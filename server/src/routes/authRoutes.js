@@ -4,6 +4,7 @@ import {
   loginUser,
   refreshTokenHandler,
   logoutUser,
+  getCurrentUser,
 } from '../controllers/authController.js';
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 
@@ -18,5 +19,5 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/refresh-token', refreshTokenHandler);
 router.post('/logout', logoutUser);
-
+router.get('/me', verifyAccessToken, getCurrentUser);
 export default router;
