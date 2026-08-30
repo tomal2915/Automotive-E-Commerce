@@ -99,54 +99,67 @@ export const refreshTokenHandler = async (req, res) => {
     // If no user owns this token, it was already rotated/removed before.
     // Someone is trying to reuse an old token -> possible theft.
     if (!foundUser) {
-      jwt.verify(
-        refreshToken,
-        process.env.REFRESH_TOKEN_SECRET,
-        async (err, decoded) => {
-          if (!err && decoded?.userId) {
-            // HACK DETECTED: wipe all refresh tokens for this user
-            // This forces logout on every device/session for that account
-            await User.findByIdAndUpdate(decoded.userId, {
-              refreshTokens: [],
-            });
-          }
-        },
-      );
+      try {
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        // HACK DETECTED: wipe all refresh tokens for this user
+        // This forces logout on every device/session for that account
+        await User.findByIdAndUpdate(decoded.userId, { refreshTokens: [] });
+      } catch {
+        // Token was invalid/expired anyway — nothing to revoke
+      }
       return res.status(403).json({
         message: "Security compromise detected. Please log in again.",
       });
     }
 
-    // Verify the token signature and expiry
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
-      async (err, decoded) => {
-        if (err || foundUser._id.toString() !== decoded.userId) {
-          return res.status(403).json({ message: "Forbidden" });
-        }
+    // Verify the token signature and expiry (synchronous form, wrapped in try/catch
+    // so a verification failure never becomes an unhandled rejection)
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch {
+      return res.status(403).json({ message: "Forbidden" });
+    }
 
-        // --- Rotation ---
-        // Remove the old token and issue a fresh pair
-        const newAccessToken = generateAccessToken(foundUser);
-        const newRefreshToken = generateRefreshToken(foundUser);
+    if (foundUser._id.toString() !== decoded.userId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
 
-        foundUser.refreshTokens = foundUser.refreshTokens.filter(
-          (t) => t.token !== refreshToken,
-        );
-        foundUser.refreshTokens.push({ token: newRefreshToken });
-        await foundUser.save();
+    // --- Rotation ---
+    const newAccessToken = generateAccessToken(foundUser);
+    const newRefreshToken = generateRefreshToken(foundUser);
 
-        res.cookie("refreshToken", newRefreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "Strict",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
-
-        res.json({ accessToken: newAccessToken });
+    // Atomic update: pull the old token and push the new one in ONE operation.
+    // updateOne() bypasses Mongoose's document versioning, so two concurrent
+    // requests can't collide the way find() + save() did.
+    const updateResult = await User.updateOne(
+      { _id: foundUser._id, "refreshTokens.token": refreshToken },
+      {
+        $pull: { refreshTokens: { token: refreshToken } },
       },
     );
+
+    // If nothing was pulled, another concurrent request already rotated this
+    // exact token — treat it as a reuse attempt rather than crashing.
+    if (updateResult.modifiedCount === 0) {
+      return res.status(403).json({
+        message: "Security compromise detected. Please log in again.",
+      });
+    }
+
+    await User.updateOne(
+      { _id: foundUser._id },
+      { $push: { refreshTokens: { token: newRefreshToken } } },
+    );
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ accessToken: newAccessToken });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
