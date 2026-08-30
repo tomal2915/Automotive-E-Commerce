@@ -1,13 +1,12 @@
 import Product from "../models/Product.js";
 
-// @route GET /api/v1/products
-// Supports dynamic filtering + pagination for the automotive catalog
 export const getProducts = async (req, res) => {
   try {
     const {
       make,
       model,
       category,
+      year,
       minPrice,
       maxPrice,
       inStock,
@@ -21,6 +20,12 @@ export const getProducts = async (req, res) => {
     if (make) filter.make = make;
     if (model) filter.model = model;
     if (category) filter.category = category;
+
+    // A product matches a year if the year falls within its yearRange
+    if (year) {
+      filter["yearRange.start"] = { $lte: Number(year) };
+      filter["yearRange.end"] = { $gte: Number(year) };
+    }
 
     if (minPrice || maxPrice) {
       filter.price = {};
@@ -37,10 +42,9 @@ export const getProducts = async (req, res) => {
     }
 
     const pageNum = Math.max(Number(page), 1);
-    const limitNum = Math.min(Number(limit), 100); // cap to prevent abuse
+    const limitNum = Math.min(Number(limit), 100);
     const skip = (pageNum - 1) * limitNum;
 
-    // Run the count and the actual query in parallel for speed
     const [products, total] = await Promise.all([
       Product.find(filter).skip(skip).limit(limitNum).sort({ createdAt: -1 }),
       Product.countDocuments(filter),
@@ -81,20 +85,44 @@ export const createProduct = async (req, res) => {
     const product = await Product.create(req.body);
     res.status(201).json({ product });
   } catch (error) {
-    res.status(400).json({ message: "Invalid product data", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Invalid product data", error: error.message });
   }
 };
 
 // @route GET /api/v1/products/filters/options
-// Returns distinct values so the frontend can build filter dropdowns
 export const getFilterOptions = async (req, res) => {
   try {
-    const [makes, categories] = await Promise.all([
-      Product.distinct("make"),
-      Product.distinct("category"),
+    const { year, make, model } = req.query;
+
+    const filter = {};
+
+    if (year) {
+      filter["yearRange.start"] = { $lte: Number(year) };
+      filter["yearRange.end"] = { $gte: Number(year) };
+    }
+    if (make) filter.make = make;
+    if (model) filter.model = model;
+
+    const [makes, models, categories] = await Promise.all([
+      Product.distinct("make", filter),
+      Product.distinct("model", filter),
+      Product.distinct("category", {}),
     ]);
 
-    res.json({ makes, categories });
+    // Generate a reasonable year list (current year down to 25 years back)
+    // rather than deriving it from stored data, since a product's yearRange
+    // can span many years that wouldn't otherwise show up as a distinct value.
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 26 }, (_, i) => currentYear - i);
+
+    res.json({
+      years,
+      makes: makes.sort(),
+      models: models.sort(),
+      categories: categories.sort(),
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -114,7 +142,9 @@ export const updateProduct = async (req, res) => {
 
     res.json({ product });
   } catch (error) {
-    res.status(400).json({ message: "Invalid update data", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Invalid update data", error: error.message });
   }
 };
 

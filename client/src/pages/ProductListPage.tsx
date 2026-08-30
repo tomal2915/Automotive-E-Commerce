@@ -3,17 +3,21 @@ import { Container, Grid, Typography, Pagination, Box, Alert } from "@mui/materi
 import { useProducts } from "../features/products/useProducts";
 import ProductCard from "../features/products/ProductCard";
 import ProductCardSkeleton from "../features/products/ProductCardSkeleton";
+import VehicleFilterBar from "../features/products/VehicleFilterBar";
+import type { ProductFilters } from "../features/products/productTypes";
 
 export default function ProductListPage() {
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<ProductFilters>({ page: 1, limit: 12 });
 
-  const { data, isLoading, isError } = useProducts({ page, limit: 12 });
+  const { data, isLoading, isError } = useProducts(filters);
 
   return (
     <Container sx={{ py: 4 }}>
       <Typography variant="h4" mb={3}>
         Auto Parts Catalog
       </Typography>
+
+      <VehicleFilterBar filters={filters} onChange={setFilters} />
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -23,8 +27,7 @@ export default function ProductListPage() {
 
       <Grid container spacing={2}>
         {isLoading
-          ? // Show 12 skeleton cards while loading, matching the page size
-            Array.from({ length: 12 }).map((_, i) => (
+          ? Array.from({ length: 12 }).map((_, i) => (
               <Grid key={i} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                 <ProductCardSkeleton />
               </Grid>
@@ -36,12 +39,18 @@ export default function ProductListPage() {
             ))}
       </Grid>
 
+      {data?.products.length === 0 && !isLoading && (
+        <Typography color="text.secondary" mt={4} textAlign="center">
+          No products match your selected vehicle. Try different filters.
+        </Typography>
+      )}
+
       {data && data.pagination.totalPages > 1 && (
         <Box display="flex" justifyContent="center" mt={4}>
           <Pagination
             count={data.pagination.totalPages}
-            page={page}
-            onChange={(_, value) => setPage(value)}
+            page={filters.page ?? 1}
+            onChange={(_, value) => setFilters({ ...filters, page: value })}
             color="primary"
           />
         </Box>

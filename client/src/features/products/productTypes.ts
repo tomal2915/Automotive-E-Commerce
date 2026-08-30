@@ -24,7 +24,9 @@ export interface ProductsResponse {
 
 export interface ProductFilters {
   make?: string;
+  model?: string;
   category?: string;
+  year?: number;
   minPrice?: number;
   maxPrice?: number;
   page?: number;
