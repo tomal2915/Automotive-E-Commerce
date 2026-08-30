@@ -1,13 +1,12 @@
+import { Toolbar } from "@mui/material";
 import AppRouter from "./routes/AppRouter";
-import ThemeToggle from "./components/ThemeToggle";
+import Navbar from "./components/Navbar";
 import { useSessionRestore } from "./features/auth/useSessionRestore";
 import { CircularProgress, Box } from "@mui/material";
 
 function App() {
   const { isRestoring } = useSessionRestore();
 
-  // Show a loading state while we check for an existing session,
-  // so the app doesn't briefly flash a "logged out" UI on reload.
   if (isRestoring) {
     return (
       <Box
@@ -24,10 +23,13 @@ function App() {
   }
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <ThemeToggle />
+    <>
+      <Navbar />
+      {/* This empty Toolbar pushes page content below the fixed AppBar,
+          matching its height exactly (including responsive breakpoints) */}
+      <Toolbar />
       <AppRouter />
-    </div>
+    </>
   );
 }
 
