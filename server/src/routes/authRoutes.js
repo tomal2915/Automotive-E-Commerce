@@ -5,8 +5,14 @@ import {
   refreshTokenHandler,
   logoutUser,
 } from '../controllers/authController.js';
+import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 
 const router = express.Router();
+
+// Temporary test route to confirm the middleware works
+router.get("/me", verifyAccessToken, (req, res) => {
+  res.json({ message: "You are authenticated", user: req.user });
+});
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
