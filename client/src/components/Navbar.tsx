@@ -91,6 +91,22 @@ export default function Navbar() {
                 onClose={handleMenuClose}
               >
                 <MenuItem disabled>{user?.email}</MenuItem>
+                <MenuItem
+                  component={RouterLink}
+                  to="/my-orders"
+                  onClick={handleMenuClose}
+                >
+                  My Orders
+                </MenuItem>
+                {user?.role === "admin" && (
+                  <MenuItem
+                    component={RouterLink}
+                    to="/admin/orders"
+                    onClick={handleMenuClose}
+                  >
+                    Manage Orders
+                  </MenuItem>
+                )}
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
             </>

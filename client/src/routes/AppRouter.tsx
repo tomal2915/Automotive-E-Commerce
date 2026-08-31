@@ -3,7 +3,11 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ProductListPage from "../pages/ProductListPage";
 import CartPage from "../pages/CartPage";
+import OrderConfirmationPage from "../pages/OrderConfirmationPage";
+import MyOrdersPage from "../pages/MyOrdersPage";
+import AdminOrdersPage from "../pages/AdminOrdersPage";
 import ProtectedRoute from "./ProtectedRoute";
+import AdminRoute from "./AdminRoute";
 
 export default function AppRouter() {
   return (
@@ -14,6 +18,12 @@ export default function AppRouter() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+        <Route path="/my-orders" element={<MyOrdersPage />} />
+      </Route>
+
+      <Route element={<AdminRoute />}>
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
       </Route>
     </Routes>
   );

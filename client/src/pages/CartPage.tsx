@@ -13,15 +13,24 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useCart } from "../features/cart/useCart";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateCartItemRequest, removeFromCartRequest } from "../features/cart/cartApi";
+import {
+  updateCartItemRequest,
+  removeFromCartRequest,
+} from "../features/cart/cartApi";
+import { initiateCheckoutRequest } from "../features/orders/orderApi";
 
 export default function CartPage() {
   const { data: cart, isLoading } = useCart();
   const queryClient = useQueryClient();
 
   const updateQuantity = useMutation({
-    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) =>
-      updateCartItemRequest(productId, quantity),
+    mutationFn: ({
+      productId,
+      quantity,
+    }: {
+      productId: string;
+      quantity: number;
+    }) => updateCartItemRequest(productId, quantity),
     onSuccess: (updatedCart) => queryClient.setQueryData(["cart"], updatedCart),
   });
 
@@ -30,10 +39,31 @@ export default function CartPage() {
     onSuccess: (updatedCart) => queryClient.setQueryData(["cart"], updatedCart),
   });
 
+  const checkout = useMutation({
+    mutationFn: initiateCheckoutRequest,
+    onSuccess: (data) => {
+      // Redirect the browser to SSLCommerz's hosted payment page
+      window.location.href = data.gatewayUrl;
+    },
+  });
+
+  const handleCheckout = () => {
+    checkout.mutate({
+      name: "Test User",
+      phone: "01700000000",
+      address: "Mirpur-02, Dhaka",
+      city: "Dhaka",
+      postcode: "1216",
+    });
+  };
+
   if (isLoading) return <Container sx={{ py: 4 }}>Loading cart...</Container>;
 
   const items = cart?.items ?? [];
-  const total = items.reduce((sum, item) => sum + item.priceAtAdd * item.quantity, 0);
+  const total = items.reduce(
+    (sum, item) => sum + item.priceAtAdd * item.quantity,
+    0,
+  );
 
   return (
     <Container sx={{ py: 4 }}>
@@ -83,8 +113,13 @@ export default function CartPage() {
 
           <Box display="flex" justifyContent="space-between" mt={3}>
             <Typography variant="h6">Total: ${total.toFixed(2)}</Typography>
-            <Button variant="contained" size="large">
-              Checkout
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleCheckout}
+              disabled={checkout.isPending}
+            >
+              {checkout.isPending ? "Redirecting..." : "Checkout"}
             </Button>
           </Box>
         </>
