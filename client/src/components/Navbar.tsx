@@ -17,6 +17,7 @@ import ThemeToggle from "./ThemeToggle";
 import { useAuthStore } from "../store/authStore";
 import { setAccessToken } from "../lib/tokenStore";
 import { api } from "../lib/api";
+import { useCart } from "../features/cart/useCart";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -43,6 +44,10 @@ export default function Navbar() {
     }
   };
 
+  const { data: cart } = useCart();
+  const itemCount =
+    cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+
   return (
     <AppBar
       position="fixed"
@@ -68,7 +73,7 @@ export default function Navbar() {
           <ThemeToggle />
 
           <IconButton color="inherit" component={RouterLink} to="/cart">
-            <Badge badgeContent={0} color="primary">
+            <Badge badgeContent={itemCount} color="primary">
               <ShoppingCartIcon />
             </Badge>
           </IconButton>

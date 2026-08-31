@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from "./routes/productRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -23,6 +24,7 @@ app.use(cookieParser());
 
 app.use('/api/v1/auth', authRoutes);
 app.use("/api/v1/products", productRoutes);
+app.use("/api/v1/cart", cartRoutes);
 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });

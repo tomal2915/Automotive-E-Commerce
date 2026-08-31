@@ -1,4 +1,5 @@
-import { Card, CardContent, Typography, Chip, Box } from "@mui/material";
+import { Card, CardContent, CardActions, Typography, Chip, Box, Button } from "@mui/material";
+import { useAddToCart } from "../cart/useAddToCart";
 import type { Product } from "./productTypes";
 
 interface Props {
@@ -6,6 +7,8 @@ interface Props {
 }
 
 export default function ProductCard({ product }: Props) {
+  const addToCart = useAddToCart();
+
   return (
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <CardContent sx={{ flexGrow: 1 }}>
@@ -28,6 +31,16 @@ export default function ProductCard({ product }: Props) {
           ${product.price.toFixed(2)}
         </Typography>
       </CardContent>
+      <CardActions>
+        <Button
+          fullWidth
+          variant="contained"
+          disabled={product.stock === 0 || addToCart.isPending}
+          onClick={() => addToCart.mutate({ product })}
+        >
+          Add to Cart
+        </Button>
+      </CardActions>
     </Card>
   );
 }
