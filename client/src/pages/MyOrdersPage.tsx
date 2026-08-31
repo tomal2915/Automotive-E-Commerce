@@ -8,24 +8,36 @@ import {
   TableCell,
   Paper,
   TableContainer,
+  Button,
+  Box,
 } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMyOrders } from "../features/orders/orderApi";
 import OrderStatusChip from "../features/orders/OrderStatusChip";
 
 export default function MyOrdersPage() {
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["my-orders"],
     queryFn: fetchMyOrders,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   if (isLoading) return <Container sx={{ py: 4 }}>Loading orders...</Container>;
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        My Orders
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4">My Orders</Typography>
+        <Button
+          startIcon={<RefreshIcon />}
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          {isFetching ? "Refreshing..." : "Refresh"}
+        </Button>
+      </Box>
 
       {!orders || orders.length === 0 ? (
         <Typography color="text.secondary">You haven't placed any orders yet.</Typography>
