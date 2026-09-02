@@ -2,14 +2,20 @@ import {
   Card,
   CardContent,
   CardActions,
+  CardMedia,
   Typography,
   Chip,
   Box,
   Button,
-  CardMedia,
+  IconButton,
 } from "@mui/material";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { useAddToCart } from "../cart/useAddToCart";
+import { useWishlist } from "../wishlist/useWishlist";
+import { useToggleWishlist } from "../wishlist/useToggleWishlist";
 import type { Product } from "./productTypes";
+
 const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 
 interface Props {
@@ -18,35 +24,66 @@ interface Props {
 
 export default function ProductCard({ product }: Props) {
   const addToCart = useAddToCart();
+  const { data: wishlist } = useWishlist();
+  const toggleWishlist = useToggleWishlist();
 
-  // Use the first uploaded image if one exists, otherwise fall back to the placeholder
   const imageSrc = product.images?.[0] || PLACEHOLDER_IMAGE;
+  const isInWishlist =
+    wishlist?.products.some((p) => p._id === product._id) ?? false;
 
   return (
-    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+      }}
+    >
+      <IconButton
+        onClick={() => toggleWishlist.mutate({ product, isInWishlist })}
+        sx={{
+          position: "absolute",
+          top: 4,
+          right: 4,
+          zIndex: 1,
+          bgcolor: "rgba(0,0,0,0.4)",
+          "&:hover": { bgcolor: "rgba(0,0,0,0.6)" },
+        }}
+        size="small"
+      >
+        {isInWishlist ? (
+          <FavoriteIcon fontSize="small" color="error" />
+        ) : (
+          <FavoriteBorderIcon fontSize="small" sx={{ color: "white" }} />
+        )}
+      </IconButton>
+
+      <CardMedia
+        component="img"
+        height="160"
+        image={imageSrc}
+        alt={product.title}
+        sx={{ objectFit: "cover", bgcolor: "background.default" }}
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          if (target.src !== window.location.origin + PLACEHOLDER_IMAGE) {
+            target.src = PLACEHOLDER_IMAGE;
+          }
+        }}
+      />
+
       <CardContent sx={{ flexGrow: 1 }}>
         <Typography variant="h6" noWrap>
           {product.title}
         </Typography>
-        <CardMedia
-          component="img"
-          height="160"
-          image={imageSrc}
-          alt={product.title}
-          sx={{ objectFit: "cover", bgcolor: "background.default" }}
-          // If the stored image URL exists but is broken/unreachable (e.g. deleted
-          // from Cloudinary, or a bad URL), fall back to the placeholder at runtime too
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            if (target.src !== window.location.origin + PLACEHOLDER_IMAGE) {
-              target.src = PLACEHOLDER_IMAGE;
-            }
-          }}
-        />
+
         <Typography variant="body2" color="text.secondary" mb={1}>
-          {product.make} {product.model} ({product.yearRange.start}-
-          {product.yearRange.end})
+          {product.make} {product.model}
+          {product.yearRange &&
+            ` (${product.yearRange.start}-${product.yearRange.end})`}
         </Typography>
+
         <Box display="flex" gap={1} mb={1}>
           <Chip label={product.category} size="small" />
           {product.stock > 0 ? (

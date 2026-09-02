@@ -18,11 +18,15 @@ import { useAuthStore } from "../store/authStore";
 import { setAccessToken } from "../lib/tokenStore";
 import { api } from "../lib/api";
 import { useCart } from "../features/cart/useCart";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import { useWishlist } from "../features/wishlist/useWishlist";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const { user, isAuthenticated, setUser } = useAuthStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { data: wishlist } = useWishlist();
+  const wishlistCount = wishlist?.products.length ?? 0;
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -75,6 +79,12 @@ export default function Navbar() {
           <IconButton color="inherit" component={RouterLink} to="/cart">
             <Badge badgeContent={itemCount} color="primary">
               <ShoppingCartIcon />
+            </Badge>
+          </IconButton>
+
+          <IconButton color="inherit" component={RouterLink} to="/wishlist">
+            <Badge badgeContent={wishlistCount} color="error">
+              <FavoriteIcon />
             </Badge>
           </IconButton>
 
