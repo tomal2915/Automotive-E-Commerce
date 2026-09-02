@@ -6,12 +6,15 @@ interface ShippingAddress {
   phone: string;
   address: string;
   city: string;
+  postcode?: string;
+  couponCode?: string; // ADDED
 }
 
-export const initiateCheckoutRequest = async (
-  shippingAddress: ShippingAddress,
-): Promise<{ gatewayUrl: string; orderId: string }> => {
-  const res = await api.post("/orders/checkout", { shippingAddress });
+export const initiateCheckoutRequest = async (data: {
+  shippingAddress: ShippingAddress;
+  couponCode?: string;
+}): Promise<{ gatewayUrl: string; orderId: string }> => {
+  const res = await api.post("/orders/checkout", data);
   return res.data;
 };
 

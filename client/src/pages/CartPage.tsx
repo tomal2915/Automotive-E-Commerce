@@ -9,6 +9,7 @@ import {
   Box,
   Divider,
   Button,
+  Alert,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useCart } from "../features/cart/useCart";
@@ -18,6 +19,8 @@ import {
   removeFromCartRequest,
 } from "../features/cart/cartApi";
 import { initiateCheckoutRequest } from "../features/orders/orderApi";
+import { validateCouponRequest } from "../features/coupons/couponApi";
+import { useState } from "react";
 
 export default function CartPage() {
   const { data: cart, isLoading } = useCart();
@@ -47,16 +50,6 @@ export default function CartPage() {
     },
   });
 
-  const handleCheckout = () => {
-    checkout.mutate({
-      name: "Test User",
-      phone: "01700000000",
-      address: "Mirpur-02, Dhaka",
-      city: "Dhaka",
-      postcode: "1216",
-    });
-  };
-
   if (isLoading) return <Container sx={{ py: 4 }}>Loading cart...</Container>;
 
   const items = cart?.items ?? [];
@@ -64,6 +57,40 @@ export default function CartPage() {
     (sum, item) => sum + item.priceAtAdd * item.quantity,
     0,
   );
+
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState("");
+
+  const applyCoupon = useMutation({
+    mutationFn: (amount: number) => validateCouponRequest(couponCode, amount),
+    onSuccess: (data) => {
+      setAppliedCoupon({ code: couponCode, discount: data.discount });
+      setCouponError("");
+    },
+    onError: (error: any) => {
+      setCouponError(error?.response?.data?.message || "Invalid coupon");
+      setAppliedCoupon(null);
+    },
+  });
+
+  const finalTotal = appliedCoupon ? total - appliedCoupon.discount : total;
+
+  const handleCheckout = () => {
+    checkout.mutate({
+      shippingAddress: {
+        name: "Test User",
+        phone: "01700000000",
+        address: "Mirpur-02, Dhaka",
+        city: "Dhaka",
+        postcode: "1216",
+      },
+      couponCode: appliedCoupon?.code,
+    });
+  };
 
   return (
     <Container sx={{ py: 4 }}>
@@ -111,8 +138,63 @@ export default function CartPage() {
             ))}
           </List>
 
+          <Box display="flex" gap={1} alignItems="center" mb={2}>
+            <TextField
+              size="small"
+              label="Coupon Code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              disabled={!!appliedCoupon}
+            />
+            <Button
+              variant="outlined"
+              onClick={() => applyCoupon.mutate(total)}
+              disabled={!couponCode || !!appliedCoupon || applyCoupon.isPending}
+            >
+              Apply
+            </Button>
+            {appliedCoupon && (
+              <Button
+                size="small"
+                color="error"
+                onClick={() => {
+                  setAppliedCoupon(null);
+                  setCouponCode("");
+                }}
+              >
+                Remove
+              </Button>
+            )}
+          </Box>
+          {couponError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {couponError}
+            </Alert>
+          )}
+          {appliedCoupon && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              Coupon "{appliedCoupon.code}" applied — $
+              {appliedCoupon.discount.toFixed(2)} off
+            </Alert>
+          )}
+
           <Box display="flex" justifyContent="space-between" mt={3}>
-            <Typography variant="h6">Total: ${total.toFixed(2)}</Typography>
+            <Typography variant="h6">
+              {appliedCoupon && (
+                <Typography
+                  component="span"
+                  sx={{
+                    textDecoration: "line-through",
+                    color: "text.secondary",
+                    mr: 1,
+                  }}
+                >
+                  ${total.toFixed(2)}
+                </Typography>
+              )}
+              Total: ${finalTotal.toFixed(2)}
+            </Typography>
+
             <Button
               variant="contained"
               size="large"

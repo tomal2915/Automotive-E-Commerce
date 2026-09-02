@@ -48,6 +48,10 @@ const orderSchema = new mongoose.Schema(
       card_type: String,
       val_id: String,
     },
+    
+    couponCode: { type: String, default: null },
+    discountAmount: { type: Number, default: 0 },
+    subtotal: { type: Number }, // amount before discount — totalAmount is now the final, post-discount amount
   },
   { timestamps: true },
 );

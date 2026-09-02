@@ -5,12 +5,14 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import { sslcz } from "../config/sslcommerz.js";
 import { sendOrderConfirmationEmail } from "../services/emailService.js";
+import Coupon from "../models/Coupon.js";
+import { validateAndCalculateDiscount } from "../utils/couponHelper.js";
 
 // @route POST /api/v1/orders/checkout
 // Creates a pending order from the user's cart and starts an SSLCommerz session
 export const initiateCheckout = async (req, res) => {
   try {
-    const { shippingAddress } = req.body;
+    const { shippingAddress, couponCode } = req.body;
 
     const cart = await Cart.findOne({ user: req.user.id }).populate(
       "items.product",
@@ -29,11 +31,32 @@ export const initiateCheckout = async (req, res) => {
       }
     }
 
-    const totalAmount = cart.items.reduce(
+    const subtotal = cart.items.reduce(
       (sum, item) => sum + item.priceAtAdd * item.quantity,
       0,
     );
 
+    let discountAmount = 0;
+    let appliedCoupon = null;
+
+    // Re-validate the coupon server-side even though the user already saw
+    // a preview via /coupons/validate — never trust a discount value sent
+    // directly from the client, since that could be tampered with
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
+      if (!coupon) {
+        return res.status(400).json({ message: "Invalid coupon code" });
+      }
+
+      try {
+        discountAmount = validateAndCalculateDiscount(coupon, subtotal);
+        appliedCoupon = coupon;
+      } catch (error) {
+        return res.status(400).json({ message: error.message });
+      }
+    }
+
+    const totalAmount = Math.round((subtotal - discountAmount) * 100) / 100;
     const transactionId = uuidv4();
 
     const order = await Order.create({
@@ -44,14 +67,26 @@ export const initiateCheckout = async (req, res) => {
         quantity: item.quantity,
         price: item.priceAtAdd,
       })),
+      subtotal,
+      discountAmount,
+      couponCode: appliedCoupon?.code ?? null,
       totalAmount,
       transactionId,
       status: "pending",
       shippingAddress,
     });
 
+    // Reserve the usage slot now (at order creation), not after payment —
+    // prevents two simultaneous checkouts both grabbing the last usage slot
+    if (appliedCoupon) {
+      await Coupon.updateOne(
+        { _id: appliedCoupon._id },
+        { $inc: { usedCount: 1 } },
+      );
+    }
+
     const sslData = {
-      total_amount: totalAmount,
+      total_amount: totalAmount, // charge the DISCOUNTED amount, not the subtotal
       currency: "BDT",
       tran_id: transactionId,
       success_url: `${process.env.SERVER_URL}/api/v1/orders/payment/success`,
@@ -87,11 +122,17 @@ export const initiateCheckout = async (req, res) => {
       ship_country: "Bangladesh",
     };
 
-    const apiResponse = await sslcz.init(sslData);
-    console.log("SSLCommerz response:", apiResponse); // TEMP DEBUG — remove after fixing
+    const apiResponse = await sslcz.init(sslData); // TEMP DEBUG — remove after fixing
 
     if (!apiResponse?.GatewayPageURL) {
       await Order.findByIdAndDelete(order._id);
+      // Roll back the usage count too, since this order never actually happened
+      if (appliedCoupon) {
+        await Coupon.updateOne(
+          { _id: appliedCoupon._id },
+          { $inc: { usedCount: -1 } },
+        );
+      }
       return res
         .status(502)
         .json({ message: "Failed to initiate payment session" });

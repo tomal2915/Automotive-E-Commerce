@@ -14,6 +14,7 @@ import WishlistPage from "../pages/WishlistPage";
 import ProductDetailPage from "../pages/ProductDetailPage";
 import AdminProductEditPage from "../pages/AdminProductEditPage";
 import AdminProductListPage from "../pages/AdminProductListPage";
+import AdminCouponsPage from "../pages/AdminCouponsPage";
 
 export default function AppRouter() {
   return (
@@ -42,6 +43,7 @@ export default function AppRouter() {
           path="/admin/products/:id/edit"
           element={<AdminProductEditPage />}
         />
+        <Route path="/admin/coupons" element={<AdminCouponsPage />} />
       </Route>
     </Routes>
   );
