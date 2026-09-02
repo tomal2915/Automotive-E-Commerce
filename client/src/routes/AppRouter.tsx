@@ -11,6 +11,7 @@ import AdminRoute from "./AdminRoute";
 import AdminProductCreatePage from "../pages/AdminProductCreatePage";
 import ProfilePage from "../pages/ProfilePage";
 import WishlistPage from "../pages/WishlistPage";
+import ProductDetailPage from "../pages/ProductDetailPage";
 
 export default function AppRouter() {
   return (
@@ -18,6 +19,7 @@ export default function AppRouter() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/" element={<ProductListPage />} />
+      <Route path="/products/:id" element={<ProductDetailPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/cart" element={<CartPage />} />

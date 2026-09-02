@@ -11,6 +11,7 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 // dotenv.config();
 connectDB();
@@ -33,6 +34,7 @@ app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/orders", orderRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });

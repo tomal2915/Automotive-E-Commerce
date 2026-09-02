@@ -10,6 +10,8 @@ export interface Product {
   price: number;
   stock: number;
   images: string[];
+  averageRating: number;
+  reviewCount: number;
 }
 
 export interface ProductsResponse {

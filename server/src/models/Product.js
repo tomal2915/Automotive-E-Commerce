@@ -21,6 +21,12 @@ const productSchema = new mongoose.Schema(
     images: [{ type: String }], // image URLs, will wire up upload later
 
     specifications: { type: Map, of: String }, // e.g. { "Material": "Ceramic" }
+
+    // Denormalized review stats — kept in sync whenever a review is
+    // created/updated/deleted, so listing pages never need to aggregate
+    // reviews on every request just to show a star rating
+    averageRating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

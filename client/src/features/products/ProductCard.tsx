@@ -2,6 +2,7 @@ import {
   Card,
   CardContent,
   CardActions,
+  CardActionArea,
   CardMedia,
   Typography,
   Chip,
@@ -11,10 +12,12 @@ import {
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import { useNavigate } from "react-router-dom";
 import { useAddToCart } from "../cart/useAddToCart";
 import { useWishlist } from "../wishlist/useWishlist";
 import { useToggleWishlist } from "../wishlist/useToggleWishlist";
 import type { Product } from "./productTypes";
+import StarRating from "../reviews/StarRating";
 
 const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 
@@ -26,6 +29,7 @@ export default function ProductCard({ product }: Props) {
   const addToCart = useAddToCart();
   const { data: wishlist } = useWishlist();
   const toggleWishlist = useToggleWishlist();
+  const navigate = useNavigate();
 
   const imageSrc = product.images?.[0] || PLACEHOLDER_IMAGE;
   const isInWishlist =
@@ -41,7 +45,10 @@ export default function ProductCard({ product }: Props) {
       }}
     >
       <IconButton
-        onClick={() => toggleWishlist.mutate({ product, isInWishlist })}
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleWishlist.mutate({ product, isInWishlist });
+        }}
         sx={{
           position: "absolute",
           top: 4,
@@ -59,43 +66,52 @@ export default function ProductCard({ product }: Props) {
         )}
       </IconButton>
 
-      <CardMedia
-        component="img"
-        height="160"
-        image={imageSrc}
-        alt={product.title}
-        sx={{ objectFit: "cover", bgcolor: "background.default" }}
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          if (target.src !== window.location.origin + PLACEHOLDER_IMAGE) {
-            target.src = PLACEHOLDER_IMAGE;
-          }
-        }}
-      />
+      <CardActionArea onClick={() => navigate(`/products/${product._id}`)}>
+        <CardMedia
+          component="img"
+          height="160"
+          image={imageSrc}
+          alt={product.title}
+          sx={{ objectFit: "cover", bgcolor: "background.default" }}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (target.src !== window.location.origin + PLACEHOLDER_IMAGE) {
+              target.src = PLACEHOLDER_IMAGE;
+            }
+          }}
+        />
 
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography variant="h6" noWrap>
-          {product.title}
-        </Typography>
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap>
+            {product.title}
+          </Typography>
 
-        <Typography variant="body2" color="text.secondary" mb={1}>
-          {product.make} {product.model}
-          {product.yearRange &&
-            ` (${product.yearRange.start}-${product.yearRange.end})`}
-        </Typography>
+          <Typography variant="body2" color="text.secondary" mb={1}>
+            {product.make} {product.model}
+            {product.yearRange &&
+              ` (${product.yearRange.start}-${product.yearRange.end})`}
+          </Typography>
 
-        <Box display="flex" gap={1} mb={1}>
-          <Chip label={product.category} size="small" />
-          {product.stock > 0 ? (
-            <Chip label="In Stock" size="small" color="success" />
-          ) : (
-            <Chip label="Out of Stock" size="small" color="error" />
+          <Box display="flex" gap={1} mb={1}>
+            <Chip label={product.category} size="small" />
+            {product.stock > 0 ? (
+              <Chip label="In Stock" size="small" color="success" />
+            ) : (
+              <Chip label="Out of Stock" size="small" color="error" />
+            )}
+          </Box>
+          <Typography variant="h6" color="primary">
+            ${product.price.toFixed(2)}
+          </Typography>
+
+          {product.reviewCount > 0 && (
+            <StarRating
+              value={product.averageRating}
+              count={product.reviewCount}
+            />
           )}
-        </Box>
-        <Typography variant="h6" color="primary">
-          ${product.price.toFixed(2)}
-        </Typography>
-      </CardContent>
+        </CardContent>
+      </CardActionArea>
       <CardActions>
         <Button
           fullWidth
