@@ -15,6 +15,7 @@ import {
   type RegisterFormData,
 } from "../features/auth/authSchemas";
 import { registerRequest } from "../features/auth/authApi";
+import PasswordStrengthMeter from "../features/auth/PasswordStrengthMeter";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -86,6 +87,7 @@ export default function RegisterPage() {
             error={!!errors.password}
             helperText={errors.password?.message}
           />
+          <PasswordStrengthMeter password={watch("password") || ""} />
           <Button
             type="submit"
             variant="contained"

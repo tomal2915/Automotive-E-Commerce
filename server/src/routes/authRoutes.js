@@ -7,6 +7,7 @@ import {
   getCurrentUser,
 } from '../controllers/authController.js';
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
+import { forgotPassword, resetPassword } from "../controllers/authController.js";
 
 const router = express.Router();
 
@@ -19,5 +20,7 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/refresh-token', refreshTokenHandler);
 router.post('/logout', logoutUser);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 router.get('/me', verifyAccessToken, getCurrentUser);
 export default router;

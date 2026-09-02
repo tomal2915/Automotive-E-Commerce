@@ -4,6 +4,9 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/generateTokens.js";
+import { validatePasswordStrength } from "../utils/passwordValidator.js";
+import crypto from "crypto";
+import { transporter } from "../config/mailer.js";
 
 // @route POST /api/v1/auth/register
 export const registerUser = async (req, res) => {
@@ -12,6 +15,14 @@ export const registerUser = async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const passwordCheck = validatePasswordStrength(password);
+    if (!passwordCheck.isValid) {
+      return res.status(400).json({
+        message: passwordCheck.errors[0],
+        errors: passwordCheck.errors,
+      });
     }
 
     const existingUser = await User.findOne({ email });
@@ -209,6 +220,108 @@ export const getCurrentUser = async (req, res) => {
         role: user.role,
         avatar: user.avatar, // ADDED
       },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route POST /api/v1/auth/forgot-password
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    // IMPORTANT: always return the same success message whether or not
+    // the email exists — revealing "email not found" lets an attacker
+    // enumerate which emails have accounts on this site
+    const genericResponse = {
+      message:
+        "If an account exists with that email, a reset link has been sent.",
+    };
+
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    // Generate a random token, store only its HASH in the DB (never the
+    // raw token) — same principle as password hashing: if the DB is ever
+    // leaked, the raw tokens (which grant account access) aren't exposed
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
+    await user.save();
+
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${rawToken}`;
+
+    await transporter.sendMail({
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2>Reset Your Password</h2>
+          <p>We received a request to reset your password. Click the button below to choose a new one — this link expires in 30 minutes.</p>
+          <a href="${resetUrl}" style="display: inline-block; background: #38bdf8; color: #0f172a; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
+          <p style="color: #64748b; margin-top: 16px; font-size: 13px;">If you didn't request this, you can safely ignore this email — your password will remain unchanged.</p>
+        </div>
+      `,
+    });
+
+    res.json(genericResponse);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route POST /api/v1/auth/reset-password/:token
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const passwordCheck = validatePasswordStrength(newPassword);
+    if (!passwordCheck.isValid) {
+      return res
+        .status(400)
+        .json({
+          message: passwordCheck.errors[0],
+          errors: passwordCheck.errors,
+        });
+    }
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }, // must not be expired
+    }).select("+resetPasswordToken +resetPasswordExpires");
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "This reset link is invalid or has expired" });
+    }
+
+    user.password = newPassword; // pre-save hook re-hashes automatically
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    // Invalidate all existing sessions — same reasoning as changePassword:
+    // if someone reset the password (possibly an attacker who got access
+    // to the email), old sessions everywhere should die
+    user.refreshTokens = [];
+    await user.save();
+
+    res.json({
+      message:
+        "Password reset successful. Please log in with your new password.",
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

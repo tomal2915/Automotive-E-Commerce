@@ -14,6 +14,8 @@ import { loginSchema, type LoginFormData } from "../features/auth/authSchemas";
 import { loginRequest } from "../features/auth/authApi";
 import { setAccessToken } from "../lib/tokenStore";
 import { useAuthStore } from "../store/authStore";
+import { Link as MuiLink } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -92,6 +94,11 @@ export default function LoginPage() {
 
         <Typography variant="body2" mt={2}>
           Don't have an account? <Link to="/register">Register</Link>
+        </Typography>
+        <Typography variant="body2" mt={1}>
+          <MuiLink component={RouterLink} to="/forgot-password">
+            Forgot password?
+          </MuiLink>
         </Typography>
       </Paper>
     </Box>

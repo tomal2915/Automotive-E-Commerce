@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
+import { validatePasswordStrength } from "../utils/passwordValidator.js";
 
 // @route GET /api/v1/users/profile
 // Returns the full profile of the logged-in user
@@ -80,6 +81,16 @@ export const changePassword = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Both current and new password are required" });
+    }
+
+    const passwordCheck = validatePasswordStrength(newPassword);
+    if (!passwordCheck.isValid) {
+      return res
+        .status(400)
+        .json({
+          message: passwordCheck.errors[0],
+          errors: passwordCheck.errors,
+        });
     }
 
     if (newPassword.length < 6) {

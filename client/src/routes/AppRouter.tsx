@@ -16,6 +16,8 @@ import AdminProductEditPage from "../pages/AdminProductEditPage";
 import AdminProductListPage from "../pages/AdminProductListPage";
 import AdminCouponsPage from "../pages/AdminCouponsPage";
 import AddressBookPage from "../pages/AddressBookPage";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
+import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 
 export default function AppRouter() {
   return (
@@ -24,6 +26,8 @@ export default function AppRouter() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/" element={<ProductListPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/cart" element={<CartPage />} />

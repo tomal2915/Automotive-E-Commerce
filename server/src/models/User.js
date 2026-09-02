@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    password: { type: String, required: true, minlength: 6, select: false },
+    password: { type: String, required: true, minlength: 8, select: false },
     role: { type: String, enum: ["user", "admin"], default: "user" },
 
     // Profile fields
@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    
+    // Password reset fields — token is hashed before storing (never store
+    // the raw token, same principle as never storing raw passwords)
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
   },
   { timestamps: true },
 );
