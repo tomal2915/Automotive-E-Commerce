@@ -21,6 +21,10 @@ import {
 import { initiateCheckoutRequest } from "../features/orders/orderApi";
 import { validateCouponRequest } from "../features/coupons/couponApi";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAddresses } from "../features/addresses/addressApi";
+import { MenuItem, TextField as MTextField } from "@mui/material"; // TextField already imported probably, alias avoided if not needed
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 
 export default function CartPage() {
   const { data: cart, isLoading } = useCart();
@@ -79,14 +83,32 @@ export default function CartPage() {
 
   const finalTotal = appliedCoupon ? total - appliedCoupon.discount : total;
 
+  const navigate = useNavigate();
+  const { data: addresses } = useQuery({
+    queryKey: ["addresses"],
+    queryFn: fetchAddresses,
+  });
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+
+  // Once addresses load, default to the user's default address (if any)
+  // This is safe to compute on every render — it's cheap and idempotent
+  const defaultAddress = addresses?.find((a) => a.isDefault);
+  const activeAddressId = selectedAddressId || defaultAddress?._id || "";
+  const selectedAddress = addresses?.find((a) => a._id === activeAddressId);
+
   const handleCheckout = () => {
+    if (!selectedAddress) {
+      alert("Please select or add a shipping address first");
+      return;
+    }
+
     checkout.mutate({
       shippingAddress: {
-        name: "Test User",
-        phone: "01700000000",
-        address: "Mirpur-02, Dhaka",
-        city: "Dhaka",
-        postcode: "1216",
+        name: selectedAddress.name,
+        phone: selectedAddress.phone,
+        address: selectedAddress.street,
+        city: selectedAddress.city,
+        postcode: selectedAddress.postcode,
       },
       couponCode: appliedCoupon?.code,
     });
@@ -178,6 +200,40 @@ export default function CartPage() {
             </Alert>
           )}
 
+          <Box mb={3}>
+            <Typography variant="subtitle1" mb={1}>
+              Shipping Address
+            </Typography>
+
+            {!addresses || addresses.length === 0 ? (
+              <Alert
+                severity="warning"
+                action={
+                  <Button size="small" component={RouterLink} to="/addresses">
+                    Add Address
+                  </Button>
+                }
+              >
+                No saved addresses. Please add one to checkout.
+              </Alert>
+            ) : (
+              <TextField
+                select
+                fullWidth
+                label="Select delivery address"
+                value={activeAddressId}
+                onChange={(e) => setSelectedAddressId(e.target.value)}
+              >
+                {addresses.map((addr) => (
+                  <MenuItem key={addr._id} value={addr._id}>
+                    {addr.label} — {addr.street}, {addr.city} ({addr.name},{" "}
+                    {addr.phone})
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          </Box>
+
           <Box display="flex" justifyContent="space-between" mt={3}>
             <Typography variant="h6">
               {appliedCoupon && (
@@ -199,7 +255,7 @@ export default function CartPage() {
               variant="contained"
               size="large"
               onClick={handleCheckout}
-              disabled={checkout.isPending}
+              disabled={checkout.isPending || !selectedAddress}
             >
               {checkout.isPending ? "Redirecting..." : "Checkout"}
             </Button>

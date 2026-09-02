@@ -145,6 +145,13 @@ export default function Navbar() {
                     >
                       Manage Coupons
                     </MenuItem>
+                    <MenuItem
+                      component={RouterLink}
+                      to="/addresses"
+                      onClick={handleMenuClose}
+                    >
+                      Address Book
+                    </MenuItem>
                   </>
                 )}
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>

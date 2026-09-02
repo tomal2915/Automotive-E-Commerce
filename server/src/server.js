@@ -13,6 +13,7 @@ import userRoutes from "./routes/userRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
+import addressRoutes from "./routes/addressRoutes.js";
 
 // dotenv.config();
 connectDB();
@@ -37,6 +38,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/coupons", couponRoutes);
+app.use("/api/v1/addresses", addressRoutes);
 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });

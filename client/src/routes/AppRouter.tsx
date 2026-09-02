@@ -15,6 +15,7 @@ import ProductDetailPage from "../pages/ProductDetailPage";
 import AdminProductEditPage from "../pages/AdminProductEditPage";
 import AdminProductListPage from "../pages/AdminProductListPage";
 import AdminCouponsPage from "../pages/AdminCouponsPage";
+import AddressBookPage from "../pages/AddressBookPage";
 
 export default function AppRouter() {
   return (
@@ -30,6 +31,7 @@ export default function AppRouter() {
         <Route path="/my-orders" element={<MyOrdersPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/addresses" element={<AddressBookPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>
