@@ -9,6 +9,7 @@ import AdminOrdersPage from "../pages/AdminOrdersPage";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
 import AdminProductCreatePage from "../pages/AdminProductCreatePage";
+import ProfilePage from "../pages/ProfilePage";
 
 export default function AppRouter() {
   return (
@@ -21,6 +22,7 @@ export default function AppRouter() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
         <Route path="/my-orders" element={<MyOrdersPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
 
       <Route element={<AdminRoute />}>

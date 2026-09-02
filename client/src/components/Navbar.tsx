@@ -81,7 +81,7 @@ export default function Navbar() {
           {isAuthenticated ? (
             <>
               <IconButton onClick={handleMenuOpen} size="small">
-                <Avatar sx={{ width: 32, height: 32 }}>
+                <Avatar src={user?.avatar} sx={{ width: 32, height: 32 }}>
                   {user?.name?.charAt(0).toUpperCase()}
                 </Avatar>
               </IconButton>
@@ -91,6 +91,13 @@ export default function Navbar() {
                 onClose={handleMenuClose}
               >
                 <MenuItem disabled>{user?.email}</MenuItem>
+                <MenuItem
+                  component={RouterLink}
+                  to="/profile"
+                  onClick={handleMenuClose}
+                >
+                  My Profile
+                </MenuItem>
                 <MenuItem
                   component={RouterLink}
                   to="/my-orders"
