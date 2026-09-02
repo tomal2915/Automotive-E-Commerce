@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { useAddToCart } from "../cart/useAddToCart";
 import type { Product } from "./productTypes";
+const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 
 interface Props {
   product: Product;
@@ -17,6 +18,9 @@ interface Props {
 
 export default function ProductCard({ product }: Props) {
   const addToCart = useAddToCart();
+
+  // Use the first uploaded image if one exists, otherwise fall back to the placeholder
+  const imageSrc = product.images?.[0] || PLACEHOLDER_IMAGE;
 
   return (
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -27,8 +31,17 @@ export default function ProductCard({ product }: Props) {
         <CardMedia
           component="img"
           height="160"
-          image={product.images?.[0] || "/placeholder-part.png"}
+          image={imageSrc}
           alt={product.title}
+          sx={{ objectFit: "cover", bgcolor: "background.default" }}
+          // If the stored image URL exists but is broken/unreachable (e.g. deleted
+          // from Cloudinary, or a bad URL), fall back to the placeholder at runtime too
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (target.src !== window.location.origin + PLACEHOLDER_IMAGE) {
+              target.src = PLACEHOLDER_IMAGE;
+            }
+          }}
         />
         <Typography variant="body2" color="text.secondary" mb={1}>
           {product.make} {product.model} ({product.yearRange.start}-
