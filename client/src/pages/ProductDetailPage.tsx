@@ -1,10 +1,22 @@
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Container, Grid, Typography, Chip, Box, Button, CardMedia } from "@mui/material";
+import {
+  Container,
+  Grid,
+  Typography,
+  Chip,
+  Box,
+  Button,
+  CardMedia,
+} from "@mui/material";
 import { fetchProductById } from "../features/products/productApi";
 import { useAddToCart } from "../features/cart/useAddToCart";
 import StarRating from "../features/reviews/StarRating";
 import ProductReviews from "../features/reviews/ProductReviews";
+import ProductRow from "../features/products/ProductRow";
+import { useRelatedProducts } from "../features/products/useRelatedProducts";
+import { addToRecentlyViewed } from "../features/products/recentlyViewed";
 
 const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 
@@ -17,6 +29,16 @@ export default function ProductDetailPage() {
     queryFn: () => fetchProductById(id!),
     enabled: !!id,
   });
+
+  const { data: related } = useRelatedProducts(id!);
+
+  // Record this product as viewed once it has loaded — runs once per
+  // product ID, not on every re-render
+  useEffect(() => {
+    if (id) {
+      addToRecentlyViewed(id);
+    }
+  }, [id]);
 
   if (isLoading) return <Container sx={{ py: 4 }}>Loading...</Container>;
   if (!product) return <Container sx={{ py: 4 }}>Product not found</Container>;
@@ -39,7 +61,11 @@ export default function ProductDetailPage() {
 
           {product.reviewCount > 0 && (
             <Box mb={2}>
-              <StarRating value={product.averageRating} count={product.reviewCount} size="medium" />
+              <StarRating
+                value={product.averageRating}
+                count={product.reviewCount}
+                size="medium"
+              />
             </Box>
           )}
 
@@ -50,7 +76,9 @@ export default function ProductDetailPage() {
           <Box display="flex" gap={1} mb={2}>
             <Chip label={product.category} />
             <Chip label={`${product.make} ${product.model}`} />
-            <Chip label={`${product.yearRange.start}-${product.yearRange.end}`} />
+            <Chip
+              label={`${product.yearRange.start}-${product.yearRange.end}`}
+            />
           </Box>
 
           <Typography variant="h4" color="primary" mb={2}>
@@ -69,6 +97,8 @@ export default function ProductDetailPage() {
       </Grid>
 
       <ProductReviews productId={product._id} />
+
+      <ProductRow title="Related Products" products={related ?? []} />
     </Container>
   );
 }

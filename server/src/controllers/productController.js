@@ -220,3 +220,60 @@ export const getSearchSuggestions = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// @route GET /api/v1/products/:id/related
+// Finds other products that share the same category or make/model —
+// helps surface cross-sell opportunities on the product detail page
+export const getRelatedProducts = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const related = await Product.find({
+      _id: { $ne: product._id }, // exclude the product itself
+      $or: [
+        { category: product.category },
+        { make: product.make, model: product.model },
+      ],
+    })
+      .select("title price images make model category averageRating reviewCount yearRange stock")
+      .limit(8)
+      .lean();
+
+    res.json({ related });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route GET /api/v1/products/batch?ids=id1,id2,id3
+// Fetches multiple products by ID in a single request — used by the
+// "Recently Viewed" widget, which only stores IDs in localStorage
+export const getProductsByIds = async (req, res) => {
+  try {
+    const { ids } = req.query;
+
+    if (!ids) {
+      return res.json({ products: [] });
+    }
+
+    const idArray = ids.split(",").filter(Boolean).slice(0, 20); // cap to prevent abuse
+
+    const products = await Product.find({ _id: { $in: idArray } })
+      .select("title price images make model category averageRating reviewCount yearRange stock")
+      .lean();
+
+    // Preserve the original order (most-recently-viewed-first), since
+    // $in doesn't guarantee result order matches the input array
+    const orderedProducts = idArray
+      .map((id) => products.find((p) => p._id.toString() === id))
+      .filter(Boolean);
+
+    res.json({ products: orderedProducts });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

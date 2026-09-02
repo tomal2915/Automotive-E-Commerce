@@ -62,3 +62,14 @@ export const updateProductRequest = async (
   });
   return res.data.product;
 };
+
+export const fetchRelatedProducts = async (productId: string): Promise<Product[]> => {
+  const res = await api.get(`/products/${productId}/related`);
+  return res.data.related;
+};
+
+export const fetchProductsByIds = async (ids: string[]): Promise<Product[]> => {
+  if (ids.length === 0) return [];
+  const res = await api.get("/products/batch", { params: { ids: ids.join(",") } });
+  return res.data.products;
+};

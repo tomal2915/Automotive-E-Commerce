@@ -5,11 +5,13 @@ import ProductCard from "../features/products/ProductCard";
 import ProductCardSkeleton from "../features/products/ProductCardSkeleton";
 import VehicleFilterBar from "../features/products/VehicleFilterBar";
 import type { ProductFilters } from "../features/products/productTypes";
+import ProductRow from "../features/products/ProductRow";
+import { useRecentlyViewed } from "../features/products/useRecentlyViewed";
 
 export default function ProductListPage() {
   const [filters, setFilters] = useState<ProductFilters>({ page: 1, limit: 12 });
-
   const { data, isLoading, isError } = useProducts(filters);
+  const { data: recentlyViewed } = useRecentlyViewed();
 
   return (
     <Container sx={{ py: 4 }}>
@@ -55,6 +57,7 @@ export default function ProductListPage() {
           />
         </Box>
       )}
+      <ProductRow title="Recently Viewed" products={recentlyViewed ?? []} />
     </Container>
   );
 }
