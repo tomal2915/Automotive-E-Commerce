@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Autocomplete, TextField, Box, Typography, Avatar, CircularProgress } from "@mui/material";
+import {
+  Autocomplete,
+  TextField,
+  Box,
+  Typography,
+  Avatar,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSearchSuggestions } from "../features/products/useSearchSuggestions";
 import type { SearchSuggestion } from "../features/products/searchApi";
@@ -11,10 +17,13 @@ export default function SearchBar() {
   const [inputValue, setInputValue] = useState("");
   const { data: suggestions, isFetching } = useSearchSuggestions(inputValue);
 
-  const handleSelect = (_event: unknown, value: SearchSuggestion | string | null) => {
+  const handleSelect = (
+    _event: unknown,
+    value: SearchSuggestion | string | null,
+  ) => {
     if (value && typeof value !== "string") {
       navigate(`/products/${value._id}`);
-      setInputValue(""); // clear after navigating
+      setInputValue("");
     }
   };
 
@@ -22,12 +31,15 @@ export default function SearchBar() {
     <Autocomplete
       freeSolo
       options={suggestions ?? []}
-      getOptionLabel={(option) => (typeof option === "string" ? option : option.title)}
-      filterOptions={(x) => x} // we already filtered server-side, don't re-filter client-side
+      getOptionLabel={(option) =>
+        typeof option === "string" ? option : option.title
+      }
+      filterOptions={(x) => x}
       inputValue={inputValue}
       onInputChange={(_e, value) => setInputValue(value)}
       onChange={handleSelect}
       loading={isFetching}
+      loadingText="Searching..."
       sx={{ width: { xs: 180, sm: 320 } }}
       renderInput={(params) => (
         <TextField
@@ -36,17 +48,9 @@ export default function SearchBar() {
           placeholder="Search parts, make, model..."
           variant="outlined"
           sx={{
-            "& .MuiOutlinedInput-root": { bgcolor: "background.paper", borderRadius: 1 },
-          }}
-          slotProps={{
-            input: {
-              ...params.InputProps,
-              endAdornment: (
-                <>
-                  {isFetching ? <CircularProgress color="inherit" size={16} /> : null}
-                  {params.InputProps.endAdornment}
-                </>
-              ),
+            "& .MuiOutlinedInput-root": {
+              bgcolor: "background.paper",
+              borderRadius: 1,
             },
           }}
         />
@@ -54,7 +58,14 @@ export default function SearchBar() {
       renderOption={(props, option) => {
         if (typeof option === "string") return null;
         return (
-          <Box component="li" {...props} key={option._id} display="flex" gap={1.5} alignItems="center">
+          <Box
+            component="li"
+            {...props}
+            key={option._id}
+            display="flex"
+            gap={1.5}
+            alignItems="center"
+          >
             <Avatar
               src={option.images?.[0] || PLACEHOLDER_IMAGE}
               variant="rounded"
@@ -69,7 +80,9 @@ export default function SearchBar() {
           </Box>
         );
       }}
-      noOptionsText={inputValue.trim().length < 2 ? "Type to search..." : "No products found"}
+      noOptionsText={
+        inputValue.trim().length < 2 ? "Type to search..." : "No products found"
+      }
     />
   );
 }
