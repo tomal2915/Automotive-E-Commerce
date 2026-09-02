@@ -4,6 +4,7 @@ import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import { sslcz } from "../config/sslcommerz.js";
+import { sendOrderConfirmationEmail } from "../services/emailService.js";
 
 // @route POST /api/v1/orders/checkout
 // Creates a pending order from the user's cart and starts an SSLCommerz session
@@ -164,6 +165,21 @@ export const handleIPN = async (req, res) => {
       await session.endSession();
     }
 
+    // Send confirmation email AFTER the transaction fully commits — this is
+    // intentionally outside the transaction and its own try/catch (handled
+    // inside sendOrderConfirmationEmail itself) so an email failure can never
+    // undo an already-successful, already-paid order.
+    const populatedOrder = await Order.findById(order._id).populate(
+      "user",
+      "email",
+    );
+    if (populatedOrder?.user?.email) {
+      await sendOrderConfirmationEmail(
+        populatedOrder,
+        populatedOrder.user.email,
+      );
+    }
+
     res.status(200).send();
   } catch (error) {
     console.error("IPN handling error:", error.message);
@@ -212,7 +228,9 @@ export const getOrderByTransactionId = async (req, res) => {
 // Returns the logged-in user's own order history, most recent first
 export const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user.id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ user: req.user.id }).sort({
+      createdAt: -1,
+    });
     res.json({ orders });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -261,7 +279,14 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const allowedStatuses = ["pending", "paid", "shipped", "delivered", "failed", "cancelled"];
+    const allowedStatuses = [
+      "pending",
+      "paid",
+      "shipped",
+      "delivered",
+      "failed",
+      "cancelled",
+    ];
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status value" });
     }
