@@ -31,9 +31,13 @@ export const updateProfile = async (req, res) => {
     if (street !== undefined || city !== undefined || postcode !== undefined) {
       const currentUser = await User.findById(req.user.id);
       updateData.address = {
-        street: street !== undefined ? street : currentUser.address?.street ?? "",
-        city: city !== undefined ? city : currentUser.address?.city ?? "",
-        postcode: postcode !== undefined ? postcode : currentUser.address?.postcode ?? "",
+        street:
+          street !== undefined ? street : (currentUser.address?.street ?? ""),
+        city: city !== undefined ? city : (currentUser.address?.city ?? ""),
+        postcode:
+          postcode !== undefined
+            ? postcode
+            : (currentUser.address?.postcode ?? ""),
       };
     }
 
@@ -47,9 +51,21 @@ export const updateProfile = async (req, res) => {
       runValidators: true,
     });
 
-    res.json({ user });
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        address: user.address,
+        avatar: user.avatar,
+      },
+    });
   } catch (error) {
-    res.status(400).json({ message: "Invalid profile data", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Invalid profile data", error: error.message });
   }
 };
 
@@ -61,11 +77,15 @@ export const changePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: "Both current and new password are required" });
+      return res
+        .status(400)
+        .json({ message: "Both current and new password are required" });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ message: "New password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({ message: "New password must be at least 6 characters" });
     }
 
     const user = await User.findById(req.user.id).select("+password");
@@ -89,7 +109,9 @@ export const changePassword = async (req, res) => {
       sameSite: "Strict",
     });
 
-    res.json({ message: "Password changed successfully. Please log in again." });
+    res.json({
+      message: "Password changed successfully. Please log in again.",
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

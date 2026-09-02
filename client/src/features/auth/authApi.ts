@@ -6,6 +6,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: "user" | "admin";
+  avatar?: string;
 }
 
 interface LoginResponse {
@@ -18,7 +19,9 @@ export const registerRequest = async (data: RegisterFormData) => {
   return res.data;
 };
 
-export const loginRequest = async (data: LoginFormData): Promise<LoginResponse> => {
+export const loginRequest = async (
+  data: LoginFormData,
+): Promise<LoginResponse> => {
   const res = await api.post("/auth/login", data);
   return res.data;
 };

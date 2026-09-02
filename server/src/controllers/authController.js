@@ -74,6 +74,7 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar, // ADDED
       },
     });
   } catch (error) {
@@ -100,7 +101,10 @@ export const refreshTokenHandler = async (req, res) => {
     // Someone is trying to reuse an old token -> possible theft.
     if (!foundUser) {
       try {
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const decoded = jwt.verify(
+          refreshToken,
+          process.env.REFRESH_TOKEN_SECRET,
+        );
         // HACK DETECTED: wipe all refresh tokens for this user
         // This forces logout on every device/session for that account
         await User.findByIdAndUpdate(decoded.userId, { refreshTokens: [] });
@@ -203,6 +207,7 @@ export const getCurrentUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar, // ADDED
       },
     });
   } catch (error) {
