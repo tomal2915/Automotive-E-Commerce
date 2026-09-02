@@ -6,6 +6,7 @@ import {
   updateProduct,
   deleteProduct,
   getFilterOptions,
+  getSearchSuggestions,
 } from "../controllers/productController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 import { verifyRole } from "../middlewares/verifyRole.js";
@@ -16,6 +17,7 @@ const router = express.Router();
 
 router.get("/", getProducts);
 router.get("/filters/options", getFilterOptions);
+router.get("/search/suggestions", getSearchSuggestions); // must come before /:id
 router.get("/:id", getProductById);
 
 router.post(

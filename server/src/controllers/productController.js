@@ -191,3 +191,32 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// @route GET /api/v1/products/search/suggestions?q=brake
+// Lightweight autocomplete endpoint — returns only what's needed to render
+// a dropdown (no full product payload), and caps results tightly.
+export const getSearchSuggestions = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim().length < 2) {
+      return res.json({ suggestions: [] });
+    }
+
+    // Case-insensitive prefix/substring match on title, make, and model.
+    // Using a regex here (not $text) because autocomplete needs partial-word
+    // matching ("bra" -> "Brake") which MongoDB's $text search doesn't do well.
+    const searchRegex = new RegExp(q.trim(), "i");
+
+    const suggestions = await Product.find({
+      $or: [{ title: searchRegex }, { make: searchRegex }, { model: searchRegex }],
+    })
+      .select("title make model category price images")
+      .limit(8) // keep the dropdown short and the query cheap
+      .lean(); // plain JS objects — faster since we don't need Mongoose document methods here
+
+    res.json({ suggestions });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

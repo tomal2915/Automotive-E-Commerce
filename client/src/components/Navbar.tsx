@@ -20,6 +20,7 @@ import { api } from "../lib/api";
 import { useCart } from "../features/cart/useCart";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useWishlist } from "../features/wishlist/useWishlist";
+import SearchBar from "./SearchBar";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -63,15 +64,14 @@ export default function Navbar() {
           variant="h6"
           component={RouterLink}
           to="/"
-          sx={{
-            flexGrow: 1,
-            textDecoration: "none",
-            color: "inherit",
-            fontWeight: 700,
-          }}
+          sx={{ textDecoration: "none", color: "inherit", fontWeight: 700 }}
         >
           AutoParts
         </Typography>
+
+        <Box sx={{ mx: 2, flexGrow: 1, display: "flex" }}>
+          <SearchBar />
+        </Box>
 
         <Box display="flex" alignItems="center" gap={1}>
           <ThemeToggle />
