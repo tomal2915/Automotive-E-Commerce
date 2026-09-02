@@ -12,6 +12,8 @@ import AdminProductCreatePage from "../pages/AdminProductCreatePage";
 import ProfilePage from "../pages/ProfilePage";
 import WishlistPage from "../pages/WishlistPage";
 import ProductDetailPage from "../pages/ProductDetailPage";
+import AdminProductEditPage from "../pages/AdminProductEditPage";
+import AdminProductListPage from "../pages/AdminProductListPage";
 
 export default function AppRouter() {
   return (
@@ -31,9 +33,14 @@ export default function AppRouter() {
 
       <Route element={<AdminRoute />}>
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/products" element={<AdminProductListPage />} />
         <Route
           path="/admin/products/new"
           element={<AdminProductCreatePage />}
+        />
+        <Route
+          path="/admin/products/:id/edit"
+          element={<AdminProductEditPage />}
         />
       </Route>
     </Routes>

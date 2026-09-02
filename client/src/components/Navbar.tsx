@@ -131,6 +131,13 @@ export default function Navbar() {
                     >
                       Add Product
                     </MenuItem>
+                    <MenuItem
+                      component={RouterLink}
+                      to="/admin/products"
+                      onClick={handleMenuClose}
+                    >
+                      Manage Products
+                    </MenuItem>
                   </>
                 )}
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
