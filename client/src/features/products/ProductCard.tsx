@@ -1,4 +1,13 @@
-import { Card, CardContent, CardActions, Typography, Chip, Box, Button } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardActions,
+  Typography,
+  Chip,
+  Box,
+  Button,
+  CardMedia,
+} from "@mui/material";
 import { useAddToCart } from "../cart/useAddToCart";
 import type { Product } from "./productTypes";
 
@@ -15,6 +24,12 @@ export default function ProductCard({ product }: Props) {
         <Typography variant="h6" noWrap>
           {product.title}
         </Typography>
+        <CardMedia
+          component="img"
+          height="160"
+          image={product.images?.[0] || "/placeholder-part.png"}
+          alt={product.title}
+        />
         <Typography variant="body2" color="text.secondary" mb={1}>
           {product.make} {product.model} ({product.yearRange.start}-
           {product.yearRange.end})

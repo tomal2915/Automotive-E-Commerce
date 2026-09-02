@@ -99,13 +99,22 @@ export default function Navbar() {
                   My Orders
                 </MenuItem>
                 {user?.role === "admin" && (
-                  <MenuItem
-                    component={RouterLink}
-                    to="/admin/orders"
-                    onClick={handleMenuClose}
-                  >
-                    Manage Orders
-                  </MenuItem>
+                  <>
+                    <MenuItem
+                      component={RouterLink}
+                      to="/admin/orders"
+                      onClick={handleMenuClose}
+                    >
+                      Manage Orders
+                    </MenuItem>
+                    <MenuItem
+                      component={RouterLink}
+                      to="/admin/products/new"
+                      onClick={handleMenuClose}
+                    >
+                      Add Product
+                    </MenuItem>
+                  </>
                 )}
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>

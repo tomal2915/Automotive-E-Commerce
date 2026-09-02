@@ -8,6 +8,7 @@ import MyOrdersPage from "../pages/MyOrdersPage";
 import AdminOrdersPage from "../pages/AdminOrdersPage";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
+import AdminProductCreatePage from "../pages/AdminProductCreatePage";
 
 export default function AppRouter() {
   return (
@@ -24,6 +25,10 @@ export default function AppRouter() {
 
       <Route element={<AdminRoute />}>
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route
+          path="/admin/products/new"
+          element={<AdminProductCreatePage />}
+        />
       </Route>
     </Routes>
   );

@@ -79,10 +79,25 @@ export const getProductById = async (req, res) => {
   }
 };
 
-// @route POST /api/v1/products (admin only — protected later in Step 11)
+// @route POST /api/v1/products (admin only)
 export const createProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    // Multer + CloudinaryStorage populate req.files with the uploaded images,
+    // each already containing the Cloudinary-hosted URL in `.path`
+    const imageUrls = (req.files || []).map((file) => file.path);
+
+    const productData = {
+      ...req.body,
+      images: imageUrls,
+      // yearRange arrives as separate form fields since this is multipart/form-data,
+      // not JSON, so we reconstruct the nested object here
+      yearRange: {
+        start: Number(req.body.yearRangeStart),
+        end: Number(req.body.yearRangeEnd),
+      },
+    };
+
+    const product = await Product.create(productData);
     res.status(201).json({ product });
   } catch (error) {
     res
@@ -131,8 +146,22 @@ export const getFilterOptions = async (req, res) => {
 // @route PUT /api/v1/products/:id (admin only)
 export const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true, // return the updated document
+    const updateData = { ...req.body };
+
+    // Only overwrite images if new ones were uploaded in this request
+    if (req.files && req.files.length > 0) {
+      updateData.images = req.files.map((file) => file.path);
+    }
+
+    if (req.body.yearRangeStart && req.body.yearRangeEnd) {
+      updateData.yearRange = {
+        start: Number(req.body.yearRangeStart),
+        end: Number(req.body.yearRangeEnd),
+      };
+    }
+
+    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
       runValidators: true,
     });
 
