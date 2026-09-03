@@ -18,6 +18,8 @@ import AdminCouponsPage from "../pages/AdminCouponsPage";
 import AddressBookPage from "../pages/AddressBookPage";
 import ResetPasswordPage from "../pages/ResetPasswordPage";
 import ForgotPasswordPage from "../pages/ForgotPasswordPage";
+import VerifyEmailPage from "../pages/VerifyEmailPage";
+import CheckInboxPage from "../pages/CheckInboxPage";
 
 export default function AppRouter() {
   return (
@@ -28,6 +30,8 @@ export default function AppRouter() {
       <Route path="/products/:id" element={<ProductDetailPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      <Route path="/check-inbox" element={<CheckInboxPage />} />
+      <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/cart" element={<CartPage />} />

@@ -29,11 +29,15 @@ const userSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
-    
+
     // Password reset fields — token is hashed before storing (never store
     // the raw token, same principle as never storing raw passwords)
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: Date, select: false },
+
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String, select: false },
+    emailVerificationExpires: { type: Date, select: false },
   },
   { timestamps: true },
 );

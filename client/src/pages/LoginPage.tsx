@@ -16,14 +16,17 @@ import { setAccessToken } from "../lib/tokenStore";
 import { useAuthStore } from "../store/authStore";
 import { Link as MuiLink } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import { useState } from "react";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
+  const [showResend, setShowResend] = useState(false);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -32,10 +35,12 @@ export default function LoginPage() {
   const mutation = useMutation({
     mutationFn: loginRequest,
     onSuccess: (data) => {
-      // Store access token in memory and user info in the auth store
       setAccessToken(data.accessToken);
       setUser(data.user);
       navigate("/");
+    },
+    onError: (error: any) => {
+      setShowResend(error?.response?.data?.code === "EMAIL_NOT_VERIFIED");
     },
   });
 
@@ -59,7 +64,18 @@ export default function LoginPage() {
 
         {mutation.isError && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            Invalid email or password
+            {(mutation.error as any)?.response?.data?.message ||
+              "Invalid email or password"}
+            {showResend && (
+              <MuiLink
+                component={RouterLink}
+                to="/check-inbox"
+                state={{ email: watch("email") }}
+                sx={{ display: "block", mt: 1 }}
+              >
+                Resend verification email
+              </MuiLink>
+            )}
           </Alert>
         )}
 

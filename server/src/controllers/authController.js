@@ -7,6 +7,10 @@ import {
 import { validatePasswordStrength } from "../utils/passwordValidator.js";
 import crypto from "crypto";
 import { transporter } from "../config/mailer.js";
+import {
+  isDisposableEmail,
+  isPlausibleEmail,
+} from "../utils/emailValidator.js";
 
 // @route POST /api/v1/auth/register
 export const registerUser = async (req, res) => {
@@ -15,6 +19,19 @@ export const registerUser = async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (!isPlausibleEmail(email)) {
+      return res
+        .status(400)
+        .json({ message: "Please enter a valid email address" });
+    }
+
+    if (isDisposableEmail(email)) {
+      return res.status(400).json({
+        message:
+          "Temporary/disposable email addresses are not allowed. Please use a real email.",
+      });
     }
 
     const passwordCheck = validatePasswordStrength(password);
@@ -30,10 +47,39 @@ export const registerUser = async (req, res) => {
       return res.status(409).json({ message: "Email already registered" });
     }
 
-    const user = await User.create({ name, email, password });
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${rawToken}`;
+
+    await transporter.sendMail({
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: "Verify Your Email — AutoParts BD",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2>Welcome to AutoParts BD, ${name}!</h2>
+          <p>Please verify your email address to activate your account. This link expires in 24 hours.</p>
+          <a href="${verifyUrl}" style="display: inline-block; background: #38bdf8; color: #0f172a; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Verify Email</a>
+          <p style="color: #64748b; margin-top: 16px; font-size: 13px;">If you didn't create this account, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
 
     res.status(201).json({
-      message: "User registered successfully",
+      message:
+        "Registration successful! Please check your email to verify your account.",
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
@@ -61,6 +107,14 @@ export const loginUser = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    if (!user.isEmailVerified) {
+      return res.status(403).json({
+        message:
+          "Please verify your email before logging in. Check your inbox for the verification link.",
+        code: "EMAIL_NOT_VERIFIED", // lets the frontend show a "resend" option specifically for this case
+      });
     }
 
     const accessToken = generateAccessToken(user);
@@ -288,12 +342,10 @@ export const resetPassword = async (req, res) => {
 
     const passwordCheck = validatePasswordStrength(newPassword);
     if (!passwordCheck.isValid) {
-      return res
-        .status(400)
-        .json({
-          message: passwordCheck.errors[0],
-          errors: passwordCheck.errors,
-        });
+      return res.status(400).json({
+        message: passwordCheck.errors[0],
+        errors: passwordCheck.errors,
+      });
     }
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
@@ -323,6 +375,82 @@ export const resetPassword = async (req, res) => {
       message:
         "Password reset successful. Please log in with your new password.",
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route POST /api/v1/auth/verify-email/:token
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: Date.now() },
+    }).select("+emailVerificationToken +emailVerificationExpires");
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "This verification link is invalid or has expired" });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Email verified successfully! You can now log in." });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route POST /api/v1/auth/resend-verification
+export const resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    // Same email-enumeration protection principle as forgot-password
+    const genericResponse = {
+      message:
+        "If an account exists with that email, a verification link has been sent.",
+    };
+
+    if (!user || user.isEmailVerified) {
+      return res.json(genericResponse);
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+    await user.save();
+
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${rawToken}`;
+
+    await transporter.sendMail({
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: "Verify Your Email — AutoParts BD",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2>Verify Your Email</h2>
+          <p>Click the link below to verify your account. This link expires in 24 hours.</p>
+          <a href="${verifyUrl}" style="display: inline-block; background: #38bdf8; color: #0f172a; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Verify Email</a>
+        </div>
+      `,
+    });
+
+    res.json(genericResponse);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

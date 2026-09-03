@@ -24,6 +24,7 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -32,8 +33,7 @@ export default function RegisterPage() {
   const mutation = useMutation({
     mutationFn: registerRequest,
     onSuccess: () => {
-      // After successful registration, send the user to login
-      navigate("/login");
+      navigate("/check-inbox", { state: { email: getValues("email") } });
     },
   });
 
