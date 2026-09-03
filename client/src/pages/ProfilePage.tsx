@@ -20,6 +20,7 @@ import {
 import { useAuthStore } from "../store/authStore";
 import { useNavigate } from "react-router-dom";
 import { setAccessToken } from "../lib/tokenStore";
+import TwoFactorSettings from "../features/twoFactor/TwoFactorSettings";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -31,7 +32,13 @@ export default function ProfilePage() {
     queryFn: fetchProfile,
   });
 
-  const [form, setForm] = useState({ name: "", phone: "", street: "", city: "", postcode: "" });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    street: "",
+    city: "",
+    postcode: "",
+  });
   const [avatarFile, setAvatarFile] = useState<File | undefined>();
   const [avatarPreview, setAvatarPreview] = useState<string>("");
 
@@ -63,7 +70,10 @@ export default function ProfilePage() {
     },
   });
 
-  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "" });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+  });
   const changePassword = useMutation({
     mutationFn: changePasswordRequest,
     onSuccess: () => {
@@ -92,7 +102,8 @@ export default function ProfilePage() {
     changePassword.mutate(passwordForm);
   };
 
-  if (isLoading) return <Container sx={{ py: 4 }}>Loading profile...</Container>;
+  if (isLoading)
+    return <Container sx={{ py: 4 }}>Loading profile...</Container>;
 
   return (
     <Container sx={{ py: 4, maxWidth: "700px !important" }}>
@@ -120,7 +131,12 @@ export default function ProfilePage() {
             </Avatar>
             <Button component="label" variant="outlined" size="small">
               Change Avatar
-              <input type="file" hidden accept="image/*" onChange={handleAvatarChange} />
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
             </Button>
           </Box>
 
@@ -134,7 +150,12 @@ export default function ProfilePage() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField label="Email" fullWidth value={profile?.email ?? ""} disabled />
+              <TextField
+                label="Email"
+                fullWidth
+                value={profile?.email ?? ""}
+                disabled
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
@@ -170,7 +191,12 @@ export default function ProfilePage() {
             </Grid>
           </Grid>
 
-          <Button type="submit" variant="contained" sx={{ mt: 3 }} disabled={updateProfile.isPending}>
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{ mt: 3 }}
+            disabled={updateProfile.isPending}
+          >
             {updateProfile.isPending ? "Saving..." : "Save Changes"}
           </Button>
         </Box>
@@ -185,7 +211,8 @@ export default function ProfilePage() {
 
         {changePassword.isError && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {(changePassword.error as any)?.response?.data?.message || "Failed to change password"}
+            {(changePassword.error as any)?.response?.data?.message ||
+              "Failed to change password"}
           </Alert>
         )}
 
@@ -199,7 +226,10 @@ export default function ProfilePage() {
                 required
                 value={passwordForm.currentPassword}
                 onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                  setPasswordForm({
+                    ...passwordForm,
+                    currentPassword: e.target.value,
+                  })
                 }
               />
             </Grid>
@@ -211,7 +241,10 @@ export default function ProfilePage() {
                 required
                 value={passwordForm.newPassword}
                 onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                  setPasswordForm({
+                    ...passwordForm,
+                    newPassword: e.target.value,
+                  })
                 }
               />
             </Grid>
@@ -226,9 +259,23 @@ export default function ProfilePage() {
           >
             {changePassword.isPending ? "Changing..." : "Change Password"}
           </Button>
-          <Typography variant="caption" display="block" color="text.secondary" mt={1}>
+          <Typography
+            variant="caption"
+            display="block"
+            color="text.secondary"
+            mt={1}
+          >
             Changing your password will log you out of all devices.
           </Typography>
+        </Box>
+
+        <Box mt={3}>
+          <TwoFactorSettings
+            isEnabled={!!profile?.twoFactorEnabled}
+            onStatusChange={() =>
+              queryClient.invalidateQueries({ queryKey: ["profile"] })
+            }
+          />
         </Box>
       </Paper>
     </Container>

@@ -9,19 +9,22 @@ import {
   Typography,
   Paper,
   Alert,
+  Link as MuiLink,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
+import { useState } from "react";
 import { loginSchema, type LoginFormData } from "../features/auth/authSchemas";
 import { loginRequest } from "../features/auth/authApi";
 import { setAccessToken } from "../lib/tokenStore";
 import { useAuthStore } from "../store/authStore";
-import { Link as MuiLink } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import { useState } from "react";
+import TwoFactorLoginStep from "../features/twoFactor/TwoFactorLoginStep";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
   const [showResend, setShowResend] = useState(false);
+  const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
+  const [twoFactorToken, setTwoFactorToken] = useState("");
 
   const {
     register,
@@ -34,7 +37,12 @@ export default function LoginPage() {
 
   const mutation = useMutation({
     mutationFn: loginRequest,
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
+      if (data.requiresTwoFactor) {
+        setRequiresTwoFactor(true);
+        setTwoFactorToken(data.twoFactorToken);
+        return;
+      }
       setAccessToken(data.accessToken);
       setUser(data.user);
       navigate("/");
@@ -62,60 +70,73 @@ export default function LoginPage() {
           Login
         </Typography>
 
-        {mutation.isError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {(mutation.error as any)?.response?.data?.message ||
-              "Invalid email or password"}
-            {showResend && (
-              <MuiLink
-                component={RouterLink}
-                to="/check-inbox"
-                state={{ email: watch("email") }}
-                sx={{ display: "block", mt: 1 }}
-              >
-                Resend verification email
-              </MuiLink>
+        {requiresTwoFactor ? (
+          <TwoFactorLoginStep
+            twoFactorToken={twoFactorToken}
+            onSuccess={(data) => {
+              setAccessToken(data.accessToken);
+              setUser(data.user);
+              navigate("/");
+            }}
+          />
+        ) : (
+          <>
+            {mutation.isError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {(mutation.error as any)?.response?.data?.message ||
+                  "Invalid email or password"}
+                {showResend && (
+                  <MuiLink
+                    component={RouterLink}
+                    to="/check-inbox"
+                    state={{ email: watch("email") }}
+                    sx={{ display: "block", mt: 1 }}
+                  >
+                    Resend verification email
+                  </MuiLink>
+                )}
+              </Alert>
             )}
-          </Alert>
+
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+              <TextField
+                label="Email"
+                fullWidth
+                margin="normal"
+                {...register("email")}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+              />
+              <TextField
+                label="Password"
+                type="password"
+                fullWidth
+                margin="normal"
+                {...register("password")}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                sx={{ mt: 2 }}
+                disabled={mutation.isPending}
+              >
+                {mutation.isPending ? "Logging in..." : "Login"}
+              </Button>
+            </Box>
+
+            <Typography variant="body2" mt={2}>
+              Don't have an account? <Link to="/register">Register</Link>
+            </Typography>
+            <Typography variant="body2" mt={1}>
+              <MuiLink component={RouterLink} to="/forgot-password">
+                Forgot password?
+              </MuiLink>
+            </Typography>
+          </>
         )}
-
-        <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <TextField
-            label="Email"
-            fullWidth
-            margin="normal"
-            {...register("email")}
-            error={!!errors.email}
-            helperText={errors.email?.message}
-          />
-          <TextField
-            label="Password"
-            type="password"
-            fullWidth
-            margin="normal"
-            {...register("password")}
-            error={!!errors.password}
-            helperText={errors.password?.message}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{ mt: 2 }}
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? "Logging in..." : "Login"}
-          </Button>
-        </Box>
-
-        <Typography variant="body2" mt={2}>
-          Don't have an account? <Link to="/register">Register</Link>
-        </Typography>
-        <Typography variant="body2" mt={1}>
-          <MuiLink component={RouterLink} to="/forgot-password">
-            Forgot password?
-          </MuiLink>
-        </Typography>
       </Paper>
     </Box>
   );

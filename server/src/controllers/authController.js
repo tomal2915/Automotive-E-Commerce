@@ -11,6 +11,8 @@ import {
   isDisposableEmail,
   isPlausibleEmail,
 } from "../utils/emailValidator.js";
+import speakeasy from "speakeasy";
+import bcrypt from "bcryptjs";
 
 // @route POST /api/v1/auth/register
 export const registerUser = async (req, res) => {
@@ -98,8 +100,9 @@ export const loginUser = async (req, res) => {
         .json({ message: "Email and password are required" });
     }
 
-    // Explicitly select password since the schema has select: false
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select(
+      "+password +twoFactorEnabled",
+    );
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -113,24 +116,35 @@ export const loginUser = async (req, res) => {
       return res.status(403).json({
         message:
           "Please verify your email before logging in. Check your inbox for the verification link.",
-        code: "EMAIL_NOT_VERIFIED", // lets the frontend show a "resend" option specifically for this case
+        code: "EMAIL_NOT_VERIFIED",
       });
     }
 
+    // --- 2FA branch ---
+    if (user.twoFactorEnabled) {
+      // Issue a short-lived, single-purpose token that proves "password
+      // was already correct" WITHOUT granting any actual account access.
+      // This is NOT an access token — it can only be used at /2fa/login-verify.
+      const twoFactorToken = jwt.sign(
+        { userId: user._id, purpose: "2fa-login" },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "5m" },
+      );
+
+      return res.json({
+        requiresTwoFactor: true,
+        twoFactorToken,
+      });
+    }
+
+    // --- Normal login (no 2FA) — unchanged from before ---
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // Save the new refresh token to the DB (needed for rotation later)
     user.refreshTokens.push({ token: refreshToken });
     await user.save();
 
-    // Refresh token goes into an HttpOnly cookie (per blueprint)
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie("refreshToken", refreshToken, getRefreshCookieOptions());
 
     res.json({
       accessToken,
@@ -139,7 +153,7 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        avatar: user.avatar, // ADDED
+        avatar: user.avatar,
       },
     });
   } catch (error) {

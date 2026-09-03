@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String, select: false },
     emailVerificationExpires: { type: Date, select: false },
+
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: { type: String, select: false },
+    twoFactorBackupCodes: { type: [String], select: false, default: [] }, // hashed, one-time-use recovery codes
   },
   { timestamps: true },
 );
