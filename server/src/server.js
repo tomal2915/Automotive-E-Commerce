@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
-import mongoSanitize from "express-mongo-sanitize";
+import { sanitizeInput } from "./middlewares/sanitizeInput.js";
+import hpp from "hpp";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -22,9 +23,7 @@ import { ensureDeviceId } from "./middlewares/deviceFingerprint.js";
 // dotenv.config();
 connectDB();
 
-app.use(express.json());
-app.use(mongoSanitize()); // strips any key starting with "$" or containing "." from req.body/query/params
-app.use(hpp()); // prevents duplicate query params (e.g. ?price=10&price=20) from causing unexpected behavior
+const app = express();
 
 // Core middlewares
 app.use(
@@ -41,6 +40,8 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(sanitizeInput); // strips any key starting with "$" or containing "." from req.body/query/params
+app.use(hpp()); // prevents duplicate query params (e.g. ?price=10&price=20) from causing unexpected behavior
 app.use(ensureDeviceId);
 
 app.use("/api/v1/auth", authRoutes);

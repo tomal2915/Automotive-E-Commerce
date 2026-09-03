@@ -61,7 +61,7 @@ export const createReview = async (req, res) => {
       product: productId,
       user: req.user.id,
       rating,
-      comment,
+      comment: stripHtml(comment),
     });
 
     await recalculateProductRating(productId);
@@ -133,10 +133,3 @@ export const deleteReview = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-const review = await Review.create({
-  product: productId,
-  user: req.user.id,
-  rating,
-  comment: stripHtml(comment),
-});
