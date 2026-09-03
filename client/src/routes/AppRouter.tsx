@@ -20,6 +20,7 @@ import ResetPasswordPage from "../pages/ResetPasswordPage";
 import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 import VerifyEmailPage from "../pages/VerifyEmailPage";
 import CheckInboxPage from "../pages/CheckInboxPage";
+import AdminUsersPage from "../pages/AdminUsersPage";
 
 export default function AppRouter() {
   return (
@@ -54,6 +55,7 @@ export default function AppRouter() {
           element={<AdminProductEditPage />}
         />
         <Route path="/admin/coupons" element={<AdminCouponsPage />} />
+        <Route path="/admin/users" element={<AdminUsersPage />} />
       </Route>
     </Routes>
   );
