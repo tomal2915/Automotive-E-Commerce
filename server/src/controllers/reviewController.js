@@ -1,5 +1,6 @@
 import Review from "../models/Review.js";
 import Product from "../models/Product.js";
+import { stripHtml } from "../utils/sanitize.js";
 
 // Recalculates and saves a product's averageRating + reviewCount
 // from its current set of reviews. Called after any review write.
@@ -132,3 +133,10 @@ export const deleteReview = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+const review = await Review.create({
+  product: productId,
+  user: req.user.id,
+  rating,
+  comment: stripHtml(comment),
+});

@@ -13,6 +13,7 @@ import {
 } from "../utils/emailValidator.js";
 import speakeasy from "speakeasy";
 import bcrypt from "bcryptjs";
+import { getRefreshCookieOptions } from "../utils/cookieOptions.js";
 
 // @route POST /api/v1/auth/register
 export const registerUser = async (req, res) => {
@@ -49,6 +50,19 @@ export const registerUser = async (req, res) => {
       return res.status(409).json({ message: "Email already registered" });
     }
 
+    // Soft device-based signup limiter — allows a small number of accounts
+    // per browser (families/shared computers legitimately need more than 1)
+    // rather than a hard block, which would be too aggressive
+    const accountsFromThisDevice = await User.countDocuments({
+      registrationDeviceId: req.deviceId,
+    });
+    if (accountsFromThisDevice >= 3) {
+      return res.status(429).json({
+        message:
+          "Too many accounts have been created from this device. Please contact support if you need another account.",
+      });
+    }
+
     const rawToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto
       .createHash("sha256")
@@ -59,8 +73,9 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password,
+      registrationDeviceId: req.deviceId,
       emailVerificationToken: hashedToken,
-      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
 
     const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${rawToken}`;
@@ -101,15 +116,43 @@ export const loginUser = async (req, res) => {
     }
 
     const user = await User.findOne({ email }).select(
-      "+password +twoFactorEnabled",
+      "+password +twoFactorEnabled +failedLoginAttempts +accountLockedUntil",
     );
+
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Account is currently locked — reject before even checking the password
+    if (user.accountLockedUntil && user.accountLockedUntil > Date.now()) {
+      const minutesLeft = Math.ceil(
+        (user.accountLockedUntil - Date.now()) / 60000,
+      );
+      return res.status(423).json({
+        message: `Account temporarily locked due to too many failed attempts. Try again in ${minutesLeft} minute(s).`,
+      });
+    }
+
     const isMatch = await user.comparePassword(password);
+
     if (!isMatch) {
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+
+      // Lock the account for 15 minutes after 5 consecutive failures
+      if (user.failedLoginAttempts >= 5) {
+        user.accountLockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+        user.failedLoginAttempts = 0; // reset counter once locked
+      }
+
+      await user.save();
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Successful password match — clear any failed-attempt history
+    if (user.failedLoginAttempts > 0 || user.accountLockedUntil) {
+      user.failedLoginAttempts = 0;
+      user.accountLockedUntil = null;
+      await user.save();
     }
 
     if (!user.isEmailVerified) {
@@ -120,24 +163,15 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // --- 2FA branch ---
     if (user.twoFactorEnabled) {
-      // Issue a short-lived, single-purpose token that proves "password
-      // was already correct" WITHOUT granting any actual account access.
-      // This is NOT an access token — it can only be used at /2fa/login-verify.
       const twoFactorToken = jwt.sign(
         { userId: user._id, purpose: "2fa-login" },
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: "5m" },
       );
-
-      return res.json({
-        requiresTwoFactor: true,
-        twoFactorToken,
-      });
+      return res.json({ requiresTwoFactor: true, twoFactorToken });
     }
 
-    // --- Normal login (no 2FA) — unchanged from before ---
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 

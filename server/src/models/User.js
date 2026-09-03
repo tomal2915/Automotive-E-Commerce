@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema(
     twoFactorEnabled: { type: Boolean, default: false },
     twoFactorSecret: { type: String, select: false },
     twoFactorBackupCodes: { type: [String], select: false, default: [] }, // hashed, one-time-use recovery codes
+
+    registrationDeviceId: { type: String, index: true, select: false },
+
+    failedLoginAttempts: { type: Number, default: 0, select: false },
+    accountLockedUntil: { type: Date, default: null, select: false },
   },
   { timestamps: true },
 );
