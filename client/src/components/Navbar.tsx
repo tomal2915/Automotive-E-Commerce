@@ -21,6 +21,7 @@ import { useCart } from "../features/cart/useCart";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useWishlist } from "../features/wishlist/useWishlist";
 import SearchBar from "./SearchBar";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -87,6 +88,8 @@ export default function Navbar() {
               <FavoriteIcon />
             </Badge>
           </IconButton>
+
+          {isAuthenticated && <NotificationBell />}
 
           {isAuthenticated ? (
             <>

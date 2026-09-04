@@ -452,6 +452,14 @@ export const cancelOrder = async (req, res) => {
       }
     }
 
+    await createNotification({
+      userId: order.user,
+      type: "order_cancelled",
+      title: "Order Cancelled",
+      message: `Your order ${order.transactionId} has been cancelled.`,
+      link: "/my-orders",
+    });
+
     res.json({ message: "Order cancelled successfully", order });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -568,6 +576,17 @@ export const reviewReturnRequest = async (req, res) => {
     }
 
     await order.save();
+
+    await createNotification({
+      userId: order.user,
+      type: decision === "approved" ? "return_approved" : "return_rejected",
+      title: decision === "approved" ? "Return Approved" : "Return Rejected",
+      message:
+        decision === "approved"
+          ? `Your return request for order ${order.transactionId} has been approved. Refund is being processed.`
+          : `Your return request for order ${order.transactionId} was not approved.${adminNote ? ` Note: ${adminNote}` : ""}`,
+      link: "/my-orders",
+    });
 
     res.json({ message: `Return request ${decision}`, order });
   } catch (error) {

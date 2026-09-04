@@ -1,5 +1,9 @@
 import express from "express";
-import { getMyNotifications, markAsRead, markAllAsRead } from "../controllers/notificationController.js";
+import {
+  getMyNotifications,
+  markAsRead,
+  markAllAsRead,
+} from "../controllers/notificationController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 
 const router = express.Router();

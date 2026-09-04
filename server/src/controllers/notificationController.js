@@ -7,7 +7,10 @@ export const getMyNotifications = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(30); // cap — a notification bell doesn't need unlimited history
 
-    const unreadCount = await Notification.countDocuments({ user: req.user.id, isRead: false });
+    const unreadCount = await Notification.countDocuments({
+      user: req.user.id,
+      isRead: false,
+    });
 
     res.json({ notifications, unreadCount });
   } catch (error) {
@@ -37,7 +40,10 @@ export const markAsRead = async (req, res) => {
 // @route PUT /api/v1/notifications/read-all
 export const markAllAsRead = async (req, res) => {
   try {
-    await Notification.updateMany({ user: req.user.id, isRead: false }, { isRead: true });
+    await Notification.updateMany(
+      { user: req.user.id, isRead: false },
+      { isRead: true },
+    );
     res.json({ message: "All notifications marked as read" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
