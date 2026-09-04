@@ -19,6 +19,7 @@ import addressRoutes from "./routes/addressRoutes.js";
 import twoFactorRoutes from "./routes/twoFactorRoutes.js";
 import { generalApiLimiter } from "./middlewares/rateLimiters.js";
 import { ensureDeviceId } from "./middlewares/deviceFingerprint.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 // dotenv.config();
 connectDB();
@@ -54,6 +55,7 @@ app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/coupons", couponRoutes);
 app.use("/api/v1/addresses", addressRoutes);
 app.use("/api/v1/2fa", twoFactorRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api", generalApiLimiter); // applies to everything under /api, specific routes above override with their own stricter limiter
 
 app.get("/api/v1/health", (req, res) => {

@@ -21,6 +21,8 @@ import ForgotPasswordPage from "../pages/ForgotPasswordPage";
 import VerifyEmailPage from "../pages/VerifyEmailPage";
 import CheckInboxPage from "../pages/CheckInboxPage";
 import AdminUsersPage from "../pages/AdminUsersPage";
+import AdminReturnsPage from "../pages/AdminReturnsPage";
+
 
 export default function AppRouter() {
   return (
@@ -56,6 +58,7 @@ export default function AppRouter() {
         />
         <Route path="/admin/coupons" element={<AdminCouponsPage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/returns" element={<AdminReturnsPage />} />
       </Route>
     </Routes>
   );

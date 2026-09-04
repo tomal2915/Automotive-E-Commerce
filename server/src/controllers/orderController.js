@@ -7,6 +7,9 @@ import { sslcz } from "../config/sslcommerz.js";
 import { sendOrderConfirmationEmail } from "../services/emailService.js";
 import Coupon from "../models/Coupon.js";
 import { validateAndCalculateDiscount } from "../utils/couponHelper.js";
+import { createNotification } from "../services/notificationService.js";
+import { canCancelOrder, canRequestReturn } from "../utils/orderPolicy.js";
+import { sendOrderStatusEmail } from "../services/emailService.js"; // built in 33.6 below
 
 // @route POST /api/v1/orders/checkout
 // Creates a pending order from the user's cart and starts an SSLCommerz session
@@ -214,12 +217,21 @@ export const handleIPN = async (req, res) => {
       "user",
       "email",
     );
+    // after: const populatedOrder = await Order.findById(order._id).populate("user", "email");
     if (populatedOrder?.user?.email) {
       await sendOrderConfirmationEmail(
         populatedOrder,
         populatedOrder.user.email,
       );
     }
+
+    await createNotification({
+      userId: order.user,
+      type: "order_placed",
+      title: "Order Confirmed",
+      message: `Your order ${order.transactionId} has been confirmed and is being processed.`,
+      link: "/my-orders",
+    });
 
     res.status(200).send();
   } catch (error) {
@@ -342,7 +354,236 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    // Notify the customer for the statuses they'd actually care about
+    const notificationMap = {
+      shipped: {
+        type: "order_shipped",
+        title: "Order Shipped",
+        message: `Your order ${order.transactionId} has shipped!`,
+      },
+      delivered: {
+        type: "order_delivered",
+        title: "Order Delivered",
+        message: `Your order ${order.transactionId} has been delivered.`,
+      },
+    };
+
+    if (notificationMap[status]) {
+      await createNotification({
+        userId: order.user,
+        ...notificationMap[status],
+        link: "/my-orders",
+      });
+    }
+
     res.json({ order });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route POST /api/v1/orders/:id/cancel
+export const cancelOrder = async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const policy = canCancelOrder(order);
+    if (!policy.allowed) {
+      return res.status(400).json({ message: policy.reason });
+    }
+
+    const wasAlreadyPaid = order.status === "paid";
+
+    // Use a transaction — restoring stock and updating the order status
+    // must succeed or fail together (same reasoning as the IPN handler
+    // in Step 14: never leave stock and order status out of sync)
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        for (const item of order.items) {
+          await Product.updateOne(
+            { _id: item.product },
+            { $inc: { stock: item.quantity } }, // restore stock
+            { session },
+          );
+        }
+
+        order.status = "cancelled";
+        order.cancellation = {
+          reason: reason || "Cancelled by customer",
+          cancelledAt: new Date(),
+        };
+        if (wasAlreadyPaid) {
+          order.refundStatus = "pending";
+        }
+        await order.save({ session });
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    // If payment was already captured, attempt an SSLCommerz refund.
+    // This is intentionally outside the transaction and non-blocking —
+    // same reasoning as order confirmation emails: a refund API hiccup
+    // should never undo an already-valid cancellation
+    if (wasAlreadyPaid && order.paymentDetails?.val_id) {
+      try {
+        const refundResponse = await sslcz.initiateRefund({
+          refund_amount: order.totalAmount,
+          refund_remarks: "Customer requested cancellation",
+          bank_tran_id: order.paymentDetails.bank_tran_id,
+          refe_id: order.transactionId,
+        });
+
+        order.refundStatus =
+          refundResponse?.status === "success" ? "completed" : "pending";
+        await order.save();
+      } catch (refundError) {
+        console.error("Refund initiation failed:", refundError.message);
+        // refundStatus stays "pending" — needs manual follow-up by admin
+      }
+    }
+
+    res.json({ message: "Order cancelled successfully", order });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route POST /api/v1/orders/:id/return
+export const requestReturn = async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    if (!reason || reason.trim().length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a reason for the return" });
+    }
+
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const policy = canRequestReturn(order);
+    if (!policy.allowed) {
+      return res.status(400).json({ message: policy.reason });
+    }
+
+    order.status = "return_requested";
+    order.returnRequest = {
+      reason,
+      requestedAt: new Date(),
+      status: "pending",
+      reviewedAt: null,
+      adminNote: null,
+    };
+    await order.save();
+
+    res.json({
+      message: "Return request submitted. We'll review it shortly.",
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route PUT /api/v1/orders/admin/:id/return-review (admin only)
+export const reviewReturnRequest = async (req, res) => {
+  try {
+    const { decision, adminNote } = req.body; // decision: "approved" | "rejected"
+
+    if (!["approved", "rejected"].includes(decision)) {
+      return res
+        .status(400)
+        .json({ message: "Decision must be 'approved' or 'rejected'" });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.returnRequest?.status !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "No pending return request on this order" });
+    }
+
+    order.returnRequest.status = decision;
+    order.returnRequest.reviewedAt = new Date();
+    order.returnRequest.adminNote = adminNote || null;
+
+    if (decision === "approved") {
+      order.status = "returned";
+
+      const session = await mongoose.startSession();
+      try {
+        await session.withTransaction(async () => {
+          for (const item of order.items) {
+            await Product.updateOne(
+              { _id: item.product },
+              { $inc: { stock: item.quantity } },
+              { session },
+            );
+          }
+          order.refundStatus = "pending";
+          await order.save({ session });
+        });
+      } finally {
+        await session.endSession();
+      }
+
+      // Attempt refund, same non-blocking pattern as cancellation
+      if (order.paymentDetails?.val_id) {
+        try {
+          const refundResponse = await sslcz.initiateRefund({
+            refund_amount: order.totalAmount,
+            refund_remarks: "Approved return",
+            bank_tran_id: order.paymentDetails.bank_tran_id,
+            refe_id: order.transactionId,
+          });
+          order.refundStatus =
+            refundResponse?.status === "success" ? "completed" : "pending";
+        } catch (refundError) {
+          console.error("Refund initiation failed:", refundError.message);
+        }
+      }
+    } else {
+      // Rejected — order goes back to "delivered" since the return didn't happen
+      order.status = "delivered";
+    }
+
+    await order.save();
+
+    res.json({ message: `Return request ${decision}`, order });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route GET /api/v1/orders/admin/returns (admin only)
+// Lists all pending return requests for the admin to triage
+export const getPendingReturns = async (req, res) => {
+  try {
+    const orders = await Order.find({ "returnRequest.status": "pending" })
+      .populate("user", "name email")
+      .sort({ "returnRequest.requestedAt": -1 });
+
+    res.json({ orders });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

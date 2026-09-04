@@ -74,3 +74,22 @@ export const sendOrderConfirmationEmail = async (order, userEmail) => {
     console.error("Failed to send order confirmation email:", error.message);
   }
 };
+
+export const sendOrderStatusEmail = async (order, userEmail, statusMessage) => {
+  try {
+    await transporter.sendMail({
+      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.SMTP_USER}>`,
+      to: userEmail,
+      subject: `Order Update — ${order.transactionId}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2>Order Update</h2>
+          <p>${statusMessage}</p>
+          <p style="color: #64748b;">Order ID: ${order.transactionId}</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("Failed to send order status email:", error.message);
+  }
+};

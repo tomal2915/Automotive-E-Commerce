@@ -38,3 +38,30 @@ export const updateOrderStatusRequest = async (
   const res = await api.put(`/orders/admin/${orderId}/status`, { status });
   return res.data.order;
 };
+
+export const cancelOrderRequest = async (orderId: string, reason: string) => {
+  const res = await api.post(`/orders/${orderId}/cancel`, { reason });
+  return res.data;
+};
+
+export const requestReturnRequest = async (orderId: string, reason: string) => {
+  const res = await api.post(`/orders/${orderId}/return`, { reason });
+  return res.data;
+};
+
+export const fetchPendingReturns = async () => {
+  const res = await api.get("/orders/admin/returns");
+  return res.data.orders;
+};
+
+export const reviewReturnRequestApi = async (
+  orderId: string,
+  decision: "approved" | "rejected",
+  adminNote?: string,
+) => {
+  const res = await api.put(`/orders/admin/${orderId}/return-review`, {
+    decision,
+    adminNote,
+  });
+  return res.data;
+};

@@ -159,6 +159,13 @@ export default function Navbar() {
                     >
                       Manage Users
                     </MenuItem>
+                    <MenuItem
+                      component={RouterLink}
+                      to="/admin/returns"
+                      onClick={handleMenuClose}
+                    >
+                      Return Requests
+                    </MenuItem>
                   </>
                 )}
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>

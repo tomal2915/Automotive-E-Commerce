@@ -31,8 +31,40 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "paid", "shipped", "delivered", "failed", "cancelled"],
+      enum: [
+        "pending",
+        "paid",
+        "shipped",
+        "delivered",
+        "cancelled",
+        "return_requested",
+        "returned",
+        "failed",
+      ],
       default: "pending",
+    },
+
+    cancellation: {
+      reason: { type: String, default: null },
+      cancelledAt: { type: Date, default: null },
+    },
+
+    returnRequest: {
+      reason: { type: String, default: null },
+      requestedAt: { type: Date, default: null },
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: null,
+      },
+      reviewedAt: { type: Date, default: null },
+      adminNote: { type: String, default: null },
+    },
+
+    refundStatus: {
+      type: String,
+      enum: ["none", "pending", "completed", "failed"],
+      default: "none",
     },
 
     shippingAddress: {
@@ -48,7 +80,7 @@ const orderSchema = new mongoose.Schema(
       card_type: String,
       val_id: String,
     },
-    
+
     couponCode: { type: String, default: null },
     discountAmount: { type: Number, default: 0 },
     subtotal: { type: Number }, // amount before discount — totalAmount is now the final, post-discount amount

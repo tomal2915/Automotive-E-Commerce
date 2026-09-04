@@ -10,7 +10,24 @@ export interface Order {
   items: OrderItem[];
   totalAmount: number;
   transactionId: string;
-  status: "pending" | "paid" | "shipped" | "delivered" | "failed" | "cancelled";
+  status:
+    | "pending"
+    | "paid"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+    | "return_requested"
+    | "returned"
+    | "failed";
   createdAt: string;
-  user?: { name: string; email: string }; // populated only in admin view
+  user?: { name: string; email: string };
+  cancellation?: { reason: string; cancelledAt: string };
+  returnRequest?: {
+    reason: string;
+    requestedAt: string;
+    status: "pending" | "approved" | "rejected";
+    reviewedAt: string | null;
+    adminNote: string | null;
+  };
+  refundStatus?: "none" | "pending" | "completed" | "failed";
 }
