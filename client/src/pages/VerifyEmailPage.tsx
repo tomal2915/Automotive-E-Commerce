@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
-import { Box, Paper, Typography, Alert, CircularProgress, Link as MuiLink } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Typography,
+  Alert,
+  CircularProgress,
+  Link as MuiLink,
+} from "@mui/material";
 import { verifyEmailRequest } from "../features/auth/authApi";
 
 export default function VerifyEmailPage() {
   const { token } = useParams<{ token: string }>();
-  const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
+  const [status, setStatus] = useState<"verifying" | "success" | "error">(
+    "verifying",
+  );
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -23,7 +32,14 @@ export default function VerifyEmailPage() {
   }, [token]);
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <Paper sx={{ p: 4, width: 400, textAlign: "center" }}>
         {status === "verifying" && (
           <>

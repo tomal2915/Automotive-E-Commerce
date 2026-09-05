@@ -1,5 +1,9 @@
 import express from "express";
-import { getWishlist, addToWishlist, removeFromWishlist } from "../controllers/wishlistController.js";
+import {
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist,
+} from "../controllers/wishlistController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 
 const router = express.Router();

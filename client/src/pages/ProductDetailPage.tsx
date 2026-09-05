@@ -18,6 +18,7 @@ import ProductRow from "../features/products/ProductRow";
 import { useRelatedProducts } from "../features/products/useRelatedProducts";
 import { addToRecentlyViewed } from "../features/products/recentlyViewed";
 import SEO from "../components/SEO";
+import { formatCurrency } from "../utils/formatCurrency"; // adjust relative path per file
 
 const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 
@@ -61,7 +62,7 @@ export default function ProductDetailPage() {
           offers: {
             "@type": "Offer",
             price: product.price,
-            priceCurrency: "USD",
+            priceCurrency: "BDT", // was "USD"
             availability:
               product.stock > 0
                 ? "https://schema.org/InStock"
@@ -88,12 +89,12 @@ export default function ProductDetailPage() {
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Typography variant="h4" component="h1" mb={1}>
+          <Typography sx={{ variant: "h4", component: "h1", mb: 1 }}>
             {product.title}
           </Typography>
 
           {product.reviewCount > 0 && (
-            <Box mb={2}>
+            <Box sx={{ mb: 2 }}>
               <StarRating
                 value={product.averageRating}
                 count={product.reviewCount}
@@ -102,11 +103,11 @@ export default function ProductDetailPage() {
             </Box>
           )}
 
-          <Typography variant="body1" color="text.secondary" mb={2}>
+          <Typography sx={{ variant: "body1", color: "text.secondary", mb: 2 }}>
             {product.description}
           </Typography>
 
-          <Box display="flex" gap={1} mb={2}>
+          <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
             <Chip label={product.category} />
             <Chip label={`${product.make} ${product.model}`} />
             <Chip
@@ -114,8 +115,8 @@ export default function ProductDetailPage() {
             />
           </Box>
 
-          <Typography variant="h4" color="primary" mb={2}>
-            ${product.price.toFixed(2)}
+          <Typography sx={{ variant: "h4", color: "primary", mb: 2 }}>
+            {formatCurrency(product.price)}
           </Typography>
 
           <Button

@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 
 const cartItemSchema = new mongoose.Schema(
   {
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
     quantity: { type: Number, required: true, min: 1, default: 1 },
     priceAtAdd: { type: Number, required: true }, // snapshot price when added
   },

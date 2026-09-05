@@ -22,9 +22,20 @@ export const validatePasswordStrength = (password) => {
 
   // Blocks the most common weak passwords outright, regardless of
   // whether they technically satisfy the rules above (e.g. "Password1!")
-  const commonWeakPasswords = ["password", "123456", "12345678", "qwerty", "letmein", "admin123"];
-  if (commonWeakPasswords.some((weak) => password?.toLowerCase().includes(weak))) {
-    errors.push("This password is too common — please choose something less predictable");
+  const commonWeakPasswords = [
+    "password",
+    "123456",
+    "12345678",
+    "qwerty",
+    "letmein",
+    "admin123",
+  ];
+  if (
+    commonWeakPasswords.some((weak) => password?.toLowerCase().includes(weak))
+  ) {
+    errors.push(
+      "This password is too common — please choose something less predictable",
+    );
   }
 
   return { isValid: errors.length === 0, errors };

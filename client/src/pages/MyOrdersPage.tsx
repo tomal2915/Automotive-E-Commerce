@@ -74,12 +74,14 @@ export default function MyOrdersPage() {
   return (
     <Container sx={{ py: 4 }}>
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
       >
-        <Typography variant="h4">My Orders</Typography>
+        <Typography sx={{ variant: "h4" }}>My Orders</Typography>
         <Button
           startIcon={<RefreshIcon />}
           onClick={() => refetch()}
@@ -175,7 +177,7 @@ export default function MyOrdersPage() {
             sx={{ mt: 1 }}
           />
           {(cancelOrder.isError || requestReturn.isError) && (
-            <Typography color="error" variant="body2" mt={1}>
+            <Typography sx={{ color: "error", variant: "body2", mt: 1 }}>
               {((cancelOrder.error || requestReturn.error) as any)?.response
                 ?.data?.message || "Action failed"}
             </Typography>

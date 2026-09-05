@@ -44,7 +44,9 @@ export const createAddress = async (req, res) => {
 
     res.status(201).json({ address });
   } catch (error) {
-    res.status(400).json({ message: "Invalid address data", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Invalid address data", error: error.message });
   }
 };
 
@@ -53,7 +55,10 @@ export const updateAddress = async (req, res) => {
   try {
     const { label, name, phone, street, city, postcode, isDefault } = req.body;
 
-    const address = await Address.findOne({ _id: req.params.id, user: req.user.id });
+    const address = await Address.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    });
     if (!address) {
       return res.status(404).json({ message: "Address not found" });
     }
@@ -74,14 +79,19 @@ export const updateAddress = async (req, res) => {
     await address.save();
     res.json({ address });
   } catch (error) {
-    res.status(400).json({ message: "Invalid address data", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Invalid address data", error: error.message });
   }
 };
 
 // @route DELETE /api/v1/addresses/:id
 export const deleteAddress = async (req, res) => {
   try {
-    const address = await Address.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+    const address = await Address.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.id,
+    });
 
     if (!address) {
       return res.status(404).json({ message: "Address not found" });
@@ -91,7 +101,9 @@ export const deleteAddress = async (req, res) => {
     // recently added remaining address to default — the user should
     // never be left with zero default addresses while having any at all
     if (address.isDefault) {
-      const nextAddress = await Address.findOne({ user: req.user.id }).sort({ createdAt: -1 });
+      const nextAddress = await Address.findOne({ user: req.user.id }).sort({
+        createdAt: -1,
+      });
       if (nextAddress) {
         nextAddress.isDefault = true;
         await nextAddress.save();

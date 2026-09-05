@@ -10,7 +10,7 @@ const buildOrderConfirmationHtml = (order) => {
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${item.title}</td>
           <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">$${item.price.toFixed(2)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: right;">৳${item.price.toFixed(2)}</td>
         </tr>
       `,
     )
@@ -43,7 +43,7 @@ const buildOrderConfirmationHtml = (order) => {
         </table>
 
         <p style="text-align: right; font-size: 18px; color: #0f172a;">
-          <strong>Total: $${order.totalAmount.toFixed(2)}</strong>
+          <strong>Total: ৳${order.totalAmount.toFixed(2)}</strong>
         </p>
 
         <p style="color: #475569; margin-top: 24px;">

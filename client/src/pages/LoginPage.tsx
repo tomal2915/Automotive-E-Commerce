@@ -70,9 +70,7 @@ export default function LoginPage() {
         }}
       >
         <Paper sx={{ p: 4, width: 400 }}>
-          <Typography variant="h5" mb={3}>
-            Login
-          </Typography>
+          <Typography sx={{ variant: "h5", mb: 3 }}>Login</Typography>
 
           {requiresTwoFactor ? (
             <TwoFactorLoginStep
@@ -135,10 +133,10 @@ export default function LoginPage() {
                 </Button>
               </Box>
 
-              <Typography variant="body2" mt={2}>
+              <Typography sx={{ variant: "body2", mt: 2 }}>
                 Don't have an account? <Link to="/register">Register</Link>
               </Typography>
-              <Typography variant="body2" mt={1}>
+              <Typography sx={{ variant: "body2", mt: 1 }}>
                 <MuiLink component={RouterLink} to="/forgot-password">
                   Forgot password?
                 </MuiLink>

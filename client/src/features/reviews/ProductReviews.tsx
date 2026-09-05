@@ -61,20 +61,20 @@ export default function ProductReviews({ productId }: Props) {
   };
 
   return (
-    <Box mt={4}>
-      <Typography variant="h5" mb={2}>
+    <Box sx={{ mt: 4 }}>
+      <Typography sx={{ variant: "h5", mb: 2 }}>
         Reviews {reviews && `(${reviews.length})`}
       </Typography>
 
       {/* Review form — only shown to logged-in users who haven't reviewed yet */}
       {currentUser && !alreadyReviewed && (
-        <Box component="form" onSubmit={handleSubmit} mb={3}>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mb: 3 }}>
           {createReview.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {(createReview.error as any)?.response?.data?.message || "Failed to submit review"}
             </Alert>
           )}
-          <Typography component="legend" variant="body2">
+          <Typography component="legend" sx={{ variant: "body2" }}>
             Your Rating
           </Typography>
           <Rating
@@ -129,12 +129,12 @@ export default function ProductReviews({ productId }: Props) {
                   {review.user.name.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle2">{review.user.name}</Typography>
+                  <Typography sx={{ variant: "subtitle2" }}>{review.user.name}</Typography>
                   <Rating value={review.rating} readOnly size="small" />
-                  <Typography variant="body2" mt={0.5}>
+                  <Typography sx={{ variant: "body2", mt: 0.5 }}>
                     {review.comment}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography sx={{ variant: "caption", color: "text.secondary" }}>
                     {new Date(review.createdAt).toLocaleDateString()}
                   </Typography>
                 </Box>

@@ -15,14 +15,20 @@ import {
   Grid,
   Box,
   Chip,
-  Alert,
 } from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchCoupons, createCouponRequest, toggleCouponRequest } from "../features/coupons/couponApi";
+import {
+  fetchCoupons,
+  createCouponRequest,
+  toggleCouponRequest,
+} from "../features/coupons/couponApi";
 
 export default function AdminCouponsPage() {
   const queryClient = useQueryClient();
-  const { data: coupons, isLoading } = useQuery({ queryKey: ["coupons"], queryFn: fetchCoupons });
+  const { data: coupons } = useQuery({
+    queryKey: ["coupons"],
+    queryFn: fetchCoupons,
+  });
 
   const [form, setForm] = useState({
     code: "",
@@ -40,14 +46,24 @@ export default function AdminCouponsPage() {
         code: form.code,
         discountType: form.discountType as "percentage" | "fixed",
         discountValue: Number(form.discountValue),
-        maxDiscountAmount: form.maxDiscountAmount ? Number(form.maxDiscountAmount) : null,
+        maxDiscountAmount: form.maxDiscountAmount
+          ? Number(form.maxDiscountAmount)
+          : null,
         minOrderAmount: form.minOrderAmount ? Number(form.minOrderAmount) : 0,
         expiresAt: form.expiresAt,
         usageLimit: form.usageLimit ? Number(form.usageLimit) : null,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["coupons"] });
-      setForm({ code: "", discountType: "percentage", discountValue: "", maxDiscountAmount: "", minOrderAmount: "", expiresAt: "", usageLimit: "" });
+      setForm({
+        code: "",
+        discountType: "percentage",
+        discountValue: "",
+        maxDiscountAmount: "",
+        minOrderAmount: "",
+        expiresAt: "",
+        usageLimit: "",
+      });
     },
   });
 
@@ -63,14 +79,10 @@ export default function AdminCouponsPage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        Manage Coupons
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>Manage Coupons</Typography>
 
       <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" mb={2}>
-          Create New Coupon
-        </Typography>
+        <Typography sx={{ variant: "h6", mb: 2 }}>Create New Coupon</Typography>
         <Box component="form" onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -79,7 +91,9 @@ export default function AdminCouponsPage() {
                 fullWidth
                 required
                 value={form.code}
-                onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                onChange={(e) =>
+                  setForm({ ...form, code: e.target.value.toUpperCase() })
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -88,7 +102,9 @@ export default function AdminCouponsPage() {
                 label="Type"
                 fullWidth
                 value={form.discountType}
-                onChange={(e) => setForm({ ...form, discountType: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, discountType: e.target.value })
+                }
               >
                 <MenuItem value="percentage">Percentage (%)</MenuItem>
                 <MenuItem value="fixed">Fixed Amount ($)</MenuItem>
@@ -101,7 +117,9 @@ export default function AdminCouponsPage() {
                 fullWidth
                 required
                 value={form.discountValue}
-                onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, discountValue: e.target.value })
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -110,7 +128,9 @@ export default function AdminCouponsPage() {
                 type="number"
                 fullWidth
                 value={form.maxDiscountAmount}
-                onChange={(e) => setForm({ ...form, maxDiscountAmount: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, maxDiscountAmount: e.target.value })
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -119,7 +139,9 @@ export default function AdminCouponsPage() {
                 type="number"
                 fullWidth
                 value={form.minOrderAmount}
-                onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, minOrderAmount: e.target.value })
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -130,7 +152,9 @@ export default function AdminCouponsPage() {
                 required
                 slotProps={{ inputLabel: { shrink: true } }}
                 value={form.expiresAt}
-                onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, expiresAt: e.target.value })
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -139,11 +163,21 @@ export default function AdminCouponsPage() {
                 type="number"
                 fullWidth
                 value={form.usageLimit}
-                onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, usageLimit: e.target.value })
+                }
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
-              <Button type="submit" variant="contained" disabled={createCoupon.isPending} fullWidth>
+            <Grid
+              size={{ xs: 12, sm: 3 }}
+              sx={{ display: "flex", alignItems: "center" }}
+            >
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={createCoupon.isPending}
+                fullWidth
+              >
                 {createCoupon.isPending ? "Creating..." : "Create Coupon"}
               </Button>
             </Grid>
@@ -173,10 +207,13 @@ export default function AdminCouponsPage() {
                   {coupon.discountType === "percentage"
                     ? `${coupon.discountValue}%`
                     : `$${coupon.discountValue}`}
-                  {coupon.maxDiscountAmount && ` (max $${coupon.maxDiscountAmount})`}
+                  {coupon.maxDiscountAmount &&
+                    ` (max $${coupon.maxDiscountAmount})`}
                 </TableCell>
                 <TableCell>${coupon.minOrderAmount}</TableCell>
-                <TableCell>{new Date(coupon.expiresAt).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  {new Date(coupon.expiresAt).toLocaleDateString()}
+                </TableCell>
                 <TableCell>
                   {coupon.usedCount} / {coupon.usageLimit ?? "∞"}
                 </TableCell>

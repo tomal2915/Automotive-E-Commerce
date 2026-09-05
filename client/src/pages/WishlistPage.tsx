@@ -12,9 +12,7 @@ export default function WishlistPage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        My Wishlist
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>My Wishlist</Typography>
 
       {products.length === 0 ? (
         <Typography color="text.secondary">

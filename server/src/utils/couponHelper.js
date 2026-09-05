@@ -14,7 +14,9 @@ export const validateAndCalculateDiscount = (coupon, orderAmount) => {
   }
 
   if (orderAmount < coupon.minOrderAmount) {
-    throw new Error(`Minimum order amount of $${coupon.minOrderAmount} required for this coupon`);
+    throw new Error(
+      `Minimum order amount of $${coupon.minOrderAmount} required for this coupon`,
+    );
   }
 
   let discount =
@@ -22,7 +24,10 @@ export const validateAndCalculateDiscount = (coupon, orderAmount) => {
       ? (orderAmount * coupon.discountValue) / 100
       : coupon.discountValue;
 
-  if (coupon.maxDiscountAmount !== null && discount > coupon.maxDiscountAmount) {
+  if (
+    coupon.maxDiscountAmount !== null &&
+    discount > coupon.maxDiscountAmount
+  ) {
     discount = coupon.maxDiscountAmount;
   }
 

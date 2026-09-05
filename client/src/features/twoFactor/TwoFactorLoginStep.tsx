@@ -23,7 +23,7 @@ export default function TwoFactorLoginStep({
 
   return (
     <Box>
-      <Typography mb={2}>
+      <Typography sx={{ mb: 2 }}>
         Enter the{" "}
         {useBackupCode
           ? "backup code"
@@ -57,7 +57,7 @@ export default function TwoFactorLoginStep({
         {verify.isPending ? "Verifying..." : "Verify"}
       </Button>
 
-      <Typography variant="body2" mt={2}>
+      <Typography sx={{ variant: "body2", mt: 2 }}>
         <Link
           component="button"
           type="button"

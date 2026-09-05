@@ -107,9 +107,7 @@ export default function ProfilePage() {
 
   return (
     <Container sx={{ py: 4, maxWidth: "700px !important" }}>
-      <Typography variant="h4" mb={3}>
-        My Profile
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>My Profile</Typography>
 
       {/* --- Profile Info Form --- */}
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -125,7 +123,7 @@ export default function ProfilePage() {
         )}
 
         <Box component="form" onSubmit={handleProfileSubmit}>
-          <Box display="flex" alignItems="center" gap={2} mb={3}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
             <Avatar src={avatarPreview} sx={{ width: 80, height: 80 }}>
               {form.name.charAt(0).toUpperCase()}
             </Avatar>
@@ -204,9 +202,7 @@ export default function ProfilePage() {
 
       {/* --- Change Password Form --- */}
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" mb={2}>
-          Change Password
-        </Typography>
+        <Typography sx={{ variant: "h6", mb: 2 }}>Change Password</Typography>
         <Divider sx={{ mb: 2 }} />
 
         {changePassword.isError && (
@@ -260,16 +256,18 @@ export default function ProfilePage() {
             {changePassword.isPending ? "Changing..." : "Change Password"}
           </Button>
           <Typography
-            variant="caption"
-            display="block"
-            color="text.secondary"
-            mt={1}
+            sx={{
+              variant: "caption",
+              display: "block",
+              color: "text.secondary",
+              mt: 1,
+            }}
           >
             Changing your password will log you out of all devices.
           </Typography>
         </Box>
 
-        <Box mt={3}>
+        <Box sx={{ mt: 3 }}>
           <TwoFactorSettings
             isEnabled={!!profile?.twoFactorEnabled}
             onStatusChange={() =>

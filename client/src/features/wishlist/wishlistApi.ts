@@ -10,12 +10,16 @@ export const fetchWishlist = async (): Promise<Wishlist> => {
   return res.data.wishlist;
 };
 
-export const addToWishlistRequest = async (productId: string): Promise<Wishlist> => {
+export const addToWishlistRequest = async (
+  productId: string,
+): Promise<Wishlist> => {
   const res = await api.post(`/wishlist/${productId}`);
   return res.data.wishlist;
 };
 
-export const removeFromWishlistRequest = async (productId: string): Promise<Wishlist> => {
+export const removeFromWishlistRequest = async (
+  productId: string,
+): Promise<Wishlist> => {
   const res = await api.delete(`/wishlist/${productId}`);
   return res.data.wishlist;
 };

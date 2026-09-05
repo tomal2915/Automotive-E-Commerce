@@ -35,7 +35,7 @@ export default function VehicleFilterBar({ filters, onChange }: Props) {
 
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
-      <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
         <TextField
           select
           label="Year"

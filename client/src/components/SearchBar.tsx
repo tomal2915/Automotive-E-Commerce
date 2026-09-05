@@ -62,9 +62,7 @@ export default function SearchBar() {
             component="li"
             {...props}
             key={option._id}
-            display="flex"
-            gap={1.5}
-            alignItems="center"
+            sx={{ display: "flex", gap: 1.5, alignItems: "center" }}
           >
             <Avatar
               src={option.images?.[0] || PLACEHOLDER_IMAGE}

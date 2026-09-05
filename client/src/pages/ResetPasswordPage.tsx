@@ -47,9 +47,7 @@ export default function ResetPasswordPage() {
       }}
     >
       <Paper sx={{ p: 4, width: 400 }}>
-        <Typography variant="h5" mb={3}>
-          Reset Password
-        </Typography>
+        <Typography sx={{ variant: "h5", mb: 3 }}>Reset Password</Typography>
 
         {mutation.isSuccess ? (
           <Alert severity="success">
@@ -98,7 +96,7 @@ export default function ResetPasswordPage() {
           </Box>
         )}
 
-        <Typography variant="body2" mt={2}>
+        <Typography sx={{ variant: "body2", mt: 2 }}>
           <MuiLink component={RouterLink} to="/login">
             Back to Login
           </MuiLink>

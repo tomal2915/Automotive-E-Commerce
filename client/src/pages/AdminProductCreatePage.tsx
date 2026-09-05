@@ -24,9 +24,7 @@ export default function AdminProductCreatePage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        Add New Product
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>Add New Product</Typography>
       <ProductForm
         onSubmit={(values, images) => mutation.mutate({ values, images })}
         isSubmitting={mutation.isPending}

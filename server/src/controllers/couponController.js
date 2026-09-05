@@ -8,9 +8,13 @@ export const createCoupon = async (req, res) => {
     res.status(201).json({ coupon });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ message: "A coupon with this code already exists" });
+      return res
+        .status(409)
+        .json({ message: "A coupon with this code already exists" });
     }
-    res.status(400).json({ message: "Invalid coupon data", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Invalid coupon data", error: error.message });
   }
 };
 
@@ -50,7 +54,9 @@ export const validateCoupon = async (req, res) => {
     const { code, orderAmount } = req.body;
 
     if (!code || orderAmount === undefined) {
-      return res.status(400).json({ message: "Coupon code and order amount are required" });
+      return res
+        .status(400)
+        .json({ message: "Coupon code and order amount are required" });
     }
 
     const coupon = await Coupon.findOne({ code: code.toUpperCase() });
@@ -64,7 +70,11 @@ export const validateCoupon = async (req, res) => {
       valid: true,
       discount,
       finalAmount: Math.round((orderAmount - discount) * 100) / 100,
-      coupon: { code: coupon.code, discountType: coupon.discountType, discountValue: coupon.discountValue },
+      coupon: {
+        code: coupon.code,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+      },
     });
   } catch (error) {
     // validateAndCalculateDiscount throws plain Errors with user-friendly messages

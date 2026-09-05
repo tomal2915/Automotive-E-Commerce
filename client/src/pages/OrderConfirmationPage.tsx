@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Container, Typography, CircularProgress, Alert, Box } from "@mui/material";
+import {
+  Container,
+  Typography,
+  CircularProgress,
+  Alert,
+  Box,
+} from "@mui/material";
 import { api } from "../lib/api";
 
 export default function OrderConfirmationPage() {
   const [searchParams] = useSearchParams();
   const tranId = searchParams.get("tran_id");
-  const [status, setStatus] = useState<"checking" | "paid" | "pending" | "error">(
-    "checking",
-  );
+  const [status, setStatus] = useState<
+    "checking" | "paid" | "pending" | "error"
+  >("checking");
 
   useEffect(() => {
     if (!tranId) return;
@@ -45,15 +51,20 @@ export default function OrderConfirmationPage() {
         </Box>
       )}
       {status === "paid" && (
-        <Alert severity="success">Payment successful! Your order is confirmed.</Alert>
+        <Alert severity="success">
+          Payment successful! Your order is confirmed.
+        </Alert>
       )}
       {status === "pending" && (
         <Alert severity="info">
-          Still processing — this can take a moment. Check your orders page shortly.
+          Still processing — this can take a moment. Check your orders page
+          shortly.
         </Alert>
       )}
       {status === "error" && (
-        <Alert severity="error">Something went wrong confirming your order.</Alert>
+        <Alert severity="error">
+          Something went wrong confirming your order.
+        </Alert>
       )}
     </Container>
   );

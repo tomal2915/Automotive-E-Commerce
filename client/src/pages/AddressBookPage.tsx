@@ -26,11 +26,21 @@ import {
   type AddressInput,
 } from "../features/addresses/addressApi";
 
-const emptyForm: AddressInput = { label: "Home", name: "", phone: "", street: "", city: "", postcode: "" };
+const emptyForm: AddressInput = {
+  label: "Home",
+  name: "",
+  phone: "",
+  street: "",
+  city: "",
+  postcode: "",
+};
 
 export default function AddressBookPage() {
   const queryClient = useQueryClient();
-  const { data: addresses, isLoading } = useQuery({ queryKey: ["addresses"], queryFn: fetchAddresses });
+  const { data: addresses, isLoading } = useQuery({
+    queryKey: ["addresses"],
+    queryFn: fetchAddresses,
+  });
 
   const [form, setForm] = useState<AddressInput>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -90,11 +100,19 @@ export default function AddressBookPage() {
 
   const isSubmitting = createAddress.isPending || updateAddress.isPending;
 
-  if (isLoading) return <Container sx={{ py: 4 }}>Loading addresses...</Container>;
+  if (isLoading)
+    return <Container sx={{ py: 4 }}>Loading addresses...</Container>;
 
   return (
     <Container sx={{ py: 4, maxWidth: "800px !important" }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Typography variant="h4">Address Book</Typography>
         {!showForm && (
           <Button variant="contained" onClick={() => setShowForm(true)}>
@@ -105,7 +123,7 @@ export default function AddressBookPage() {
 
       {showForm && (
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" mb={2}>
+          <Typography sx={{ variant: "h6", mb: 2 }}>
             {editingId ? "Edit Address" : "New Address"}
           </Typography>
           <Box component="form" onSubmit={handleSubmit}>
@@ -160,12 +178,14 @@ export default function AddressBookPage() {
                   fullWidth
                   required
                   value={form.postcode}
-                  onChange={(e) => setForm({ ...form, postcode: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, postcode: e.target.value })
+                  }
                 />
               </Grid>
             </Grid>
 
-            <Box display="flex" gap={1} mt={2}>
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
               <Button type="submit" variant="contained" disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : "Save Address"}
               </Button>
@@ -192,29 +212,40 @@ export default function AddressBookPage() {
           <Grid key={address._id} size={{ xs: 12, sm: 6 }}>
             <Card variant="outlined">
               <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                  <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Radio
                       checked={address.isDefault}
                       onChange={() => setAsDefault.mutate(address._id)}
                       size="small"
                     />
                     <Chip label={address.label} size="small" />
-                    {address.isDefault && <Chip label="Default" size="small" color="primary" />}
+                    {address.isDefault && (
+                      <Chip label="Default" size="small" color="primary" />
+                    )}
                   </Box>
                   <Box>
                     <IconButton size="small" onClick={() => startEdit(address)}>
                       <EditIcon fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" onClick={() => deleteAddress.mutate(address._id)}>
+                    <IconButton
+                      size="small"
+                      onClick={() => deleteAddress.mutate(address._id)}
+                    >
                       <DeleteIcon fontSize="small" color="error" />
                     </IconButton>
                   </Box>
                 </Box>
-                <Typography variant="body2" mt={1}>
+                <Typography sx={{ variant: "body2", mt: 1 }}>
                   <strong>{address.name}</strong> · {address.phone}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography sx={{ variant: "body2", color: "text.secondary" }}>
                   {address.street}, {address.city} - {address.postcode}
                 </Typography>
               </CardContent>

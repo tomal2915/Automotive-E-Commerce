@@ -13,7 +13,9 @@ export const verifyAccessToken = (req, res, next) => {
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
       // Expired or invalid access token -> frontend should call refresh-token
-      return res.status(401).json({ message: "Access token expired or invalid" });
+      return res
+        .status(401)
+        .json({ message: "Access token expired or invalid" });
     }
 
     // Attach decoded payload to the request for later use in controllers

@@ -7,7 +7,13 @@ export const useToggleWishlist = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ product, isInWishlist }: { product: Product; isInWishlist: boolean }) => {
+    mutationFn: async ({
+      product,
+      isInWishlist,
+    }: {
+      product: Product;
+      isInWishlist: boolean;
+    }) => {
       return isInWishlist
         ? removeFromWishlistRequest(product._id)
         : addToWishlistRequest(product._id);

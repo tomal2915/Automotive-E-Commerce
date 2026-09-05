@@ -13,8 +13,8 @@ export default function ProductRow({ title, products }: Props) {
   if (products.length === 0) return null;
 
   return (
-    <Box mt={4}>
-      <Typography variant="h5" mb={2}>
+    <Box sx={{ mt: 4 }}>
+      <Typography sx={{ variant: "h5", mb: 2 }}>
         {title}
       </Typography>
       <Grid container spacing={2}>

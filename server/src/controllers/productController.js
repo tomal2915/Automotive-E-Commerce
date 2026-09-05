@@ -209,7 +209,11 @@ export const getSearchSuggestions = async (req, res) => {
     const searchRegex = new RegExp(q.trim(), "i");
 
     const suggestions = await Product.find({
-      $or: [{ title: searchRegex }, { make: searchRegex }, { model: searchRegex }],
+      $or: [
+        { title: searchRegex },
+        { make: searchRegex },
+        { model: searchRegex },
+      ],
     })
       .select("title make model category price images")
       .limit(8) // keep the dropdown short and the query cheap
@@ -239,7 +243,9 @@ export const getRelatedProducts = async (req, res) => {
         { make: product.make, model: product.model },
       ],
     })
-      .select("title price images make model category averageRating reviewCount yearRange stock")
+      .select(
+        "title price images make model category averageRating reviewCount yearRange stock",
+      )
       .limit(8)
       .lean();
 
@@ -263,7 +269,9 @@ export const getProductsByIds = async (req, res) => {
     const idArray = ids.split(",").filter(Boolean).slice(0, 20); // cap to prevent abuse
 
     const products = await Product.find({ _id: { $in: idArray } })
-      .select("title price images make model category averageRating reviewCount yearRange stock")
+      .select(
+        "title price images make model category averageRating reviewCount yearRange stock",
+      )
       .lean();
 
     // Preserve the original order (most-recently-viewed-first), since

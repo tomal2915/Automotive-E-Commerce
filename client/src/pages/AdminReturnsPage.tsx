@@ -39,7 +39,7 @@ export default function AdminReturnsPage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
+      <Typography sx={{ variant: "h4", mb: 3 }}>
         Pending Return Requests
       </Typography>
 
@@ -52,21 +52,25 @@ export default function AdminReturnsPage() {
           <Card key={order._id} sx={{ mb: 2 }}>
             <CardContent>
               <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={1}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 1,
+                }}
               >
-                <Typography variant="subtitle1">
+                <Typography sx={{ variant: "subtitle1" }}>
                   {order.user?.name} ({order.user?.email})
                 </Typography>
                 <Chip label={order.transactionId} size="small" />
               </Box>
-              <Typography variant="body2" color="text.secondary" mb={1}>
+              <Typography
+                sx={{ variant: "body2", color: "text.secondary", mb: 1 }}
+              >
                 Items: {order.items.map((i: any) => i.title).join(", ")} —
                 Total: ${order.totalAmount.toFixed(2)}
               </Typography>
-              <Typography variant="body2" mb={2}>
+              <Typography sx={{ variant: "body2", mb: 2 }}>
                 <strong>Reason:</strong> {order.returnRequest.reason}
               </Typography>
 
@@ -81,7 +85,7 @@ export default function AdminReturnsPage() {
                 sx={{ mb: 2 }}
               />
 
-              <Box display="flex" gap={1}>
+              <Box sx={{ display: "flex", gap: 1 }}>
                 <Button
                   variant="contained"
                   color="success"

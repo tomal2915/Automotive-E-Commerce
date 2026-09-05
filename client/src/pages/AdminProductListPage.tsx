@@ -1,12 +1,22 @@
 import { useState } from "react";
-import { Container, Typography, Box, Button, IconButton, Chip } from "@mui/material";
+import {
+  Container,
+  Typography,
+  Box,
+  Button,
+  IconButton,
+  Chip,
+} from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { fetchAdminProducts, deleteProductRequest } from "../features/products/productAdminApi";
+import {
+  fetchAdminProducts,
+  deleteProductRequest,
+} from "../features/products/productAdminApi";
 import type { Product } from "../features/products/productTypes";
 
 export default function AdminProductListPage() {
@@ -43,7 +53,13 @@ export default function AdminProductListPage() {
         <img
           src={params.row.images?.[0] || "/placeholder-part.svg"}
           alt=""
-          style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 4, marginTop: 8 }}
+          style={{
+            width: 40,
+            height: 40,
+            objectFit: "cover",
+            borderRadius: 4,
+            marginTop: 8,
+          }}
         />
       ),
     },
@@ -76,10 +92,16 @@ export default function AdminProductListPage() {
       sortable: false,
       renderCell: (params) => (
         <>
-          <IconButton size="small" onClick={() => navigate(`/admin/products/${params.row._id}/edit`)}>
+          <IconButton
+            size="small"
+            onClick={() => navigate(`/admin/products/${params.row._id}/edit`)}
+          >
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small" onClick={() => handleDelete(params.row._id, params.row.title)}>
+          <IconButton
+            size="small"
+            onClick={() => handleDelete(params.row._id, params.row.title)}
+          >
             <DeleteIcon fontSize="small" color="error" />
           </IconButton>
         </>
@@ -89,8 +111,15 @@ export default function AdminProductListPage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Manage Products</Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography sx={{ variant: "h4" }}>Manage Products</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}

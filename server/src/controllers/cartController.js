@@ -50,13 +50,20 @@ export const addToCart = async (req, res) => {
       if (existingItem) {
         existingItem.quantity += quantity;
       } else {
-        cart.items.push({ product: productId, quantity, priceAtAdd: product.price });
+        cart.items.push({
+          product: productId,
+          quantity,
+          priceAtAdd: product.price,
+        });
       }
 
       await cart.save();
     }
 
-    const populatedCart = await cart.populate("items.product", "title price images stock");
+    const populatedCart = await cart.populate(
+      "items.product",
+      "title price images stock",
+    );
     res.status(201).json({ cart: populatedCart });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -88,7 +95,10 @@ export const updateCartItem = async (req, res) => {
     item.quantity = quantity;
     await cart.save();
 
-    const populatedCart = await cart.populate("items.product", "title price images stock");
+    const populatedCart = await cart.populate(
+      "items.product",
+      "title price images stock",
+    );
     res.json({ cart: populatedCart });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

@@ -17,7 +17,7 @@ interface Props {
 export default function RevenueTrendChart({ data }: Props) {
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" mb={2}>
+      <Typography sx={{ variant: "h6", mb: 2 }}>
         Revenue Trend (Last 30 Days)
       </Typography>
       <ResponsiveContainer width="100%" height={300}>

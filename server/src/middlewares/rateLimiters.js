@@ -2,7 +2,9 @@ import rateLimit from "express-rate-limit";
 
 // Generic response shape for all rate-limit rejections
 const limitHandler = (req, res) => {
-  res.status(429).json({ message: "Too many requests. Please try again later." });
+  res
+    .status(429)
+    .json({ message: "Too many requests. Please try again later." });
 };
 
 // Strict — login, register: prevents credential-stuffing and account-creation spam

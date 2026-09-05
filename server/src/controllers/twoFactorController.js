@@ -150,11 +150,9 @@ export const verifyTwoFactorLogin = async (req, res) => {
     try {
       decoded = jwt.verify(twoFactorToken, process.env.ACCESS_TOKEN_SECRET);
     } catch {
-      return res
-        .status(401)
-        .json({
-          message: "This login session has expired. Please log in again.",
-        });
+      return res.status(401).json({
+        message: "This login session has expired. Please log in again.",
+      });
     }
 
     // Reject any token that wasn't specifically issued for 2FA login —

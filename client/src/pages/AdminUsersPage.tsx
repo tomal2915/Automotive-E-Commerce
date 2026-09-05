@@ -144,9 +144,7 @@ export default function AdminUsersPage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        Manage Users
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>Manage Users</Typography>
 
       <TextField
         placeholder="Search by name or email..."

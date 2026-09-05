@@ -23,7 +23,7 @@ export default function TopProductsChart({ data }: Props) {
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" mb={2}>
+      <Typography sx={{ variant: "h6", mb: 2 }}>
         Top-Selling Products
       </Typography>
       <ResponsiveContainer width="100%" height={350}>

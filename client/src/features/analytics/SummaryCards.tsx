@@ -50,11 +50,11 @@ export default function SummaryCards({ summary }: Props) {
         <Grid key={card.label} size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" gap={1.5}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <Box sx={{ color: card.color }}>{card.icon}</Box>
                 <Box>
-                  <Typography variant="h6">{card.value}</Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography sx={{ variant: "h6" }}>{card.value}</Typography>
+                  <Typography sx={{ variant: "caption", color: "text.secondary" }}>
                     {card.label}
                   </Typography>
                 </Box>

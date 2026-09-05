@@ -59,9 +59,7 @@ export default function RegisterPage() {
         }}
       >
         <Paper sx={{ p: 4, width: 400 }}>
-          <Typography variant="h5" mb={3}>
-            Create Account
-          </Typography>
+          <Typography sx={{ variant: "h5", mb: 3 }}>Create Account</Typography>
 
           {mutation.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -108,7 +106,7 @@ export default function RegisterPage() {
             </Button>
           </Box>
 
-          <Typography variant="body2" mt={2}>
+          <Typography sx={{ variant: "body2", mt: 2 }}>
             Already have an account? <Link to="/login">Login</Link>
           </Typography>
         </Paper>

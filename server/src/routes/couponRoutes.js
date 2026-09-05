@@ -16,6 +16,11 @@ router.post("/validate", verifyAccessToken, validateCoupon);
 // Admin only
 router.post("/", verifyAccessToken, verifyRole("admin"), createCoupon);
 router.get("/", verifyAccessToken, verifyRole("admin"), getAllCoupons);
-router.put("/:id/toggle", verifyAccessToken, verifyRole("admin"), toggleCouponStatus);
+router.put(
+  "/:id/toggle",
+  verifyAccessToken,
+  verifyRole("admin"),
+  toggleCouponStatus,
+);
 
 export default router;

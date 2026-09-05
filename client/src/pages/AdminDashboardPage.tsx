@@ -44,9 +44,7 @@ export default function AdminDashboardPage() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        Analytics Dashboard
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>Analytics Dashboard</Typography>
 
       {summary && <SummaryCards summary={summary} />}
 

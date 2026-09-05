@@ -34,10 +34,8 @@ export default function ForgotPasswordPage() {
       }}
     >
       <Paper sx={{ p: 4, width: 400 }}>
-        <Typography variant="h5" mb={2}>
-          Forgot Password
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>
+        <Typography sx={{ variant: "h5", mb: 2 }}>Forgot Password</Typography>
+        <Typography sx={{ variant: "body2", color: "text.secondary", mb: 3 }}>
           Enter your email and we'll send you a link to reset your password.
         </Typography>
 
@@ -68,7 +66,7 @@ export default function ForgotPasswordPage() {
           </Box>
         )}
 
-        <Typography variant="body2" mt={2}>
+        <Typography sx={{ variant: "body2", mt: 2 }}>
           <MuiLink component={RouterLink} to="/login">
             Back to Login
           </MuiLink>

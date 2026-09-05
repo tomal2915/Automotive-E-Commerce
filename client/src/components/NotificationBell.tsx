@@ -78,11 +78,13 @@ export default function NotificationBell() {
         slotProps={{ paper: { sx: { width: 360, maxHeight: 450 } } }}
       >
         <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          px={2}
-          py={1}
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            px: 2,
+            py: 1,
+          }}
         >
           <Typography variant="subtitle1">Notifications</Typography>
           {unreadCount > 0 && (
@@ -114,10 +116,12 @@ export default function NotificationBell() {
                 secondary={
                   <>
                     <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      component="span"
-                      display="block"
+                      sx={{
+                        variant: "body2",
+                        color: "text.secondary",
+                        component: "span",
+                        display: "block",
+                      }}
                     >
                       {notification.message}
                     </Typography>

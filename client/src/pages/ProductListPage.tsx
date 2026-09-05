@@ -31,9 +31,7 @@ export default function ProductListPage() {
         description="Browse thousands of quality automotive parts by make, model, and category. Fast delivery across Bangladesh."
       />
 
-      <Typography variant="h4" mb={3}>
-        Auto Parts Catalog
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>Auto Parts Catalog</Typography>
 
       <VehicleFilterBar filters={filters} onChange={setFilters} />
 
@@ -58,13 +56,15 @@ export default function ProductListPage() {
       </Grid>
 
       {data?.products.length === 0 && !isLoading && (
-        <Typography color="text.secondary" mt={4} textAlign="center">
+        <Typography
+          sx={{ color: "text.secondary", mt: 4, textAlign: "center" }}
+        >
           No products match your selected vehicle. Try different filters.
         </Typography>
       )}
 
       {data && data.pagination.totalPages > 1 && (
-        <Box display="flex" justifyContent="center" mt={4}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <Pagination
             count={data.pagination.totalPages}
             page={filters.page ?? 1}

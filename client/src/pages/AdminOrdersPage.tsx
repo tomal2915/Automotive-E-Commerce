@@ -2,7 +2,10 @@ import { useState } from "react";
 import { Container, Typography, MenuItem, Select, Box } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchAllOrders, updateOrderStatusRequest } from "../features/orders/orderApi";
+import {
+  fetchAllOrders,
+  updateOrderStatusRequest,
+} from "../features/orders/orderApi";
 import OrderStatusChip from "../features/orders/OrderStatusChip";
 import type { Order } from "../features/orders/orderTypes";
 
@@ -69,7 +72,10 @@ export default function AdminOrdersPage() {
           value=""
           displayEmpty
           onChange={(e) =>
-            updateStatus.mutate({ orderId: params.row._id, status: e.target.value })
+            updateStatus.mutate({
+              orderId: params.row._id,
+              status: e.target.value,
+            })
           }
           sx={{ minWidth: 140 }}
         >
@@ -88,9 +94,7 @@ export default function AdminOrdersPage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        Manage Orders
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>Manage Orders</Typography>
 
       <Box sx={{ height: 600, width: "100%" }}>
         <DataGrid

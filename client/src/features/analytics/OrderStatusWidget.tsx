@@ -22,23 +22,21 @@ export default function OrderStatusWidget({
 }) {
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" mb={2}>
+      <Typography sx={{ variant: "h6", mb: 2 }}>
         Order Status Breakdown
       </Typography>
-      <Box display="flex" flexDirection="column" gap={1.5}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         {data.map((item) => (
           <Box
             key={item.status}
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
+            sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
           >
             <Chip
               label={item.status.replace("_", " ")}
               size="small"
               color={statusColors[item.status] || "default"}
             />
-            <Typography variant="body2" fontWeight="bold">
+            <Typography sx={{ variant: "body2", fontWeight: "bold" }}>
               {item.count}
             </Typography>
           </Box>

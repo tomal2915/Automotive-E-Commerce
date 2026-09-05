@@ -18,6 +18,7 @@ import { useWishlist } from "../wishlist/useWishlist";
 import { useToggleWishlist } from "../wishlist/useToggleWishlist";
 import type { Product } from "./productTypes";
 import StarRating from "../reviews/StarRating";
+import { formatCurrency } from "../utils/formatCurrency"; // adjust relative path per file
 
 const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 
@@ -86,13 +87,13 @@ export default function ProductCard({ product }: Props) {
             {product.title}
           </Typography>
 
-          <Typography variant="body2" color="text.secondary" mb={1}>
+          <Typography sx={{ variant: "body2", color: "text.secondary", mb: 1 }}>
             {product.make} {product.model}
             {product.yearRange &&
               ` (${product.yearRange.start}-${product.yearRange.end})`}
           </Typography>
 
-          <Box display="flex" gap={1} mb={1}>
+          <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
             <Chip label={product.category} size="small" />
             {product.stock > 0 ? (
               <Chip label="In Stock" size="small" color="success" />
@@ -100,8 +101,8 @@ export default function ProductCard({ product }: Props) {
               <Chip label="Out of Stock" size="small" color="error" />
             )}
           </Box>
-          <Typography variant="h6" color="primary">
-            ${product.price.toFixed(2)}
+          <Typography sx={{ variant: "h6", color: "primary" }}>
+            {formatCurrency(product.price)}
           </Typography>
 
           {product.reviewCount > 0 && (

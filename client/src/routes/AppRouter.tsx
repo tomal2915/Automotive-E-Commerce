@@ -24,7 +24,6 @@ import AdminUsersPage from "../pages/AdminUsersPage";
 import AdminReturnsPage from "../pages/AdminReturnsPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage";
 
-
 export default function AppRouter() {
   return (
     <Routes>

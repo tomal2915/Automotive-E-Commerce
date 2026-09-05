@@ -1,7 +1,9 @@
 import { Container, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import ProductForm, { type ProductFormValues } from "../features/products/ProductForm";
+import ProductForm, {
+  type ProductFormValues,
+} from "../features/products/ProductForm";
 import { fetchProductById } from "../features/products/productApi";
 import { updateProductRequest } from "../features/products/productAdminApi";
 
@@ -38,9 +40,7 @@ export default function AdminProductEditPage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        Edit Product
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>Edit Product</Typography>
       <ProductForm
         initialProduct={product}
         onSubmit={(values, images) => mutation.mutate({ values, images })}

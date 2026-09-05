@@ -74,7 +74,7 @@ export default function TwoFactorSettings({
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" mb={1}>
+      <Typography sx={{ variant: "h6", mb: 1 }}>
         Two-Factor Authentication
       </Typography>
       <Divider sx={{ mb: 2 }} />
@@ -152,23 +152,21 @@ export default function TwoFactorSettings({
 
       {step === "scanning" && (
         <Box>
-          <Typography mb={2}>
+          <Typography sx={{ mb: 2 }}>
             1. Scan this QR code with your authenticator app (Google
             Authenticator, Authy, etc.)
           </Typography>
-          <Box textAlign="center" mb={2}>
+          <Box sx={{ textAlign: "center", mb: 2 }}>
             <img src={qrCode} alt="2FA QR Code" style={{ maxWidth: 200 }} />
           </Box>
           <Typography
-            variant="caption"
-            color="text.secondary"
+            sx={{ variant: "caption", color: "text.secondary" }}
             display="block"
-            mb={2}
           >
             Can't scan? Enter this key manually: <strong>{manualKey}</strong>
           </Typography>
 
-          <Typography mb={1}>
+          <Typography sx={{ mb: 1 }}>
             2. Enter the 6-digit code shown in your app:
           </Typography>
           {verifySetup.isError && (

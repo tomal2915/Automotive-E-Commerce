@@ -156,7 +156,7 @@ export default function ProductForm({
             </Button>
 
             {previews.length > 0 && (
-              <Box display="flex" gap={1} mt={2} flexWrap="wrap">
+              <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
                 {previews.map((src, i) => (
                   <Box key={i} sx={{ position: "relative" }}>
                     <img
@@ -177,7 +177,7 @@ export default function ProductForm({
             )}
 
             {initialProduct && images.length === 0 && (
-              <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+              <Typography sx={{ variant: "caption", color: "text.secondary", display: "block", mt: 1 }}>
                 Uploading new images will replace all existing ones.
               </Typography>
             )}

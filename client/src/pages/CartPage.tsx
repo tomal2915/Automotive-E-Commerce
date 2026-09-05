@@ -116,9 +116,7 @@ export default function CartPage() {
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h4" mb={3}>
-        Your Cart
-      </Typography>
+      <Typography sx={{ variant: "h4", mb: 3 }}>Your Cart</Typography>
 
       {items.length === 0 ? (
         <Typography color="text.secondary">Your cart is empty.</Typography>
@@ -160,7 +158,7 @@ export default function CartPage() {
             ))}
           </List>
 
-          <Box display="flex" gap={1} alignItems="center" mb={2}>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
             <TextField
               size="small"
               label="Coupon Code"
@@ -200,8 +198,8 @@ export default function CartPage() {
             </Alert>
           )}
 
-          <Box mb={3}>
-            <Typography variant="subtitle1" mb={1}>
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ variant: "subtitle1", mb: 1 }}>
               Shipping Address
             </Typography>
 
@@ -234,8 +232,8 @@ export default function CartPage() {
             )}
           </Box>
 
-          <Box display="flex" justifyContent="space-between" mt={3}>
-            <Typography variant="h6">
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
+            <Typography sx={{ variant: "h6" }}>
               {appliedCoupon && (
                 <Typography
                   component="span"

@@ -74,7 +74,7 @@ export default function Navbar() {
           <SearchBar />
         </Box>
 
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <ThemeToggle />
 
           <IconButton color="inherit" component={RouterLink} to="/cart">
