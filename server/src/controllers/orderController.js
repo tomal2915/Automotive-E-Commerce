@@ -455,6 +455,7 @@ export const cancelOrder = async (req, res) => {
         logger.error("Refund initiation failed", {
           orderId: order._id,
           error: refundError.message,
+          stack: refundError.stack,
         });
         // refundStatus stays "pending" — needs manual follow-up by admin
       }

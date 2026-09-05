@@ -1,7 +1,7 @@
 import "dotenv/config";
 import connectDB from "./config/db.js";
 import app from "./app.js";
-import { logger } from "../config/logger.js"; // adjust relative path
+import { logger } from "../src/config/logger.js"; // adjust relative path
 
 connectDB();
 
