@@ -23,6 +23,7 @@ import CheckInboxPage from "../pages/CheckInboxPage";
 import AdminUsersPage from "../pages/AdminUsersPage";
 import AdminReturnsPage from "../pages/AdminReturnsPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage";
+import NotFoundPage from "../pages/NotFoundPage";
 
 export default function AppRouter() {
   return (
@@ -35,6 +36,7 @@ export default function AppRouter() {
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/check-inbox" element={<CheckInboxPage />} />
       <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+      <Route path="*" element={<NotFoundPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/cart" element={<CartPage />} />
