@@ -17,6 +17,7 @@ import ProductReviews from "../features/reviews/ProductReviews";
 import ProductRow from "../features/products/ProductRow";
 import { useRelatedProducts } from "../features/products/useRelatedProducts";
 import { addToRecentlyViewed } from "../features/products/recentlyViewed";
+import SEO from "../components/SEO";
 
 const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 
@@ -45,6 +46,38 @@ export default function ProductDetailPage() {
 
   return (
     <Container sx={{ py: 4 }}>
+      <SEO
+        title={product.title}
+        description={product.description.slice(0, 155)} // search engines truncate around here anyway
+        image={product.images?.[0]}
+        type="product"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.title,
+          description: product.description,
+          image: product.images?.[0],
+          sku: product.partNumber,
+          offers: {
+            "@type": "Offer",
+            price: product.price,
+            priceCurrency: "USD",
+            availability:
+              product.stock > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+          },
+          aggregateRating:
+            product.reviewCount > 0
+              ? {
+                  "@type": "AggregateRating",
+                  ratingValue: product.averageRating,
+                  reviewCount: product.reviewCount,
+                }
+              : undefined,
+        }}
+      />
+
       <Grid container spacing={4}>
         <Grid size={{ xs: 12, md: 6 }}>
           <CardMedia
@@ -55,7 +88,7 @@ export default function ProductDetailPage() {
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Typography variant="h4" mb={1}>
+          <Typography variant="h4" component="h1" mb={1}>
             {product.title}
           </Typography>
 

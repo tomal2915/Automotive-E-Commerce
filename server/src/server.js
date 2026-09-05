@@ -21,6 +21,7 @@ import { generalApiLimiter } from "./middlewares/rateLimiters.js";
 import { ensureDeviceId } from "./middlewares/deviceFingerprint.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
+import { generateSitemap } from "./controllers/sitemapController.js";
 
 // dotenv.config();
 connectDB();
@@ -63,6 +64,7 @@ app.use("/api/v1/analytics", analyticsRoutes); // admin-only analytics routes
 app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
 });
+app.get("/sitemap.xml", generateSitemap);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

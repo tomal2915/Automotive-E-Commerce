@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Container, Grid, Typography, Pagination, Box, Alert } from "@mui/material";
+import {
+  Container,
+  Grid,
+  Typography,
+  Pagination,
+  Box,
+  Alert,
+} from "@mui/material";
 import { useProducts } from "../features/products/useProducts";
 import ProductCard from "../features/products/ProductCard";
 import ProductCardSkeleton from "../features/products/ProductCardSkeleton";
@@ -7,14 +14,23 @@ import VehicleFilterBar from "../features/products/VehicleFilterBar";
 import type { ProductFilters } from "../features/products/productTypes";
 import ProductRow from "../features/products/ProductRow";
 import { useRecentlyViewed } from "../features/products/useRecentlyViewed";
+import SEO from "../components/SEO";
 
 export default function ProductListPage() {
-  const [filters, setFilters] = useState<ProductFilters>({ page: 1, limit: 12 });
+  const [filters, setFilters] = useState<ProductFilters>({
+    page: 1,
+    limit: 12,
+  });
   const { data, isLoading, isError } = useProducts(filters);
   const { data: recentlyViewed } = useRecentlyViewed();
 
   return (
     <Container sx={{ py: 4 }}>
+      <SEO
+        title="Auto Parts Catalog"
+        description="Browse thousands of quality automotive parts by make, model, and category. Fast delivery across Bangladesh."
+      />
+
       <Typography variant="h4" mb={3}>
         Auto Parts Catalog
       </Typography>
