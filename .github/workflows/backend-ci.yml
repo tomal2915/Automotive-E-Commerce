@@ -1,0 +1,58 @@
+name: Backend CI
+
+# Runs on every push and pull request that touches the server/ folder —
+# no point running backend tests when only the frontend changed
+on:
+  push:
+    branches: [main]
+    paths: ["server/**"]
+  pull_request:
+    branches: [main]
+    paths: ["server/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        env:
+          # Dummy values for env vars the app requires at startup
+          # (validateEnv would otherwise fail the whole test run).
+          # Real secrets are never needed here since tests use an
+          # in-memory MongoDB and never call real external services.
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/test
+          ACCESS_TOKEN_SECRET: test_access_token_secret_at_least_32_characters_long
+          REFRESH_TOKEN_SECRET: test_refresh_token_secret_at_least_32_characters_long
+          CLIENT_URL: http://localhost:5173
+          SERVER_URL: http://localhost:5000
+          SSLCOMMERZ_STORE_ID: test_store_id
+          SSLCOMMERZ_STORE_PASSWORD: test_store_password
+          SSLCOMMERZ_IS_LIVE: "false"
+          CLOUDINARY_CLOUD_NAME: test_cloud
+          CLOUDINARY_API_KEY: test_key
+          CLOUDINARY_API_SECRET: test_secret
+          SMTP_HOST: smtp.example.com
+          SMTP_PORT: "587"
+          SMTP_USER: test@example.com
+          SMTP_PASSWORD: test_password
+          EMAIL_FROM_NAME: "AutoParts BD Test"
