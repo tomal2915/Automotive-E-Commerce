@@ -21,7 +21,7 @@ import addressRoutes from "./routes/addressRoutes.js";
 import twoFactorRoutes from "./routes/twoFactorRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
-import { initSentry, Sentry } from "./config/sentry.js";
+import { Sentry } from "./config/sentry.js";
 
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
