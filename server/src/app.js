@@ -22,6 +22,8 @@ import twoFactorRoutes from "./routes/twoFactorRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
+
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -58,6 +60,11 @@ app.use("/api/v1/addresses", addressRoutes);
 app.use("/api/v1/2fa", twoFactorRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
+
+// ... all existing app.use("/api/v1/...") route mounts ...
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });

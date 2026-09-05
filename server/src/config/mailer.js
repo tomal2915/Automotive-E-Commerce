@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { logger } from "../config/logger.js"; // adjust relative path
 
 export const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -14,8 +15,8 @@ export const transporter = nodemailer.createTransport({
 // shows up immediately in the logs instead of silently failing later
 transporter.verify((error) => {
   if (error) {
-    console.error("SMTP connection failed:", error.message);
+    logger.error("SMTP connection failed:", error.message);
   } else {
-    console.log("SMTP server ready to send emails");
+    logger.info("SMTP server ready to send emails");
   }
 });

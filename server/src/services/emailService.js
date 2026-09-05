@@ -1,4 +1,5 @@
 import { transporter } from "../config/mailer.js";
+import { logger } from "../config/logger.js"; // adjust relative path
 
 // Builds the HTML body for an order confirmation email.
 // Kept as plain string templating (no external template engine) to keep
@@ -68,10 +69,10 @@ export const sendOrderConfirmationEmail = async (order, userEmail) => {
       subject: `Order Confirmed — ${order.transactionId}`,
       html: buildOrderConfirmationHtml(order),
     });
-    console.log(`Order confirmation email sent to ${userEmail}`);
+    logger.info(`Order confirmation email sent to ${userEmail}`);
   } catch (error) {
     // Log it for debugging/monitoring, but swallow the error — see comment above
-    console.error("Failed to send order confirmation email:", error.message);
+    logger.error("Failed to send order confirmation email:", error.message);
   }
 };
 
@@ -90,6 +91,6 @@ export const sendOrderStatusEmail = async (order, userEmail, statusMessage) => {
       `,
     });
   } catch (error) {
-    console.error("Failed to send order status email:", error.message);
+    logger.error("Failed to send order status email:", error.message);
   }
 };

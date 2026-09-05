@@ -10,6 +10,7 @@ import { validateAndCalculateDiscount } from "../utils/couponHelper.js";
 import { createNotification } from "../services/notificationService.js";
 import { canCancelOrder, canRequestReturn } from "../utils/orderPolicy.js";
 import { sendOrderStatusEmail } from "../services/emailService.js"; // built in 33.6 below
+import { logger } from "../config/logger.js"; // adjust relative path
 
 // @route POST /api/v1/orders/checkout
 // Creates a pending order from the user's cart and starts an SSLCommerz session
@@ -235,7 +236,11 @@ export const handleIPN = async (req, res) => {
 
     res.status(200).send();
   } catch (error) {
-    console.error("IPN handling error:", error.message);
+    logger.error("IPN handling error", {
+      error: error.message,
+      stack: error.stack,
+    });
+
     res.status(200).send(); // still 200 — SSLCommerz just needs acknowledgment
   }
 };
@@ -447,7 +452,10 @@ export const cancelOrder = async (req, res) => {
           refundResponse?.status === "success" ? "completed" : "pending";
         await order.save();
       } catch (refundError) {
-        console.error("Refund initiation failed:", refundError.message);
+        logger.error("Refund initiation failed", {
+          orderId: order._id,
+          error: refundError.message,
+        });
         // refundStatus stays "pending" — needs manual follow-up by admin
       }
     }
@@ -567,7 +575,7 @@ export const reviewReturnRequest = async (req, res) => {
           order.refundStatus =
             refundResponse?.status === "success" ? "completed" : "pending";
         } catch (refundError) {
-          console.error("Refund initiation failed:", refundError.message);
+          logger.error("Refund initiation failed:", refundError.message);
         }
       }
     } else {

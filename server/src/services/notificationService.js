@@ -1,4 +1,5 @@
 import Notification from "../models/Notification.js";
+import { logger } from "../config/logger.js"; // adjust relative path
 
 // Central place to create a notification — never throws, since a failed
 // notification should never break the order/return flow that triggered it
@@ -13,6 +14,6 @@ export const createNotification = async ({
   try {
     await Notification.create({ user: userId, type, title, message, link });
   } catch (error) {
-    console.error("Failed to create notification:", error.message);
+    logger.error("Failed to create notification:", error.message);
   }
 };
