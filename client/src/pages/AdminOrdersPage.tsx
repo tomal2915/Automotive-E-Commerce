@@ -8,6 +8,7 @@ import {
 } from "../features/orders/orderApi";
 import OrderStatusChip from "../features/orders/OrderStatusChip";
 import type { Order } from "../features/orders/orderTypes";
+import { formatCurrency } from "../utils/formatCurrency";
 
 const STATUS_OPTIONS: Order["status"][] = [
   "pending",
@@ -47,7 +48,7 @@ export default function AdminOrdersPage() {
       field: "totalAmount",
       headerName: "Total",
       width: 120,
-      valueFormatter: (value: number) => `$${value.toFixed(2)}`,
+      valueFormatter: (value: number) => formatCurrency(value),
     },
     {
       field: "createdAt",

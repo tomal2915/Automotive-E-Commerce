@@ -25,6 +25,7 @@ import {
   cancelOrderRequest,
   requestReturnRequest,
 } from "../features/orders/orderApi";
+import { formatCurrency } from "../utils/formatCurrency";
 
 export default function MyOrdersPage() {
   const {
@@ -116,7 +117,7 @@ export default function MyOrdersPage() {
                   <TableCell>
                     {order.items.map((i) => i.title).join(", ")}
                   </TableCell>
-                  <TableCell>${order.totalAmount.toFixed(2)}</TableCell>
+                  <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
                   <TableCell>
                     <OrderStatusChip status={order.status} />
                   </TableCell>

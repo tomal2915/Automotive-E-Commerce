@@ -18,7 +18,7 @@ import { useWishlist } from "../wishlist/useWishlist";
 import { useToggleWishlist } from "../wishlist/useToggleWishlist";
 import type { Product } from "./productTypes";
 import StarRating from "../reviews/StarRating";
-import { formatCurrency } from "../utils/formatCurrency"; // adjust relative path per file
+import { formatCurrency } from "../../utils/formatCurrency"; // adjust relative path per file
 
 const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 

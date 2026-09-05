@@ -22,6 +22,7 @@ import {
   createCouponRequest,
   toggleCouponRequest,
 } from "../features/coupons/couponApi";
+import { formatCurrency } from "../utils/formatCurrency";
 
 export default function AdminCouponsPage() {
   const queryClient = useQueryClient();
@@ -107,7 +108,7 @@ export default function AdminCouponsPage() {
                 }
               >
                 <MenuItem value="percentage">Percentage (%)</MenuItem>
-                <MenuItem value="fixed">Fixed Amount ($)</MenuItem>
+                <MenuItem value="fixed">Fixed Amount (৳)</MenuItem>
               </TextField>
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -124,7 +125,7 @@ export default function AdminCouponsPage() {
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
               <TextField
-                label="Max Discount ($, optional)"
+                label="Max Discount (৳, optional)"
                 type="number"
                 fullWidth
                 value={form.maxDiscountAmount}
@@ -206,11 +207,11 @@ export default function AdminCouponsPage() {
                 <TableCell>
                   {coupon.discountType === "percentage"
                     ? `${coupon.discountValue}%`
-                    : `$${coupon.discountValue}`}
+                    : `${formatCurrency(coupon.discountValue)}`}
                   {coupon.maxDiscountAmount &&
-                    ` (max $${coupon.maxDiscountAmount})`}
+                    ` (max ${formatCurrency(coupon.maxDiscountAmount)})`}
                 </TableCell>
-                <TableCell>${coupon.minOrderAmount}</TableCell>
+                <TableCell>{formatCurrency(coupon.minOrderAmount)}</TableCell>
                 <TableCell>
                   {new Date(coupon.expiresAt).toLocaleDateString()}
                 </TableCell>

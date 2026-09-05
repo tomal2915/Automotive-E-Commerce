@@ -25,6 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchAddresses } from "../features/addresses/addressApi";
 import { MenuItem, TextField as MTextField } from "@mui/material"; // TextField already imported probably, alias avoided if not needed
 import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { formatCurrency } from "../utils/formatCurrency";
 
 export default function CartPage() {
   const { data: cart, isLoading } = useCart();
@@ -137,7 +138,7 @@ export default function CartPage() {
                 >
                   <ListItemText
                     primary={item.product.title}
-                    secondary={`$${item.priceAtAdd.toFixed(2)} each`}
+                    secondary={`${formatCurrency(item.priceAtAdd)} each`}
                   />
                   <TextField
                     type="number"
@@ -193,8 +194,8 @@ export default function CartPage() {
           )}
           {appliedCoupon && (
             <Alert severity="success" sx={{ mb: 2 }}>
-              Coupon "{appliedCoupon.code}" applied — $
-              {appliedCoupon.discount.toFixed(2)} off
+              Coupon "{appliedCoupon.code}" applied —{" "}
+              {formatCurrency(appliedCoupon.discount)} off
             </Alert>
           )}
 
@@ -243,10 +244,10 @@ export default function CartPage() {
                     mr: 1,
                   }}
                 >
-                  ${total.toFixed(2)}
+                  {formatCurrency(total)}
                 </Typography>
               )}
-              Total: ${finalTotal.toFixed(2)}
+              Total: {formatCurrency(finalTotal)}
             </Typography>
 
             <Button

@@ -18,6 +18,7 @@ import {
   deleteProductRequest,
 } from "../features/products/productAdminApi";
 import type { Product } from "../features/products/productTypes";
+import { formatCurrency } from "../utils/formatCurrency";
 
 export default function AdminProductListPage() {
   const [page, setPage] = useState(0);
@@ -71,7 +72,7 @@ export default function AdminProductListPage() {
       field: "price",
       headerName: "Price",
       width: 100,
-      valueFormatter: (value: number) => `$${value.toFixed(2)}`,
+      valueFormatter: (value: number) => formatCurrency(value),
     },
     {
       field: "stock",
