@@ -21,10 +21,17 @@ import addressRoutes from "./routes/addressRoutes.js";
 import twoFactorRoutes from "./routes/twoFactorRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
+import { initSentry, Sentry } from "./config/sentry.js";
 
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
+initSentry();
+
 const app = express();
+
+// Sentry must wrap the app EARLY, before routes, so it can capture
+// request context for any error that happens downstream
+Sentry.setupExpressErrorHandler; // placeholder note — actual handler goes after routes, see below
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
@@ -64,10 +71,19 @@ app.use("/api/v1/analytics", analyticsRoutes);
 // ... all existing app.use("/api/v1/...") route mounts ...
 
 app.use(notFoundHandler);
+
+// Sentry's error handler must come before our own, so it captures the
+// error first (and forwards it to our handler for the actual response)
+Sentry.setupExpressErrorHandler(app);
+
 app.use(errorHandler);
 
 app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
+});
+
+app.get("/api/v1/test-error", () => {
+  throw new Error("Test error for Sentry verification");
 });
 
 export default app;

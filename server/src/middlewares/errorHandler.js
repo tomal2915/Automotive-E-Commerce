@@ -1,4 +1,5 @@
 import { logger } from "../config/logger.js";
+import { Sentry } from "../config/sentry.js";
 
 // Express recognizes this as an error-handling middleware specifically
 // because it has 4 parameters (err, req, res, next) — must be registered
@@ -11,8 +12,10 @@ export const errorHandler = (err, req, res, next) => {
     userId: req.user?.id || "anonymous",
   });
 
-  // Don't leak internal error details (stack traces, DB connection
-  // strings in error messages, etc.) to the client in production
+  // Sentry already captured this via setupExpressErrorHandler, but we can
+  // add extra context here if useful (e.g. tagging with the user ID)
+  Sentry.setUser({ id: req.user?.id || "anonymous" });
+
   const isDev = process.env.NODE_ENV !== "production";
 
   res.status(err.statusCode || 500).json({

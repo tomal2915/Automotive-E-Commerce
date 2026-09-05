@@ -3,6 +3,7 @@ import AppRouter from "./routes/AppRouter";
 import Navbar from "./components/Navbar";
 import { useSessionRestore } from "./features/auth/useSessionRestore";
 import { CircularProgress, Box } from "@mui/material";
+import { AppErrorBoundary } from "./components/ErrorBoundary";
 
 function App() {
   const { isRestoring } = useSessionRestore();
@@ -24,11 +25,11 @@ function App() {
 
   return (
     <>
-      <Navbar />
-      {/* This empty Toolbar pushes page content below the fixed AppBar,
-          matching its height exactly (including responsive breakpoints) */}
-      <Toolbar />
-      <AppRouter />
+      <AppErrorBoundary>
+        <Navbar />
+        <Toolbar />
+        <AppRouter />
+      </AppErrorBoundary>
     </>
   );
 }
