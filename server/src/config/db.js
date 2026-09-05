@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { logger } from "../config/logger.js"; // adjust relative path
+import { logger } from "./logger.js";
 
 const connectDB = async () => {
   try {
@@ -7,7 +7,7 @@ const connectDB = async () => {
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     logger.error(`Error connecting to MongoDB: ${error.message}`);
-    process.exit(1);
+    throw error; // let server.js's fatalExit handle the actual exit
   }
 };
 

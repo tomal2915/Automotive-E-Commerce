@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fatalExit } from "../utils/fatalExit.js";
 
 // Declares every environment variable the app depends on, with its
 // expected shape. If any required variable is missing or malformed,
@@ -54,12 +55,14 @@ export const validateEnv = () => {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error("\n❌ Invalid or missing environment variables:\n");
+    let message = "Invalid or missing environment variables:\n";
     for (const issue of result.error.issues) {
-      console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+      message += `  - ${issue.path.join(".")}: ${issue.message}\n`;
     }
-    console.error("\nFix your .env file and restart the server.\n");
-    process.exit(1); // stop the app entirely — never run with a broken config
+    message += "\nFix your .env file and restart the server.";
+
+    fatalExit(message);
+    throw new Error("Environment validation failed");
   }
 
   return result.data;

@@ -1,4 +1,8 @@
 import "dotenv/config";
+import { initSentry, Sentry } from "./config/sentry.js";
+
+initSentry();
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -8,6 +12,7 @@ import { sanitizeInput } from "./middlewares/sanitizeInput.js";
 import { ensureDeviceId } from "./middlewares/deviceFingerprint.js";
 import { generalApiLimiter } from "./middlewares/rateLimiters.js";
 import { generateSitemap } from "./controllers/sitemapController.js";
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -21,17 +26,8 @@ import addressRoutes from "./routes/addressRoutes.js";
 import twoFactorRoutes from "./routes/twoFactorRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
-import { Sentry } from "./config/sentry.js";
-
-import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
-
-initSentry();
 
 const app = express();
-
-// Sentry must wrap the app EARLY, before routes, so it can capture
-// request context for any error that happens downstream
-Sentry.setupExpressErrorHandler; // placeholder note — actual handler goes after routes, see below
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
@@ -47,13 +43,15 @@ app.use(ensureDeviceId);
 app.use(sanitizeInput);
 app.use(hpp());
 
-// Skip rate limiting entirely during tests — otherwise repeated test
-// runs against auth endpoints would trip the limiter and fail spuriously
 if (process.env.NODE_ENV !== "test") {
   app.use("/api", generalApiLimiter);
 }
 
 app.get("/sitemap.xml", generateSitemap);
+
+app.get("/api/v1/health", (req, res) => {
+  res.json({ status: "ok", message: "Server is running" });
+});
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/products", productRoutes);
@@ -68,22 +66,10 @@ app.use("/api/v1/2fa", twoFactorRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 
-// ... all existing app.use("/api/v1/...") route mounts ...
-
+// These two MUST be last — Express runs middleware top-to-bottom, so
+// anything registered after notFoundHandler/errorHandler would never
+// actually be reached by a request.
 app.use(notFoundHandler);
-
-// Sentry's error handler must come before our own, so it captures the
-// error first (and forwards it to our handler for the actual response)
-Sentry.setupExpressErrorHandler(app);
-
 app.use(errorHandler);
-
-app.get("/api/v1/health", (req, res) => {
-  res.json({ status: "ok", message: "Server is running" });
-});
-
-app.get("/api/v1/test-error", () => {
-  throw new Error("Test error for Sentry verification");
-});
 
 export default app;

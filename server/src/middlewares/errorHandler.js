@@ -12,9 +12,7 @@ export const errorHandler = (err, req, res, next) => {
     userId: req.user?.id || "anonymous",
   });
 
-  // Sentry already captured this via setupExpressErrorHandler, but we can
-  // add extra context here if useful (e.g. tagging with the user ID)
-  Sentry.setUser({ id: req.user?.id || "anonymous" });
+  Sentry.captureException(err);
 
   const isDev = process.env.NODE_ENV !== "production";
 

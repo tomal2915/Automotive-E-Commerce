@@ -22,3 +22,6 @@ Thumbs.db
 
 #logger files
 server/logs/
+
+# backup files
+server/backups/
