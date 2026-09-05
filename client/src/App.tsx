@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import { useSessionRestore } from "./features/auth/useSessionRestore";
 import { CircularProgress, Box } from "@mui/material";
 import { AppErrorBoundary } from "./components/ErrorBoundary";
+import Footer from "./components/Footer";
 
 function App() {
   const { isRestoring } = useSessionRestore();
@@ -24,13 +25,14 @@ function App() {
   }
 
   return (
-    <>
-      <AppErrorBoundary>
-        <Navbar />
-        <Toolbar />
+    <AppErrorBoundary>
+      <Navbar />
+      <Toolbar />
+      <Box sx={{ minHeight: "calc(100vh - 200px)" }}>
         <AppRouter />
-      </AppErrorBoundary>
-    </>
+      </Box>
+      <Footer />
+    </AppErrorBoundary>
   );
 }
 

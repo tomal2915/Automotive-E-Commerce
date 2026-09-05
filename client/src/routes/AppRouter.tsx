@@ -24,6 +24,8 @@ import AdminUsersPage from "../pages/AdminUsersPage";
 import AdminReturnsPage from "../pages/AdminReturnsPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
+import TermsOfServicePage from "../pages/TermsOfServicePage";
 
 export default function AppRouter() {
   return (
@@ -36,6 +38,8 @@ export default function AppRouter() {
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/check-inbox" element={<CheckInboxPage />} />
       <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+      <Route path="/terms" element={<TermsOfServicePage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="*" element={<NotFoundPage />} />
 
       <Route element={<ProtectedRoute />}>
