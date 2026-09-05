@@ -122,6 +122,13 @@ export default function Navbar() {
                   <>
                     <MenuItem
                       component={RouterLink}
+                      to="/admin/dashboard"
+                      onClick={handleMenuClose}
+                    >
+                      Dashboard
+                    </MenuItem>
+                    <MenuItem
+                      component={RouterLink}
                       to="/admin/orders"
                       onClick={handleMenuClose}
                     >

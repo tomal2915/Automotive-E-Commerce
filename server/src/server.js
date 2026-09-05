@@ -20,6 +20,7 @@ import twoFactorRoutes from "./routes/twoFactorRoutes.js";
 import { generalApiLimiter } from "./middlewares/rateLimiters.js";
 import { ensureDeviceId } from "./middlewares/deviceFingerprint.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 // dotenv.config();
 connectDB();
@@ -57,6 +58,7 @@ app.use("/api/v1/addresses", addressRoutes);
 app.use("/api/v1/2fa", twoFactorRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api", generalApiLimiter); // applies to everything under /api, specific routes above override with their own stricter limiter
+app.use("/api/v1/analytics", analyticsRoutes); // admin-only analytics routes
 
 app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
