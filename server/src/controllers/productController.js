@@ -82,20 +82,35 @@ export const getProductById = async (req, res) => {
 // @route POST /api/v1/products (admin only)
 export const createProduct = async (req, res) => {
   try {
-    // Multer + CloudinaryStorage populate req.files with the uploaded images,
-    // each already containing the Cloudinary-hosted URL in `.path`
     const imageUrls = (req.files || []).map((file) => file.path);
 
     const productData = {
-      ...req.body,
+      title: req.body.title,
+      description: req.body.description,
+      sku: req.body.sku,
+      category: req.body.category,
+      price: Number(req.body.price),
+      stock: Number(req.body.stock),
       images: imageUrls,
-      // yearRange arrives as separate form fields since this is multipart/form-data,
-      // not JSON, so we reconstruct the nested object here
-      yearRange: {
+    };
+
+    // Automotive fields — only included when actually provided (category
+    // has vehicle attributes). Sending them for a non-automotive product
+    // is harmless too, but the frontend won't send them in that case.
+    if (req.body.make) productData.make = req.body.make;
+    if (req.body.model) productData.model = req.body.model;
+    if (req.body.yearRangeStart && req.body.yearRangeEnd) {
+      productData.yearRange = {
         start: Number(req.body.yearRangeStart),
         end: Number(req.body.yearRangeEnd),
-      },
-    };
+      };
+    }
+
+    // Generic specifications — sent as JSON string from the frontend
+    // form (since FormData can't nest objects), parsed back here
+    if (req.body.specifications) {
+      productData.specifications = JSON.parse(req.body.specifications);
+    }
 
     const product = await Product.create(productData);
     res.status(201).json({ product });
@@ -109,10 +124,10 @@ export const createProduct = async (req, res) => {
 // @route GET /api/v1/products/filters/options
 export const getFilterOptions = async (req, res) => {
   try {
-    const { year, make, model } = req.query;
+    const { year, make, model, category } = req.query;
 
     const filter = {};
-
+    if (category) filter.category = category;
     if (year) {
       filter["yearRange.start"] = { $lte: Number(year) };
       filter["yearRange.end"] = { $gte: Number(year) };
@@ -120,23 +135,18 @@ export const getFilterOptions = async (req, res) => {
     if (make) filter.make = make;
     if (model) filter.model = model;
 
-    const [makes, models, categories] = await Promise.all([
-      Product.distinct("make", filter),
-      Product.distinct("model", filter),
-      Product.distinct("category", {}),
+    const [makes, models] = await Promise.all([
+      Product.distinct("make", { ...filter, make: { $nin: [null, ""] } }),
+      Product.distinct("model", { ...filter, model: { $nin: [null, ""] } }),
     ]);
 
-    // Generate a reasonable year list (current year down to 25 years back)
-    // rather than deriving it from stored data, since a product's yearRange
-    // can span many years that wouldn't otherwise show up as a distinct value.
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 26 }, (_, i) => currentYear - i);
 
     res.json({
       years,
-      makes: makes.sort(),
-      models: models.sort(),
-      categories: categories.sort(),
+      makes: makes.filter(Boolean).sort(),
+      models: models.filter(Boolean).sort(),
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -211,13 +221,13 @@ export const getSearchSuggestions = async (req, res) => {
     const suggestions = await Product.find({
       $or: [
         { title: searchRegex },
-        { make: searchRegex },
-        { model: searchRegex },
+        { category: searchRegex },
+        ...(true ? [{ make: searchRegex }, { model: searchRegex }] : []), // harmless even when empty
       ],
     })
       .select("title make model category price images")
-      .limit(8) // keep the dropdown short and the query cheap
-      .lean(); // plain JS objects — faster since we don't need Mongoose document methods here
+      .limit(8)
+      .lean();
 
     res.json({ suggestions });
   } catch (error) {
@@ -231,17 +241,18 @@ export const getSearchSuggestions = async (req, res) => {
 export const getRelatedProducts = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    const orConditions = [{ category: product.category }];
+
+    // Only add the make/model match if this product actually has them
+    if (product.make && product.model) {
+      orConditions.push({ make: product.make, model: product.model });
     }
 
     const related = await Product.find({
-      _id: { $ne: product._id }, // exclude the product itself
-      $or: [
-        { category: product.category },
-        { make: product.make, model: product.model },
-      ],
+      _id: { $ne: product._id },
+      $or: orConditions,
     })
       .select(
         "title price images make model category averageRating reviewCount yearRange stock",

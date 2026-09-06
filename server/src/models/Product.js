@@ -4,35 +4,37 @@ const productSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, index: "text" },
     description: { type: String, required: true },
-    partNumber: { type: String, required: true, unique: true, index: true },
-
-    // Vehicle compatibility fields
-    make: { type: String, required: true, index: true }, // e.g. BMW, Audi, Toyota
-    model: { type: String, required: true, index: true }, // e.g. M3, A4, Camry
-    yearRange: {
-      start: { type: Number, required: true },
-      end: { type: Number, required: true },
-    },
+    sku: { type: String, required: true, unique: true, index: true }, // renamed from partNumber — generic "Stock Keeping Unit"
 
     category: { type: String, required: true, index: true },
+
+    // Automotive-specific — now OPTIONAL, only populated when category
+    // has vehicle attributes (e.g. "Automotive"). Left empty/undefined
+    // for every other category (Electronics, Clothing, Books, etc.)
+    make: { type: String, index: true },
+    model: { type: String, index: true },
+    yearRange: {
+      start: { type: Number },
+      end: { type: Number },
+    },
+
     price: { type: Number, required: true, index: true },
     stock: { type: Number, default: 0, min: 0 },
+    images: [{ type: String }],
 
-    images: [{ type: String }], // image URLs, will wire up upload later
+    // Generic key-value attributes for ANY category — e.g. for
+    // Electronics: { "Brand": "Samsung", "Warranty": "1 year" }
+    // for Clothing: { "Size": "L", "Color": "Blue", "Material": "Cotton" }
+    specifications: { type: Map, of: String },
 
-    specifications: { type: Map, of: String }, // e.g. { "Material": "Ceramic" }
-
-    // Denormalized review stats — kept in sync whenever a review is
-    // created/updated/deleted, so listing pages never need to aggregate
-    // reviews on every request just to show a star rating
     averageRating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
 
-// Compound index for fast automotive search filtering
-// (matches the common filter combination: make + model + category + price)
+// Only useful when make/model are actually populated (automotive), but
+// harmless (sparse-like behavior) for products where they're empty
 productSchema.index({ make: 1, model: 1, category: 1, price: 1 });
 
 export default mongoose.model("Product", productSchema);
