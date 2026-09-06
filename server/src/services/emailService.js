@@ -20,7 +20,7 @@ const buildOrderConfirmationHtml = (order) => {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: #0f172a; padding: 24px; text-align: center;">
-        <h1 style="color: #38bdf8; margin: 0;">AutoParts BD</h1>
+        <h1 style="color: #38bdf8; margin: 0;">Shop BD</h1>
       </div>
       <div style="padding: 24px; background: #ffffff;">
         <h2 style="color: #0f172a;">Order Confirmed!</h2>
@@ -52,7 +52,7 @@ const buildOrderConfirmationHtml = (order) => {
         </p>
       </div>
       <div style="background: #f1f5f9; padding: 16px; text-align: center; color: #94a3b8; font-size: 12px;">
-        AutoParts BD &middot; Mirpur, Dhaka, Bangladesh
+        Shop BD &middot; Mirpur, Dhaka, Bangladesh
       </div>
     </div>
   `;

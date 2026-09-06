@@ -44,7 +44,7 @@ const envSchema = z.object({
   SMTP_PORT: z.string().min(1, "SMTP_PORT is required"),
   SMTP_USER: z.string().email("SMTP_USER must be a valid email"),
   SMTP_PASSWORD: z.string().min(1, "SMTP_PASSWORD is required"),
-  EMAIL_FROM_NAME: z.string().default("AutoParts BD"),
+  EMAIL_FROM_NAME: z.string().default("Shop BD"),
 
   // Optional — the app should still run fine without these (error
   // tracking is a nice-to-have, not a hard requirement)

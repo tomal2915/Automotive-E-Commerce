@@ -59,7 +59,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <SEO title="Login" description="Log in to your AutoParts BD account." />
+      <SEO title="Login" description="Log in to your Shop BD account." />
 
       <Box
         sx={{

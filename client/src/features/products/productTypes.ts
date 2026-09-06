@@ -2,14 +2,15 @@ export interface Product {
   _id: string;
   title: string;
   description: string;
-  partNumber: string;
-  make: string;
-  model: string;
-  yearRange: { start: number; end: number };
+  sku: string;
   category: string;
+  make?: string;
+  model?: string;
+  yearRange?: { start: number; end: number };
   price: number;
   stock: number;
   images: string[];
+  specifications?: Record<string, string>;
   averageRating: number;
   reviewCount: number;
 }
@@ -25,11 +26,13 @@ export interface ProductsResponse {
 }
 
 export interface ProductFilters {
+  category?: string;
   make?: string;
   model?: string;
-  category?: string;
   year?: number;
   minPrice?: number;
   maxPrice?: number;
+  search?: string;
   page?: number;
+  limit?: number;
 }

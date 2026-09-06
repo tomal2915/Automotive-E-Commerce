@@ -6,7 +6,7 @@ export default function PrivacyPolicyPage() {
     <Container sx={{ py: 6, maxWidth: "800px !important" }}>
       <SEO
         title="Privacy Policy"
-        description="How AutoParts BD collects, uses, and protects your data."
+        description="How Shop BD collects, uses, and protects your data."
       />
 
       <Typography sx={{ variant: "h4", component: "h1", mb: 1 }}>

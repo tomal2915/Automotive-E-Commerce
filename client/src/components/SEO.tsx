@@ -20,7 +20,7 @@ export default function SEO({
   type = "website",
   jsonLd,
 }: Props) {
-  const siteName = "AutoParts BD";
+  const siteName = "Shop BD";
   const fullTitle = `${title} | ${siteName}`;
   const defaultImage = `${window.location.origin}/og-default.png`;
   const canonicalUrl = url || window.location.href;

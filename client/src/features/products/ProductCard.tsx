@@ -87,11 +87,15 @@ export default function ProductCard({ product }: Props) {
             {product.title}
           </Typography>
 
-          <Typography sx={{ variant: "body2", color: "text.secondary", mb: 1 }}>
-            {product.make} {product.model}
-            {product.yearRange &&
-              ` (${product.yearRange.start}-${product.yearRange.end})`}
-          </Typography>
+          {product.make && product.model && (
+            <Typography
+              sx={{ variant: "body2", color: "text.secondary", mb: 1 }}
+            >
+              {product.make} {product.model}
+              {product.yearRange &&
+                ` (${product.yearRange.start}-${product.yearRange.end})`}
+            </Typography>
+          )}
 
           <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
             <Chip label={product.category} size="small" />

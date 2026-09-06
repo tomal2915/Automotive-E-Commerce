@@ -26,6 +26,7 @@ import AdminDashboardPage from "../pages/AdminDashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
 import TermsOfServicePage from "../pages/TermsOfServicePage";
+import AdminCategoriesPage from "../pages/AdminCategoriesPage";
 
 export default function AppRouter() {
   return (
@@ -66,6 +67,8 @@ export default function AppRouter() {
         <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/admin/returns" element={<AdminReturnsPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+
+        <Route path="/admin/categories" element={<AdminCategoriesPage />} />
       </Route>
     </Routes>
   );

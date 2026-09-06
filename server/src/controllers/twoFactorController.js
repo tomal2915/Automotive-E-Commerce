@@ -37,7 +37,7 @@ export const setupTwoFactor = async (req, res) => {
     }
 
     const secret = speakeasy.generateSecret({
-      name: `AutoParts BD (${user.email})`,
+      name: `Shop BD (${user.email})`,
       length: 20,
     });
 

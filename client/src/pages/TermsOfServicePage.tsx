@@ -6,7 +6,7 @@ export default function TermsOfServicePage() {
     <Container sx={{ py: 6, maxWidth: "800px !important" }}>
       <SEO
         title="Terms of Service"
-        description="Terms and conditions for using AutoParts BD."
+        description="Terms and conditions for using Shop BD."
       />
 
       <Typography sx={{ variant: "h4", component: "h1", mb: 1 }}>
@@ -24,7 +24,7 @@ export default function TermsOfServicePage() {
       >
         <Typography sx={{ variant: "h6" }}>1. Acceptance of Terms</Typography>
         <Typography>
-          By accessing or using AutoParts BD ("we", "our", "us"), you agree to
+          By accessing or using Shop BD ("we", "our", "us"), you agree to
           be bound by these Terms of Service. If you do not agree to these
           terms, please do not use our platform.
         </Typography>
@@ -87,7 +87,7 @@ export default function TermsOfServicePage() {
         <Typography sx={{ variant: "h6" }}>8. Intellectual Property</Typography>
         <Typography>
           All content on this platform, including logos, text, graphics, and
-          software, is the property of AutoParts BD or its licensors and is
+          software, is the property of Shop BD or its licensors and is
           protected by applicable intellectual property laws.
         </Typography>
 
@@ -95,7 +95,7 @@ export default function TermsOfServicePage() {
           9. Limitation of Liability
         </Typography>
         <Typography>
-          To the maximum extent permitted by law, AutoParts BD shall not be
+          To the maximum extent permitted by law, Shop BD shall not be
           liable for any indirect, incidental, or consequential damages arising
           from your use of the platform or purchase of products.
         </Typography>

@@ -16,7 +16,7 @@ export default function Footer() {
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} AutoParts BD. All rights reserved.
+          © {new Date().getFullYear()} Shop BD. All rights reserved.
         </Typography>
         <Box sx={{ display: "flex", gap: 3 }}>
           <MuiLink

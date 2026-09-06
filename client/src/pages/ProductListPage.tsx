@@ -10,11 +10,14 @@ import {
 import { useProducts } from "../features/products/useProducts";
 import ProductCard from "../features/products/ProductCard";
 import ProductCardSkeleton from "../features/products/ProductCardSkeleton";
-import VehicleFilterBar from "../features/products/VehicleFilterBar";
+// import VehicleFilterBar from "../features/products/VehicleFilterBar";
+import CategoryFilterBar from "../features/products/CategoryFilterBar";
 import type { ProductFilters } from "../features/products/productTypes";
 import ProductRow from "../features/products/ProductRow";
 import { useRecentlyViewed } from "../features/products/useRecentlyViewed";
 import SEO from "../components/SEO";
+import { useSearchParams } from "react-router-dom";
+import CategoryGrid from "../features/categories/CategoryGrid";
 
 export default function ProductListPage() {
   const [filters, setFilters] = useState<ProductFilters>({
@@ -23,6 +26,13 @@ export default function ProductListPage() {
   });
   const { data, isLoading, isError } = useProducts(filters);
   const { data: recentlyViewed } = useRecentlyViewed();
+
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState<ProductFilters>({
+    page: 1,
+    limit: 12,
+    category: searchParams.get("category") || undefined,
+  });
 
   return (
     <Container sx={{ py: 4 }}>
@@ -33,7 +43,8 @@ export default function ProductListPage() {
 
       <Typography sx={{ variant: "h4", mb: 3 }}>Auto Parts Catalog</Typography>
 
-      <VehicleFilterBar filters={filters} onChange={setFilters} />
+      <CategoryGrid />
+      <CategoryFilterBar filters={filters} onChange={setFilters} />
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>

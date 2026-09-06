@@ -55,4 +55,4 @@ jobs:
           SMTP_PORT: "587"
           SMTP_USER: test@example.com
           SMTP_PASSWORD: test_password
-          EMAIL_FROM_NAME: "AutoParts BD Test"
+          EMAIL_FROM_NAME: "Shop BD Test"

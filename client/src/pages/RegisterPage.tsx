@@ -47,7 +47,7 @@ export default function RegisterPage() {
     <>
       <SEO
         title="Register"
-        description="Create an account with AutoParts BD."
+        description="Create an account with Shop BD."
       />
 
       <Box

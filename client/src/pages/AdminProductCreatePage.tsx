@@ -26,7 +26,23 @@ export default function AdminProductCreatePage() {
     <Container sx={{ py: 4 }}>
       <Typography sx={{ variant: "h4", mb: 3 }}>Add New Product</Typography>
       <ProductForm
-        onSubmit={(values, images) => mutation.mutate({ values, images })}
+        onSubmit={(values, images, specifications) =>
+          mutation.mutate({
+            values: {
+              ...values,
+              yearRangeStart: values.yearRangeStart
+                ? Number(values.yearRangeStart)
+                : undefined,
+              yearRangeEnd: values.yearRangeEnd
+                ? Number(values.yearRangeEnd)
+                : undefined,
+              price: Number(values.price),
+              stock: Number(values.stock),
+            },
+            images,
+            specifications,
+          })
+        }
         isSubmitting={mutation.isPending}
         errorMessage={(mutation.error as any)?.response?.data?.message}
         submitLabel="Create Product"

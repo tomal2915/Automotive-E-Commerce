@@ -150,6 +150,13 @@ export default function Navbar() {
                     </MenuItem>
                     <MenuItem
                       component={RouterLink}
+                      to="/admin/categories"
+                      onClick={handleMenuClose}
+                    >
+                      Manage Categories
+                    </MenuItem>
+                    <MenuItem
+                      component={RouterLink}
                       to="/admin/coupons"
                       onClick={handleMenuClose}
                     >

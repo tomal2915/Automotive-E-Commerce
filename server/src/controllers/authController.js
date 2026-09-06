@@ -83,10 +83,10 @@ export const registerUser = async (req, res) => {
     await transporter.sendMail({
       from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.SMTP_USER}>`,
       to: user.email,
-      subject: "Verify Your Email — AutoParts BD",
+      subject: "Verify Your Email — Shop BD",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
-          <h2>Welcome to AutoParts BD, ${name}!</h2>
+          <h2>Welcome to Shop BD, ${name}!</h2>
           <p>Please verify your email address to activate your account. This link expires in 24 hours.</p>
           <a href="${verifyUrl}" style="display: inline-block; background: #38bdf8; color: #0f172a; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Verify Email</a>
           <p style="color: #64748b; margin-top: 16px; font-size: 13px;">If you didn't create this account, you can safely ignore this email.</p>
@@ -488,7 +488,7 @@ export const resendVerificationEmail = async (req, res) => {
     await transporter.sendMail({
       from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.SMTP_USER}>`,
       to: user.email,
-      subject: "Verify Your Email — AutoParts BD",
+      subject: "Verify Your Email — Shop BD",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
           <h2>Verify Your Email</h2>

@@ -58,7 +58,7 @@ export default function ProductDetailPage() {
           name: product.title,
           description: product.description,
           image: product.images?.[0],
-          sku: product.partNumber,
+          sku: product.sku,
           offers: {
             "@type": "Offer",
             price: product.price,
@@ -107,13 +107,37 @@ export default function ProductDetailPage() {
             {product.description}
           </Typography>
 
-          <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+          <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
             <Chip label={product.category} />
-            <Chip label={`${product.make} ${product.model}`} />
-            <Chip
-              label={`${product.yearRange.start}-${product.yearRange.end}`}
-            />
+            {product.make && product.model && (
+              <Chip label={`${product.make} ${product.model}`} />
+            )}
+            {product.yearRange && (
+              <Chip
+                label={`${product.yearRange.start}-${product.yearRange.end}`}
+              />
+            )}
           </Box>
+
+          {product.specifications &&
+            Object.keys(product.specifications).length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Typography sx={{ variant: "subtitle2", mb: 1 }}>
+                  Specifications
+                </Typography>
+                <Grid container spacing={1}>
+                  {Object.entries(product.specifications).map(
+                    ([key, value]) => (
+                      <Grid key={key} size={6}>
+                        <Typography sx={{ variant: "body2" }}>
+                          <strong>{key}:</strong> {value}
+                        </Typography>
+                      </Grid>
+                    ),
+                  )}
+                </Grid>
+              </Box>
+            )}
 
           <Typography sx={{ variant: "h4", color: "primary", mb: 2 }}>
             {formatCurrency(product.price)}
