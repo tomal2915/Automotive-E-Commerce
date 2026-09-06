@@ -96,10 +96,10 @@ export default function AdminOrdersPage() {
 
   return (
     <PageTransition>
-      <Container sx={{ py: 4 }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <Typography sx={{ variant: "h4", mb: 3 }}>Manage Orders</Typography>
 
-        <Box sx={{ height: 600, width: "100%" }}>
+        <Box sx={{ height: 600, width: "100%", overflowX: "auto" }}>
           <DataGrid
             rows={data?.orders ?? []}
             columns={columns}

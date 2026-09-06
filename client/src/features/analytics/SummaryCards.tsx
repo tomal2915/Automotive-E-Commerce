@@ -46,7 +46,7 @@ export default function SummaryCards({ summary }: Props) {
   ];
 
   return (
-    <Grid sxcontainer spacing={2} mb={3}>
+    <Grid container spacing={2} mb={3}>
       {cards.map((card) => (
         <Grid key={card.label} size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card>

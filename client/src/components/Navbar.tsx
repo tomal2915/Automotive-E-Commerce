@@ -9,202 +9,369 @@ import {
   Avatar,
   Menu,
   MenuItem,
-  Badge,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import MenuIcon from "@mui/icons-material/Menu";
+import SearchIcon from "@mui/icons-material/Search";
+import CloseIcon from "@mui/icons-material/Close";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import PersonIcon from "@mui/icons-material/Person";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
+import NotificationBell from "./NotificationBell";
+import SearchBar from "./SearchBar";
+import AnimatedBadge from "./AnimatedBadge";
 import { useAuthStore } from "../store/authStore";
+import { useCart } from "../features/cart/useCart";
+import { useWishlist } from "../features/wishlist/useWishlist";
 import { setAccessToken } from "../lib/tokenStore";
 import { api } from "../lib/api";
-import { useCart } from "../features/cart/useCart";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import { useWishlist } from "../features/wishlist/useWishlist";
-import SearchBar from "./SearchBar";
-import NotificationBell from "./NotificationBell";
-import AnimatedBadge from "./AnimatedBadge";
 
 export default function Navbar() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // < 900px
+
   const navigate = useNavigate();
   const { user, isAuthenticated, setUser } = useAuthStore();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { data: cart } = useCart();
   const { data: wishlist } = useWishlist();
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
+  const itemCount =
+    cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
   const wishlistCount = wishlist?.products.length ?? 0;
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
     } finally {
-      // Clear client-side state regardless of whether the API call succeeded
       setAccessToken(null);
       setUser(null);
-      handleMenuClose();
+      setAnchorEl(null);
+      setDrawerOpen(false);
       navigate("/login");
     }
   };
 
-  const { data: cart } = useCart();
-  const itemCount =
-    cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  const closeDrawer = () => setDrawerOpen(false);
 
   return (
-    <AppBar
-      position="fixed"
-      elevation={1}
-      sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-    >
-      <Toolbar>
-        <Typography
-          variant="h6"
-          component={RouterLink}
-          to="/"
-          sx={{ textDecoration: "none", color: "inherit", fontWeight: 700 }}
-        >
-          ShopBD
-        </Typography>
+    <>
+      <AppBar
+        position="fixed"
+        elevation={1}
+        sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}
+      >
+        <Toolbar sx={{ gap: { xs: 0.5, sm: 1 } }}>
+          {/* Hamburger — mobile/tablet only */}
+          {isMobile && (
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={() => setDrawerOpen(true)}
+              sx={{ mr: 0.5 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
 
-        <Box sx={{ mx: 2, flexGrow: 1, display: "flex" }}>
-          <SearchBar />
-        </Box>
+          {/* Logo — hides on mobile when the inline search is expanded, to save space */}
+          {!(isMobile && mobileSearchOpen) && (
+            <Typography
+              variant="h6"
+              component={RouterLink}
+              to="/"
+              sx={{
+                textDecoration: "none",
+                color: "inherit",
+                fontWeight: 700,
+                fontSize: { xs: "1.1rem", sm: "1.25rem" },
+                whiteSpace: "nowrap",
+              }}
+            >
+              Shop
+            </Typography>
+          )}
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <ThemeToggle />
+          {/* Desktop/tablet: search bar always visible, takes remaining space */}
+          {!isMobile && (
+            <Box sx={{ mx: 2, flexGrow: 1, display: "flex", maxWidth: 480 }}>
+              <SearchBar />
+            </Box>
+          )}
 
-          <IconButton color="inherit" component={RouterLink} to="/cart">
-            <Badge badgeContent={itemCount} color="primary">
-              <AnimatedBadge badgeContent={itemCount} color="primary">
-                <ShoppingCartIcon />
-              </AnimatedBadge>
-            </Badge>
-          </IconButton>
-
-          <IconButton color="inherit" component={RouterLink} to="/wishlist">
-            <Badge badgeContent={wishlistCount} color="error">
-              <FavoriteIcon />
-            </Badge>
-          </IconButton>
-
-          {isAuthenticated && <NotificationBell />}
-
-          {isAuthenticated ? (
-            <>
-              <IconButton onClick={handleMenuOpen} size="small">
-                <Avatar src={user?.avatar} sx={{ width: 32, height: 32 }}>
-                  {user?.name?.charAt(0).toUpperCase()}
-                </Avatar>
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
+          {/* Mobile: search either collapses to an icon, or expands to fill the bar */}
+          {isMobile && mobileSearchOpen && (
+            <Box
+              sx={{
+                flexGrow: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+              }}
+            >
+              <SearchBar />
+              <IconButton
+                color="inherit"
+                onClick={() => setMobileSearchOpen(false)}
               >
-                <MenuItem disabled>{user?.email}</MenuItem>
-                <MenuItem
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          )}
+
+          <Box sx={{ flexGrow: isMobile && !mobileSearchOpen ? 1 : 0 }} />
+
+          {!(isMobile && mobileSearchOpen) && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 0, sm: 0.5 },
+              }}
+            >
+              {isMobile && (
+                <IconButton
+                  color="inherit"
+                  onClick={() => setMobileSearchOpen(true)}
+                >
+                  <SearchIcon />
+                </IconButton>
+              )}
+
+              {/* Theme toggle — hidden on mobile (moved into the drawer instead) */}
+              {!isMobile && <ThemeToggle />}
+
+              {isAuthenticated && (
+                <>
+                  <IconButton
+                    color="inherit"
+                    component={RouterLink}
+                    to="/wishlist"
+                    sx={{ display: { xs: "none", sm: "inline-flex" } }}
+                  >
+                    <AnimatedBadge badgeContent={wishlistCount} color="error">
+                      <FavoriteIcon />
+                    </AnimatedBadge>
+                  </IconButton>
+
+                  <IconButton color="inherit" component={RouterLink} to="/cart">
+                    <AnimatedBadge badgeContent={itemCount} color="primary">
+                      <ShoppingCartIcon />
+                    </AnimatedBadge>
+                  </IconButton>
+
+                  <Box sx={{ display: { xs: "none", sm: "inline-flex" } }}>
+                    <NotificationBell />
+                  </Box>
+                </>
+              )}
+
+              {/* Avatar menu — desktop/tablet only; mobile uses the drawer instead */}
+              {!isMobile &&
+                (isAuthenticated ? (
+                  <>
+                    <IconButton
+                      onClick={(e) => setAnchorEl(e.currentTarget)}
+                      size="small"
+                      sx={{ ml: 0.5 }}
+                    >
+                      <Avatar src={user?.avatar} sx={{ width: 32, height: 32 }}>
+                        {user?.name?.charAt(0).toUpperCase()}
+                      </Avatar>
+                    </IconButton>
+                    <Menu
+                      anchorEl={anchorEl}
+                      open={Boolean(anchorEl)}
+                      onClose={() => setAnchorEl(null)}
+                    >
+                      <MenuItem disabled>{user?.email}</MenuItem>
+                      <MenuItem
+                        component={RouterLink}
+                        to="/profile"
+                        onClick={() => setAnchorEl(null)}
+                      >
+                        My Profile
+                      </MenuItem>
+                      <MenuItem
+                        component={RouterLink}
+                        to="/my-orders"
+                        onClick={() => setAnchorEl(null)}
+                      >
+                        My Orders
+                      </MenuItem>
+                      <MenuItem
+                        component={RouterLink}
+                        to="/addresses"
+                        onClick={() => setAnchorEl(null)}
+                      >
+                        Address Book
+                      </MenuItem>
+                      {user?.role === "admin" && (
+                        <MenuItem
+                          component={RouterLink}
+                          to="/admin/dashboard"
+                          onClick={() => setAnchorEl(null)}
+                        >
+                          Admin Dashboard
+                        </MenuItem>
+                      )}
+                      <Divider />
+                      <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                    </Menu>
+                  </>
+                ) : (
+                  <Button color="inherit" component={RouterLink} to="/login">
+                    Login
+                  </Button>
+                ))}
+            </Box>
+          )}
+        </Toolbar>
+      </AppBar>
+
+      {/* Mobile navigation drawer — replaces the avatar dropdown menu entirely on small screens */}
+      <Drawer anchor="left" open={drawerOpen} onClose={closeDrawer}>
+        <Box sx={{ width: 280 }} role="presentation">
+          {isAuthenticated && (
+            <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Avatar src={user?.avatar} sx={{ width: 44, height: 44 }}>
+                {user?.name?.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box sx={{ overflow: "hidden" }}>
+                <Typography variant="subtitle2" noWrap>
+                  {user?.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {user?.email}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+          <Divider />
+
+          <List>
+            <ListItemButton component={RouterLink} to="/" onClick={closeDrawer}>
+              <ListItemText primary="Home" />
+            </ListItemButton>
+            <ListItemButton
+              component={RouterLink}
+              to="/products"
+              onClick={closeDrawer}
+            >
+              <ListItemText primary="Shop" />
+            </ListItemButton>
+
+            {isAuthenticated ? (
+              <>
+                <ListItemButton
                   component={RouterLink}
                   to="/profile"
-                  onClick={handleMenuClose}
+                  onClick={closeDrawer}
                 >
-                  My Profile
-                </MenuItem>
-                <MenuItem
+                  <ListItemIcon>
+                    <PersonIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="My Profile" />
+                </ListItemButton>
+                <ListItemButton
                   component={RouterLink}
                   to="/my-orders"
-                  onClick={handleMenuClose}
+                  onClick={closeDrawer}
                 >
-                  My Orders
-                </MenuItem>
+                  <ListItemText primary="My Orders" />
+                </ListItemButton>
+                <ListItemButton
+                  component={RouterLink}
+                  to="/wishlist"
+                  onClick={closeDrawer}
+                >
+                  <ListItemIcon>
+                    <FavoriteIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={`Wishlist (${wishlistCount})`} />
+                </ListItemButton>
+                <ListItemButton
+                  component={RouterLink}
+                  to="/addresses"
+                  onClick={closeDrawer}
+                >
+                  <ListItemText primary="Address Book" />
+                </ListItemButton>
+
                 {user?.role === "admin" && (
                   <>
-                    <MenuItem
+                    <Divider sx={{ my: 1 }} />
+                    <ListItemButton
                       component={RouterLink}
                       to="/admin/dashboard"
-                      onClick={handleMenuClose}
+                      onClick={closeDrawer}
                     >
-                      Dashboard
-                    </MenuItem>
-                    <MenuItem
-                      component={RouterLink}
-                      to="/admin/orders"
-                      onClick={handleMenuClose}
-                    >
-                      Manage Orders
-                    </MenuItem>
-                    <MenuItem
-                      component={RouterLink}
-                      to="/admin/products/new"
-                      onClick={handleMenuClose}
-                    >
-                      Add Product
-                    </MenuItem>
-                    <MenuItem
+                      <ListItemText primary="Admin Dashboard" />
+                    </ListItemButton>
+                    <ListItemButton
                       component={RouterLink}
                       to="/admin/products"
-                      onClick={handleMenuClose}
+                      onClick={closeDrawer}
                     >
-                      Manage Products
-                    </MenuItem>
-                    <MenuItem
+                      <ListItemText primary="Manage Products" />
+                    </ListItemButton>
+                    <ListItemButton
                       component={RouterLink}
-                      to="/admin/categories"
-                      onClick={handleMenuClose}
+                      to="/admin/orders"
+                      onClick={closeDrawer}
                     >
-                      Manage Categories
-                    </MenuItem>
-                    <MenuItem
-                      component={RouterLink}
-                      to="/admin/coupons"
-                      onClick={handleMenuClose}
-                    >
-                      Manage Coupons
-                    </MenuItem>
-                    <MenuItem
-                      component={RouterLink}
-                      to="/addresses"
-                      onClick={handleMenuClose}
-                    >
-                      Address Book
-                    </MenuItem>
-                    <MenuItem
-                      component={RouterLink}
-                      to="/admin/users"
-                      onClick={handleMenuClose}
-                    >
-                      Manage Users
-                    </MenuItem>
-                    <MenuItem
-                      component={RouterLink}
-                      to="/admin/returns"
-                      onClick={handleMenuClose}
-                    >
-                      Return Requests
-                    </MenuItem>
-                    <MenuItem
-                      component={RouterLink}
-                      to="/admin/testimonials"
-                      onClick={handleMenuClose}
-                    >
-                      Manage Testimonials
-                    </MenuItem>
+                      <ListItemText primary="Manage Orders" />
+                    </ListItemButton>
                   </>
                 )}
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
-              </Menu>
-            </>
-          ) : (
-            <Button color="inherit" component={RouterLink} to="/login">
-              Login
-            </Button>
-          )}
+
+                <Divider sx={{ my: 1 }} />
+                <ListItemButton onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Logout" />
+                </ListItemButton>
+              </>
+            ) : (
+              <ListItemButton
+                component={RouterLink}
+                to="/login"
+                onClick={closeDrawer}
+              >
+                <ListItemText primary="Login" />
+              </ListItemButton>
+            )}
+
+            <Divider sx={{ my: 1 }} />
+            <Box
+              sx={{
+                px: 2,
+                py: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography variant="body2">Theme</Typography>
+              <ThemeToggle />
+            </Box>
+          </List>
         </Box>
-      </Toolbar>
-    </AppBar>
+      </Drawer>
+    </>
   );
 }

@@ -102,7 +102,7 @@ export default function AddressBookPage() {
   const isSubmitting = createAddress.isPending || updateAddress.isPending;
 
   if (isLoading)
-    return <Container sx={{ py: 4 }}>Loading addresses...</Container>;
+    return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading addresses...</Container>;
 
   return (
     <PageTransition>

@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
   });
 
   if (loadingSummary)
-    return <Container sx={{ py: 4 }}>Loading dashboard...</Container>;
+    return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading dashboard...</Container>;
 
   return (
     <PageTransition>

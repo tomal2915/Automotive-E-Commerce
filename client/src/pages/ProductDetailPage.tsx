@@ -43,12 +43,12 @@ export default function ProductDetailPage() {
     }
   }, [id]);
 
-  if (isLoading) return <Container sx={{ py: 4 }}>Loading...</Container>;
-  if (!product) return <Container sx={{ py: 4 }}>Product not found</Container>;
+  if (isLoading) return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading...</Container>;
+  if (!product) return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Product not found</Container>;
 
   return (
     <PageTransition>
-      <Container sx={{ py: 4 }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <SEO
           title={product.title}
           description={product.description.slice(0, 155)} // search engines truncate around here anyway

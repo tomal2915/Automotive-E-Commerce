@@ -6,6 +6,7 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useCategories } from "../categories/useCategories";
+import { useTheme, useMediaQuery } from "@mui/material";
 
 const FALLBACK_COLLECTIONS = [
   { _id: "1", name: "Automotive" },
@@ -19,6 +20,9 @@ export default function HeroSection() {
   const navigate = useNavigate();
   const { data: categories } = useCategories();
   const [activeIndex, setActiveIndex] = useState(0);
+  const theme = useTheme();
+  const isMobileHero = useMediaQuery(theme.breakpoints.down("sm"));
+  const visibleCount = isMobileHero ? 3 : 5;
 
   const collections =
     categories && categories.length > 0 ? categories : FALLBACK_COLLECTIONS;
@@ -30,11 +34,16 @@ export default function HeroSection() {
   // Builds a fixed-size window of 5 cards centered on activeIndex,
   // wrapping around circularly — offset -2..2 drives the visual styling
   // (center card is large/white, neighbors fade and shrink with distance)
-  const visibleCards = Array.from({ length: Math.min(5, count) }, (_, i) => {
-    const offset = i - Math.floor(Math.min(5, count) / 2);
-    const index = (((activeIndex + offset) % count) + count) % count;
-    return { ...collections[index], offset };
-  });
+  const visibleCount = window.innerWidth < 600 ? 3 : 5;
+  const visibleCards = Array.from(
+    { length: Math.min(visibleCount, count) },
+    (_, i) => {
+      const offset = i - Math.floor(Math.min(visibleCount, count) / 2);
+      // ... rest unchanged
+      const index = (((activeIndex + offset) % count) + count) % count;
+      return { ...collections[index], offset };
+    },
+  );
 
   return (
     <Box
@@ -89,7 +98,7 @@ export default function HeroSection() {
               sx={{
                 fontFamily: '"Playfair Display", serif',
                 fontWeight: 600,
-                fontSize: { xs: "2.4rem", sm: "3.2rem", md: "4.5rem" },
+                fontSize: { xs: "2rem", sm: "2.8rem", md: "4.5rem" },
                 lineHeight: 1.1,
                 color: "#26241f",
                 letterSpacing: { xs: 1, md: 2 },
@@ -148,9 +157,10 @@ export default function HeroSection() {
             display: "flex",
             justifyContent: "center",
             alignItems: "flex-end",
-            gap: { xs: 1.5, md: 2 },
-            minHeight: 280,
+            gap: { xs: 1, sm: 1.5, md: 2 },
+            minHeight: { xs: 220, md: 280 },
             px: { xs: 0, md: 4 },
+            overflow: "hidden", // prevents side cards from causing horizontal scroll on narrow screens
           }}
         >
           <AnimatePresence mode="popLayout">
@@ -182,7 +192,7 @@ export default function HeroSection() {
                           )
                     }
                     sx={{
-                      width: { xs: 130, md: isCenter ? 200 : 170 },
+                      width: { xs: 100, sm: 140, md: isCenter ? 200 : 170 },
                       bgcolor: isCenter ? "#fff" : "rgba(255,255,255,0.5)",
                       borderRadius: 3,
                       boxShadow: isCenter

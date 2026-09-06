@@ -10,6 +10,8 @@ import {
   Divider,
   Button,
   Alert,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useCart } from "../features/cart/useCart";
@@ -24,13 +26,16 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAddresses } from "../features/addresses/addressApi";
 import { MenuItem, TextField as MTextField } from "@mui/material"; // TextField already imported probably, alias avoided if not needed
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { formatCurrency } from "../utils/formatCurrency";
 import PageTransition from "../components/PageTransition";
 
 export default function CartPage() {
   const { data: cart, isLoading } = useCart();
   const queryClient = useQueryClient();
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // < 900px
 
   const updateQuantity = useMutation({
     mutationFn: ({
@@ -56,7 +61,7 @@ export default function CartPage() {
     },
   });
 
-  if (isLoading) return <Container sx={{ py: 4 }}>Loading cart...</Container>;
+  if (isLoading) return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading cart...</Container>;
 
   const items = cart?.items ?? [];
   const total = items.reduce(
@@ -69,7 +74,7 @@ export default function CartPage() {
     code: string;
     discount: number;
   } | null>(null);
-  
+
   const [couponError, setCouponError] = useState("");
 
   const applyCoupon = useMutation({
@@ -118,7 +123,7 @@ export default function CartPage() {
 
   return (
     <PageTransition>
-      <Container sx={{ py: 4 }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <Typography sx={{ variant: "h4", mb: 3 }}>Your Cart</Typography>
 
         {items.length === 0 ? (
@@ -129,6 +134,11 @@ export default function CartPage() {
               {items.map((item) => (
                 <Box key={item.product._id}>
                   <ListItem
+                    sx={{
+                      flexDirection: { xs: "column", sm: "row" },
+                      alignItems: { xs: "flex-start", sm: "center" },
+                      gap: { xs: 1, sm: 0 },
+                    }}
                     secondaryAction={
                       <IconButton
                         edge="end"
@@ -152,8 +162,11 @@ export default function CartPage() {
                           quantity: Math.max(1, Number(e.target.value)),
                         })
                       }
-                      sx={{ width: 80, mx: 2 }}
-                      inputProps={{ min: 1 }}
+                      sx={{
+                        width: { xs: "100%", sm: 80 },
+                        mx: { xs: 0, sm: 2 },
+                      }}
+                      slotProps={{ htmlInput: { min: 1 } }}
                     />
                   </ListItem>
                   <Divider />
@@ -238,7 +251,14 @@ export default function CartPage() {
             </Box>
 
             <Box
-              sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                justifyContent: "space-between",
+                alignItems: { xs: "stretch", sm: "center" },
+                gap: 2,
+                mt: 3,
+              }}
             >
               <Typography sx={{ variant: "h6" }}>
                 {appliedCoupon && (
@@ -261,6 +281,7 @@ export default function CartPage() {
                 size="large"
                 onClick={handleCheckout}
                 disabled={checkout.isPending || !selectedAddress}
+                fullWidth={isMobile}
               >
                 {checkout.isPending ? "Redirecting..." : "Checkout"}
               </Button>

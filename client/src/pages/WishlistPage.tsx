@@ -7,13 +7,13 @@ export default function WishlistPage() {
   const { data: wishlist, isLoading } = useWishlist();
 
   if (isLoading)
-    return <Container sx={{ py: 4 }}>Loading wishlist...</Container>;
+    return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading wishlist...</Container>;
 
   const products = wishlist?.products ?? [];
 
   return (
     <PageTransition>
-      <Container sx={{ py: 4 }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <Typography sx={{ variant: "h4", mb: 3 }}>My Wishlist</Typography>
 
         {products.length === 0 ? (

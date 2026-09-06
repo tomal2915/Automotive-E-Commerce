@@ -58,7 +58,7 @@ export default function AdminCategoriesPage() {
 
   return (
     <PageTransition>
-      <Container sx={{ py: 4 }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <Typography sx={{ variant: "h4", mb: 3 }}>Manage Categories</Typography>
 
         <Paper sx={{ p: 3, mb: 4 }}>

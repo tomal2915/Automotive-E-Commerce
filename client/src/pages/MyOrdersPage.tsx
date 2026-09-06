@@ -71,11 +71,11 @@ export default function MyOrdersPage() {
     else requestReturn.mutate();
   };
 
-  if (isLoading) return <Container sx={{ py: 4 }}>Loading orders...</Container>;
+  if (isLoading) return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading orders...</Container>;
 
   return (
     <PageTransition>
-      <Container sx={{ py: 4 }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <Box
           sx={{
             display: "flex",

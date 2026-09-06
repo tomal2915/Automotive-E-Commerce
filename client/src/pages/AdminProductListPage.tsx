@@ -113,7 +113,7 @@ export default function AdminProductListPage() {
 
   return (
     <PageTransition>
-      <Container sx={{ py: 4 }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <Box
           sx={{
             display: "flex",
@@ -132,7 +132,7 @@ export default function AdminProductListPage() {
           </Button>
         </Box>
 
-        <Box sx={{ height: 600, width: "100%" }}>
+        <Box sx={{ height: 600, width: "100%", overflowX: "auto" }}>
           <DataGrid
             rows={data?.products ?? []}
             columns={columns}

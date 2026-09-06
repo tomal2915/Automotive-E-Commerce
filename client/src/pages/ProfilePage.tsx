@@ -104,7 +104,7 @@ export default function ProfilePage() {
   };
 
   if (isLoading)
-    return <Container sx={{ py: 4 }}>Loading profile...</Container>;
+    return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading profile...</Container>;
 
   return (
     <PageTransition>

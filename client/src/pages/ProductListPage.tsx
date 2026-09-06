@@ -33,7 +33,7 @@ export default function ProductListPage() {
 
   return (
     <PageTransition>
-      <Container sx={{ py: 4 }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
         <SEO
           title="ShopBD Catalog"
           description="Browse thousands of quality products by make, model, and category. Fast delivery across Bangladesh."
