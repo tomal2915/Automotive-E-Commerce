@@ -132,7 +132,7 @@ export default function Navbar() {
             </Box>
           )}
 
-          <Box sx={{ flexGrow: isMobile && !mobileSearchOpen ? 1 : 0 }} />
+          <Box sx={{ flexGrow: isMobile && mobileSearchOpen ? 0 : 1 }} />
 
           {!(isMobile && mobileSearchOpen) && (
             <Box
@@ -320,20 +320,6 @@ export default function Navbar() {
                       onClick={closeDrawer}
                     >
                       <ListItemText primary="Admin Dashboard" />
-                    </ListItemButton>
-                    <ListItemButton
-                      component={RouterLink}
-                      to="/admin/products"
-                      onClick={closeDrawer}
-                    >
-                      <ListItemText primary="Manage Products" />
-                    </ListItemButton>
-                    <ListItemButton
-                      component={RouterLink}
-                      to="/admin/orders"
-                      onClick={closeDrawer}
-                    >
-                      <ListItemText primary="Manage Orders" />
                     </ListItemButton>
                   </>
                 )}

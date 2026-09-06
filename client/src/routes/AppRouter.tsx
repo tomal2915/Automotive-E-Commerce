@@ -29,6 +29,7 @@ import TermsOfServicePage from "../pages/TermsOfServicePage";
 import AdminCategoriesPage from "../pages/AdminCategoriesPage";
 import LandingPage from "../pages/LandingPage";
 import AdminTestimonialsPage from "../pages/AdminTestimonialsPage";
+import AdminLayout from "../layouts/AdminLayout";
 
 export default function AppRouter() {
   return (
@@ -56,23 +57,27 @@ export default function AppRouter() {
       </Route>
 
       <Route element={<AdminRoute />}>
-        <Route path="/admin/orders" element={<AdminOrdersPage />} />
-        <Route path="/admin/products" element={<AdminProductListPage />} />
-        <Route
-          path="/admin/products/new"
-          element={<AdminProductCreatePage />}
-        />
-        <Route
-          path="/admin/products/:id/edit"
-          element={<AdminProductEditPage />}
-        />
-        <Route path="/admin/coupons" element={<AdminCouponsPage />} />
-        <Route path="/admin/users" element={<AdminUsersPage />} />
-        <Route path="/admin/returns" element={<AdminReturnsPage />} />
-        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-
-        <Route path="/admin/categories" element={<AdminCategoriesPage />} />
-        <Route path="/admin/testimonials" element={<AdminTestimonialsPage />} />
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/products" element={<AdminProductListPage />} />
+          <Route
+            path="/admin/products/new"
+            element={<AdminProductCreatePage />}
+          />
+          <Route
+            path="/admin/products/:id/edit"
+            element={<AdminProductEditPage />}
+          />
+          <Route path="/admin/categories" element={<AdminCategoriesPage />} />
+          <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/admin/returns" element={<AdminReturnsPage />} />
+          <Route path="/admin/coupons" element={<AdminCouponsPage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
+          <Route
+            path="/admin/testimonials"
+            element={<AdminTestimonialsPage />}
+          />
+        </Route>
       </Route>
     </Routes>
   );

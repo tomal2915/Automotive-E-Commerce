@@ -20,9 +20,6 @@ export default function HeroSection() {
   const navigate = useNavigate();
   const { data: categories } = useCategories();
   const [activeIndex, setActiveIndex] = useState(0);
-  const theme = useTheme();
-  const isMobileHero = useMediaQuery(theme.breakpoints.down("sm"));
-  const visibleCount = isMobileHero ? 3 : 5;
 
   const collections =
     categories && categories.length > 0 ? categories : FALLBACK_COLLECTIONS;

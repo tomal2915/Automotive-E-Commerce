@@ -1,4 +1,4 @@
-import { Container, Typography, Grid } from "@mui/material";
+import { Container, Typography, Grid, Box } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchSummary,
@@ -41,16 +41,22 @@ export default function AdminDashboardPage() {
   });
 
   if (loadingSummary)
-    return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading dashboard...</Container>;
+    return (
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
+        Loading dashboard...
+      </Container>
+    );
 
   return (
     <PageTransition>
       <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Typography sx={{ variant: "h4", mb: 3 }}>
+        <Typography variant="h4" sx={{ mb: 3 }}>
           Analytics Dashboard
         </Typography>
 
-        {summary && <SummaryCards summary={summary} />}
+        <Box sx={{ mb: 3 }}>
+          {summary && <SummaryCards summary={summary} />}
+        </Box>
 
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, lg: 8 }}>
