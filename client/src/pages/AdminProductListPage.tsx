@@ -19,6 +19,7 @@ import {
 } from "../features/products/productAdminApi";
 import type { Product } from "../features/products/productTypes";
 import { formatCurrency } from "../utils/formatCurrency";
+import PageTransition from "../components/PageTransition";
 
 export default function AdminProductListPage() {
   const [page, setPage] = useState(0);
@@ -111,39 +112,41 @@ export default function AdminProductListPage() {
   ];
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography sx={{ variant: "h4" }}>Manage Products</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate("/admin/products/new")}
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
         >
-          Add Product
-        </Button>
-      </Box>
+          <Typography sx={{ variant: "h4" }}>Manage Products</Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/admin/products/new")}
+          >
+            Add Product
+          </Button>
+        </Box>
 
-      <Box sx={{ height: 600, width: "100%" }}>
-        <DataGrid
-          rows={data?.products ?? []}
-          columns={columns}
-          getRowId={(row: Product) => row._id}
-          loading={isLoading}
-          paginationMode="server"
-          rowCount={data?.pagination.total ?? 0}
-          paginationModel={{ page, pageSize: 20 }}
-          onPaginationModelChange={(model) => setPage(model.page)}
-          pageSizeOptions={[20]}
-          disableRowSelectionOnClick
-        />
-      </Box>
-    </Container>
+        <Box sx={{ height: 600, width: "100%" }}>
+          <DataGrid
+            rows={data?.products ?? []}
+            columns={columns}
+            getRowId={(row: Product) => row._id}
+            loading={isLoading}
+            paginationMode="server"
+            rowCount={data?.pagination.total ?? 0}
+            paginationModel={{ page, pageSize: 20 }}
+            onPaginationModelChange={(model) => setPage(model.page)}
+            pageSizeOptions={[20]}
+            disableRowSelectionOnClick
+          />
+        </Box>
+      </Container>
+    </PageTransition>
   );
 }

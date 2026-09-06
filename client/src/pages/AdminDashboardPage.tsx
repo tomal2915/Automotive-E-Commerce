@@ -12,6 +12,7 @@ import RevenueTrendChart from "../features/analytics/RevenueTrendChart";
 import TopProductsChart from "../features/analytics/TopProductsChart";
 import OrderStatusWidget from "../features/analytics/OrderStatusWidget";
 import LowStockWidget from "../features/analytics/LowStockWidget";
+import PageTransition from "../components/PageTransition";
 
 export default function AdminDashboardPage() {
   const { data: summary, isLoading: loadingSummary } = useQuery({
@@ -43,25 +44,29 @@ export default function AdminDashboardPage() {
     return <Container sx={{ py: 4 }}>Loading dashboard...</Container>;
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography sx={{ variant: "h4", mb: 3 }}>Analytics Dashboard</Typography>
+    <PageTransition>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Typography sx={{ variant: "h4", mb: 3 }}>
+          Analytics Dashboard
+        </Typography>
 
-      {summary && <SummaryCards summary={summary} />}
+        {summary && <SummaryCards summary={summary} />}
 
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, lg: 8 }}>
-          {trend && <RevenueTrendChart data={trend} />}
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, lg: 8 }}>
+            {trend && <RevenueTrendChart data={trend} />}
+          </Grid>
+          <Grid size={{ xs: 12, lg: 4 }}>
+            {statusBreakdown && <OrderStatusWidget data={statusBreakdown} />}
+          </Grid>
+          <Grid size={{ xs: 12, lg: 8 }}>
+            {topProducts && <TopProductsChart data={topProducts} />}
+          </Grid>
+          <Grid size={{ xs: 12, lg: 4 }}>
+            {lowStock && <LowStockWidget data={lowStock} />}
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, lg: 4 }}>
-          {statusBreakdown && <OrderStatusWidget data={statusBreakdown} />}
-        </Grid>
-        <Grid size={{ xs: 12, lg: 8 }}>
-          {topProducts && <TopProductsChart data={topProducts} />}
-        </Grid>
-        <Grid size={{ xs: 12, lg: 4 }}>
-          {lowStock && <LowStockWidget data={lowStock} />}
-        </Grid>
-      </Grid>
-    </Container>
+      </Container>
+    </PageTransition>
   );
 }

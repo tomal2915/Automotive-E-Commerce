@@ -5,6 +5,7 @@ import ProductForm, {
   type ProductFormValues,
 } from "../features/products/ProductForm";
 import { createProductRequest } from "../features/products/productAdminApi";
+import PageTransition from "../components/PageTransition";
 
 export default function AdminProductCreatePage() {
   const navigate = useNavigate();
@@ -23,30 +24,32 @@ export default function AdminProductCreatePage() {
   });
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Typography sx={{ variant: "h4", mb: 3 }}>Add New Product</Typography>
-      <ProductForm
-        onSubmit={(values, images, specifications) =>
-          mutation.mutate({
-            values: {
-              ...values,
-              yearRangeStart: values.yearRangeStart
-                ? Number(values.yearRangeStart)
-                : undefined,
-              yearRangeEnd: values.yearRangeEnd
-                ? Number(values.yearRangeEnd)
-                : undefined,
-              price: Number(values.price),
-              stock: Number(values.stock),
-            },
-            images,
-            specifications,
-          })
-        }
-        isSubmitting={mutation.isPending}
-        errorMessage={(mutation.error as any)?.response?.data?.message}
-        submitLabel="Create Product"
-      />
-    </Container>
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <Typography sx={{ variant: "h4", mb: 3 }}>Add New Product</Typography>
+        <ProductForm
+          onSubmit={(values, images, specifications) =>
+            mutation.mutate({
+              values: {
+                ...values,
+                yearRangeStart: values.yearRangeStart
+                  ? Number(values.yearRangeStart)
+                  : undefined,
+                yearRangeEnd: values.yearRangeEnd
+                  ? Number(values.yearRangeEnd)
+                  : undefined,
+                price: Number(values.price),
+                stock: Number(values.stock),
+              },
+              images,
+              specifications,
+            })
+          }
+          isSubmitting={mutation.isPending}
+          errorMessage={(mutation.error as any)?.response?.data?.message}
+          submitLabel="Create Product"
+        />
+      </Container>
+    </PageTransition>
   );
 }

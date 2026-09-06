@@ -26,6 +26,7 @@ import {
   requestReturnRequest,
 } from "../features/orders/orderApi";
 import { formatCurrency } from "../utils/formatCurrency";
+import PageTransition from "../components/PageTransition";
 
 export default function MyOrdersPage() {
   const {
@@ -73,130 +74,136 @@ export default function MyOrdersPage() {
   if (isLoading) return <Container sx={{ py: 4 }}>Loading orders...</Container>;
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography sx={{ variant: "h4" }}>My Orders</Typography>
-        <Button
-          startIcon={<RefreshIcon />}
-          onClick={() => refetch()}
-          disabled={isFetching}
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
         >
-          {isFetching ? "Refreshing..." : "Refresh"}
-        </Button>
-      </Box>
-
-      {!orders || orders.length === 0 ? (
-        <Typography color="text.secondary">
-          You haven't placed any orders yet.
-        </Typography>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Items</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order._id}>
-                  <TableCell>
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {order.items.map((i) => i.title).join(", ")}
-                  </TableCell>
-                  <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
-                  <TableCell>
-                    <OrderStatusChip status={order.status} />
-                  </TableCell>
-                  <TableCell>
-                    {["pending", "paid"].includes(order.status) && (
-                      <Button
-                        size="small"
-                        color="error"
-                        onClick={() =>
-                          setActionDialog({
-                            type: "cancel",
-                            orderId: order._id,
-                          })
-                        }
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                    {order.status === "delivered" && (
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          setActionDialog({
-                            type: "return",
-                            orderId: order._id,
-                          })
-                        }
-                      >
-                        Return
-                      </Button>
-                    )}
-                    {order.status === "return_requested" && (
-                      <Typography variant="caption" color="text.secondary">
-                        Return pending review
-                      </Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-
-      <Dialog open={!!actionDialog} onClose={() => setActionDialog(null)}>
-        <DialogTitle>
-          {actionDialog?.type === "cancel" ? "Cancel Order" : "Request Return"}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            fullWidth
-            multiline
-            rows={3}
-            label="Reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            sx={{ mt: 1 }}
-          />
-          {(cancelOrder.isError || requestReturn.isError) && (
-            <Typography sx={{ color: "error", variant: "body2", mt: 1 }}>
-              {((cancelOrder.error || requestReturn.error) as any)?.response
-                ?.data?.message || "Action failed"}
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setActionDialog(null)}>Close</Button>
+          <Typography sx={{ variant: "h4" }}>My Orders</Typography>
           <Button
-            variant="contained"
-            onClick={handleConfirmAction}
-            disabled={
-              !reason.trim() || cancelOrder.isPending || requestReturn.isPending
-            }
+            startIcon={<RefreshIcon />}
+            onClick={() => refetch()}
+            disabled={isFetching}
           >
-            Confirm
+            {isFetching ? "Refreshing..." : "Refresh"}
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        </Box>
+
+        {!orders || orders.length === 0 ? (
+          <Typography color="text.secondary">
+            You haven't placed any orders yet.
+          </Typography>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Items</TableCell>
+                  <TableCell>Total</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {orders.map((order) => (
+                  <TableRow key={order._id}>
+                    <TableCell>
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {order.items.map((i) => i.title).join(", ")}
+                    </TableCell>
+                    <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
+                    <TableCell>
+                      <OrderStatusChip status={order.status} />
+                    </TableCell>
+                    <TableCell>
+                      {["pending", "paid"].includes(order.status) && (
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={() =>
+                            setActionDialog({
+                              type: "cancel",
+                              orderId: order._id,
+                            })
+                          }
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                      {order.status === "delivered" && (
+                        <Button
+                          size="small"
+                          onClick={() =>
+                            setActionDialog({
+                              type: "return",
+                              orderId: order._id,
+                            })
+                          }
+                        >
+                          Return
+                        </Button>
+                      )}
+                      {order.status === "return_requested" && (
+                        <Typography variant="caption" color="text.secondary">
+                          Return pending review
+                        </Typography>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
+        <Dialog open={!!actionDialog} onClose={() => setActionDialog(null)}>
+          <DialogTitle>
+            {actionDialog?.type === "cancel"
+              ? "Cancel Order"
+              : "Request Return"}
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              fullWidth
+              multiline
+              rows={3}
+              label="Reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              sx={{ mt: 1 }}
+            />
+            {(cancelOrder.isError || requestReturn.isError) && (
+              <Typography sx={{ color: "error", variant: "body2", mt: 1 }}>
+                {((cancelOrder.error || requestReturn.error) as any)?.response
+                  ?.data?.message || "Action failed"}
+              </Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setActionDialog(null)}>Close</Button>
+            <Button
+              variant="contained"
+              onClick={handleConfirmAction}
+              disabled={
+                !reason.trim() ||
+                cancelOrder.isPending ||
+                requestReturn.isPending
+              }
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </PageTransition>
   );
 }

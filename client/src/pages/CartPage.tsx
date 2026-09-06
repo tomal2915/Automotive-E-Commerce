@@ -26,6 +26,7 @@ import { fetchAddresses } from "../features/addresses/addressApi";
 import { MenuItem, TextField as MTextField } from "@mui/material"; // TextField already imported probably, alias avoided if not needed
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { formatCurrency } from "../utils/formatCurrency";
+import PageTransition from "../components/PageTransition";
 
 export default function CartPage() {
   const { data: cart, isLoading } = useCart();
@@ -68,6 +69,7 @@ export default function CartPage() {
     code: string;
     discount: number;
   } | null>(null);
+  
   const [couponError, setCouponError] = useState("");
 
   const applyCoupon = useMutation({
@@ -84,7 +86,6 @@ export default function CartPage() {
 
   const finalTotal = appliedCoupon ? total - appliedCoupon.discount : total;
 
-  const navigate = useNavigate();
   const { data: addresses } = useQuery({
     queryKey: ["addresses"],
     queryFn: fetchAddresses,
@@ -116,151 +117,157 @@ export default function CartPage() {
   };
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Typography sx={{ variant: "h4", mb: 3 }}>Your Cart</Typography>
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <Typography sx={{ variant: "h4", mb: 3 }}>Your Cart</Typography>
 
-      {items.length === 0 ? (
-        <Typography color="text.secondary">Your cart is empty.</Typography>
-      ) : (
-        <>
-          <List>
-            {items.map((item) => (
-              <Box key={item.product._id}>
-                <ListItem
-                  secondaryAction={
-                    <IconButton
-                      edge="end"
-                      onClick={() => removeItem.mutate(item.product._id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  }
-                >
-                  <ListItemText
-                    primary={item.product.title}
-                    secondary={`${formatCurrency(item.priceAtAdd)} each`}
-                  />
-                  <TextField
-                    type="number"
-                    size="small"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateQuantity.mutate({
-                        productId: item.product._id,
-                        quantity: Math.max(1, Number(e.target.value)),
-                      })
+        {items.length === 0 ? (
+          <Typography color="text.secondary">Your cart is empty.</Typography>
+        ) : (
+          <>
+            <List>
+              {items.map((item) => (
+                <Box key={item.product._id}>
+                  <ListItem
+                    secondaryAction={
+                      <IconButton
+                        edge="end"
+                        onClick={() => removeItem.mutate(item.product._id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
                     }
-                    sx={{ width: 80, mx: 2 }}
-                    inputProps={{ min: 1 }}
-                  />
-                </ListItem>
-                <Divider />
-              </Box>
-            ))}
-          </List>
+                  >
+                    <ListItemText
+                      primary={item.product.title}
+                      secondary={`${formatCurrency(item.priceAtAdd)} each`}
+                    />
+                    <TextField
+                      type="number"
+                      size="small"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        updateQuantity.mutate({
+                          productId: item.product._id,
+                          quantity: Math.max(1, Number(e.target.value)),
+                        })
+                      }
+                      sx={{ width: 80, mx: 2 }}
+                      inputProps={{ min: 1 }}
+                    />
+                  </ListItem>
+                  <Divider />
+                </Box>
+              ))}
+            </List>
 
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
-            <TextField
-              size="small"
-              label="Coupon Code"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-              disabled={!!appliedCoupon}
-            />
-            <Button
-              variant="outlined"
-              onClick={() => applyCoupon.mutate(total)}
-              disabled={!couponCode || !!appliedCoupon || applyCoupon.isPending}
-            >
-              Apply
-            </Button>
-            {appliedCoupon && (
-              <Button
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
+              <TextField
                 size="small"
-                color="error"
-                onClick={() => {
-                  setAppliedCoupon(null);
-                  setCouponCode("");
-                }}
-              >
-                Remove
-              </Button>
-            )}
-          </Box>
-          {couponError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {couponError}
-            </Alert>
-          )}
-          {appliedCoupon && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              Coupon "{appliedCoupon.code}" applied —{" "}
-              {formatCurrency(appliedCoupon.discount)} off
-            </Alert>
-          )}
-
-          <Box sx={{ mb: 3 }}>
-            <Typography sx={{ variant: "subtitle1", mb: 1 }}>
-              Shipping Address
-            </Typography>
-
-            {!addresses || addresses.length === 0 ? (
-              <Alert
-                severity="warning"
-                action={
-                  <Button size="small" component={RouterLink} to="/addresses">
-                    Add Address
-                  </Button>
+                label="Coupon Code"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                disabled={!!appliedCoupon}
+              />
+              <Button
+                variant="outlined"
+                onClick={() => applyCoupon.mutate(total)}
+                disabled={
+                  !couponCode || !!appliedCoupon || applyCoupon.isPending
                 }
               >
-                No saved addresses. Please add one to checkout.
-              </Alert>
-            ) : (
-              <TextField
-                select
-                fullWidth
-                label="Select delivery address"
-                value={activeAddressId}
-                onChange={(e) => setSelectedAddressId(e.target.value)}
-              >
-                {addresses.map((addr) => (
-                  <MenuItem key={addr._id} value={addr._id}>
-                    {addr.label} — {addr.street}, {addr.city} ({addr.name},{" "}
-                    {addr.phone})
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          </Box>
-
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
-            <Typography sx={{ variant: "h6" }}>
+                Apply
+              </Button>
               {appliedCoupon && (
-                <Typography
-                  component="span"
-                  sx={{
-                    textDecoration: "line-through",
-                    color: "text.secondary",
-                    mr: 1,
+                <Button
+                  size="small"
+                  color="error"
+                  onClick={() => {
+                    setAppliedCoupon(null);
+                    setCouponCode("");
                   }}
                 >
-                  {formatCurrency(total)}
-                </Typography>
+                  Remove
+                </Button>
               )}
-              Total: {formatCurrency(finalTotal)}
-            </Typography>
+            </Box>
+            {couponError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {couponError}
+              </Alert>
+            )}
+            {appliedCoupon && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Coupon "{appliedCoupon.code}" applied —{" "}
+                {formatCurrency(appliedCoupon.discount)} off
+              </Alert>
+            )}
 
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleCheckout}
-              disabled={checkout.isPending || !selectedAddress}
+            <Box sx={{ mb: 3 }}>
+              <Typography sx={{ variant: "subtitle1", mb: 1 }}>
+                Shipping Address
+              </Typography>
+
+              {!addresses || addresses.length === 0 ? (
+                <Alert
+                  severity="warning"
+                  action={
+                    <Button size="small" component={RouterLink} to="/addresses">
+                      Add Address
+                    </Button>
+                  }
+                >
+                  No saved addresses. Please add one to checkout.
+                </Alert>
+              ) : (
+                <TextField
+                  select
+                  fullWidth
+                  label="Select delivery address"
+                  value={activeAddressId}
+                  onChange={(e) => setSelectedAddressId(e.target.value)}
+                >
+                  {addresses.map((addr) => (
+                    <MenuItem key={addr._id} value={addr._id}>
+                      {addr.label} — {addr.street}, {addr.city} ({addr.name},{" "}
+                      {addr.phone})
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
+            </Box>
+
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}
             >
-              {checkout.isPending ? "Redirecting..." : "Checkout"}
-            </Button>
-          </Box>
-        </>
-      )}
-    </Container>
+              <Typography sx={{ variant: "h6" }}>
+                {appliedCoupon && (
+                  <Typography
+                    component="span"
+                    sx={{
+                      textDecoration: "line-through",
+                      color: "text.secondary",
+                      mr: 1,
+                    }}
+                  >
+                    {formatCurrency(total)}
+                  </Typography>
+                )}
+                Total: {formatCurrency(finalTotal)}
+              </Typography>
+
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleCheckout}
+                disabled={checkout.isPending || !selectedAddress}
+              >
+                {checkout.isPending ? "Redirecting..." : "Checkout"}
+              </Button>
+            </Box>
+          </>
+        )}
+      </Container>
+    </PageTransition>
   );
 }

@@ -14,6 +14,7 @@ import {
   fetchPendingReturns,
   reviewReturnRequestApi,
 } from "../features/orders/orderApi";
+import PageTransition from "../components/PageTransition";
 
 export default function AdminReturnsPage() {
   const queryClient = useQueryClient();
@@ -38,79 +39,87 @@ export default function AdminReturnsPage() {
   if (isLoading) return <Container sx={{ py: 4 }}>Loading...</Container>;
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Typography sx={{ variant: "h4", mb: 3 }}>
-        Pending Return Requests
-      </Typography>
-
-      {!orders || orders.length === 0 ? (
-        <Typography color="text.secondary">
-          No pending return requests.
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <Typography sx={{ variant: "h4", mb: 3 }}>
+          Pending Return Requests
         </Typography>
-      ) : (
-        orders.map((order: any) => (
-          <Card key={order._id} sx={{ mb: 2 }}>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 1,
-                }}
-              >
-                <Typography sx={{ variant: "subtitle1" }}>
-                  {order.user?.name} ({order.user?.email})
+
+        {!orders || orders.length === 0 ? (
+          <Typography color="text.secondary">
+            No pending return requests.
+          </Typography>
+        ) : (
+          orders.map((order: any) => (
+            <Card key={order._id} sx={{ mb: 2 }}>
+              <CardContent>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1,
+                  }}
+                >
+                  <Typography sx={{ variant: "subtitle1" }}>
+                    {order.user?.name} ({order.user?.email})
+                  </Typography>
+                  <Chip label={order.transactionId} size="small" />
+                </Box>
+                <Typography
+                  sx={{ variant: "body2", color: "text.secondary", mb: 1 }}
+                >
+                  Items: {order.items.map((i: any) => i.title).join(", ")} —
+                  Total: ${order.totalAmount.toFixed(2)}
                 </Typography>
-                <Chip label={order.transactionId} size="small" />
-              </Box>
-              <Typography
-                sx={{ variant: "body2", color: "text.secondary", mb: 1 }}
-              >
-                Items: {order.items.map((i: any) => i.title).join(", ")} —
-                Total: ${order.totalAmount.toFixed(2)}
-              </Typography>
-              <Typography sx={{ variant: "body2", mb: 2 }}>
-                <strong>Reason:</strong> {order.returnRequest.reason}
-              </Typography>
+                <Typography sx={{ variant: "body2", mb: 2 }}>
+                  <strong>Reason:</strong> {order.returnRequest.reason}
+                </Typography>
 
-              <TextField
-                size="small"
-                fullWidth
-                label="Admin note (optional)"
-                value={notes[order._id] || ""}
-                onChange={(e) =>
-                  setNotes({ ...notes, [order._id]: e.target.value })
-                }
-                sx={{ mb: 2 }}
-              />
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Admin note (optional)"
+                  value={notes[order._id] || ""}
+                  onChange={(e) =>
+                    setNotes({ ...notes, [order._id]: e.target.value })
+                  }
+                  sx={{ mb: 2 }}
+                />
 
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={() =>
-                    review.mutate({ orderId: order._id, decision: "approved" })
-                  }
-                  disabled={review.isPending}
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() =>
-                    review.mutate({ orderId: order._id, decision: "rejected" })
-                  }
-                  disabled={review.isPending}
-                >
-                  Reject
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        ))
-      )}
-    </Container>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={() =>
+                      review.mutate({
+                        orderId: order._id,
+                        decision: "approved",
+                      })
+                    }
+                    disabled={review.isPending}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() =>
+                      review.mutate({
+                        orderId: order._id,
+                        decision: "rejected",
+                      })
+                    }
+                    disabled={review.isPending}
+                  >
+                    Reject
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </Container>
+    </PageTransition>
   );
 }

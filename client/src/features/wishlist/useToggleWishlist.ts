@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { enqueueSnackbar } from "notistack";
 import { addToWishlistRequest, removeFromWishlistRequest } from "./wishlistApi";
 import type { Wishlist } from "./wishlistApi";
 import type { Product } from "../products/productTypes";
@@ -33,10 +34,22 @@ export const useToggleWishlist = () => {
       return { previous };
     },
 
+    onSuccess: (_data, { product, isInWishlist }) => {
+      enqueueSnackbar(
+        `${product.title} ${isInWishlist ? "removed from" : "added to"} wishlist`,
+        {
+          variant: "success",
+        },
+      );
+    },
+
     onError: (_err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(["wishlist"], context.previous);
       }
+      enqueueSnackbar("Couldn't update wishlist. Please try again.", {
+        variant: "error",
+      });
     },
 
     onSettled: () => {

@@ -1,6 +1,7 @@
 import { Container, Typography, Grid } from "@mui/material";
 import { useWishlist } from "../features/wishlist/useWishlist";
 import ProductCard from "../features/products/ProductCard";
+import PageTransition from "../components/PageTransition";
 
 export default function WishlistPage() {
   const { data: wishlist, isLoading } = useWishlist();
@@ -11,23 +12,25 @@ export default function WishlistPage() {
   const products = wishlist?.products ?? [];
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Typography sx={{ variant: "h4", mb: 3 }}>My Wishlist</Typography>
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <Typography sx={{ variant: "h4", mb: 3 }}>My Wishlist</Typography>
 
-      {products.length === 0 ? (
-        <Typography color="text.secondary">
-          Your wishlist is empty. Tap the heart icon on any product to save it
-          here.
-        </Typography>
-      ) : (
-        <Grid container spacing={2}>
-          {products.map((product) => (
-            <Grid key={product._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-              <ProductCard product={product} />
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </Container>
+        {products.length === 0 ? (
+          <Typography color="text.secondary">
+            Your wishlist is empty. Tap the heart icon on any product to save it
+            here.
+          </Typography>
+        ) : (
+          <Grid container spacing={2}>
+            {products.map((product) => (
+              <Grid key={product._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <ProductCard product={product} />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Container>
+    </PageTransition>
   );
 }

@@ -9,6 +9,7 @@ import {
 import OrderStatusChip from "../features/orders/OrderStatusChip";
 import type { Order } from "../features/orders/orderTypes";
 import { formatCurrency } from "../utils/formatCurrency";
+import PageTransition from "../components/PageTransition";
 
 const STATUS_OPTIONS: Order["status"][] = [
   "pending",
@@ -94,23 +95,25 @@ export default function AdminOrdersPage() {
   ];
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Typography sx={{ variant: "h4", mb: 3 }}>Manage Orders</Typography>
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <Typography sx={{ variant: "h4", mb: 3 }}>Manage Orders</Typography>
 
-      <Box sx={{ height: 600, width: "100%" }}>
-        <DataGrid
-          rows={data?.orders ?? []}
-          columns={columns}
-          getRowId={(row) => row._id}
-          loading={isLoading}
-          paginationMode="server"
-          rowCount={data?.pagination.total ?? 0}
-          paginationModel={{ page, pageSize: 20 }}
-          onPaginationModelChange={(model) => setPage(model.page)}
-          pageSizeOptions={[20]}
-          disableRowSelectionOnClick
-        />
-      </Box>
-    </Container>
+        <Box sx={{ height: 600, width: "100%" }}>
+          <DataGrid
+            rows={data?.orders ?? []}
+            columns={columns}
+            getRowId={(row) => row._id}
+            loading={isLoading}
+            paginationMode="server"
+            rowCount={data?.pagination.total ?? 0}
+            paginationModel={{ page, pageSize: 20 }}
+            onPaginationModelChange={(model) => setPage(model.page)}
+            pageSizeOptions={[20]}
+            disableRowSelectionOnClick
+          />
+        </Box>
+      </Container>
+    </PageTransition>
   );
 }

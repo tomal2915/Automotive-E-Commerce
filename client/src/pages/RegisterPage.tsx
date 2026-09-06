@@ -17,6 +17,7 @@ import {
 } from "../features/auth/authSchemas";
 import { registerRequest } from "../features/auth/authApi";
 import PasswordStrengthMeter from "../features/auth/PasswordStrengthMeter";
+import { PageTransition } from "../components/PageTransition";
 import SEO from "../components/SEO";
 
 export default function RegisterPage() {
@@ -44,11 +45,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <>
-      <SEO
-        title="Register"
-        description="Create an account with Shop BD."
-      />
+    <PageTransition>
+      <SEO title="Register" description="Create an account with Shop BD." />
 
       <Box
         sx={{
@@ -111,6 +109,6 @@ export default function RegisterPage() {
           </Typography>
         </Paper>
       </Box>
-    </>
+    </PageTransition>
   );
 }

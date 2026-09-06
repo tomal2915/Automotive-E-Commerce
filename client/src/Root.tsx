@@ -7,6 +7,7 @@ import { queryClient } from "./lib/queryClient";
 import { getTheme } from "./theme";
 import { useThemeStore } from "./store/themeStore";
 import App from "./App.tsx";
+import { SnackbarProvider } from "notistack";
 
 export default function Root() {
   const mode = useThemeStore((state) => state.mode);
@@ -17,9 +18,15 @@ export default function Root() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
+          <SnackbarProvider
+            maxSnack={3}
+            autoHideDuration={2500}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </SnackbarProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </HelmetProvider>

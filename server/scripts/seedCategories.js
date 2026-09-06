@@ -7,7 +7,7 @@ const categories = [
     name: "Automotive",
     slug: "automotive",
     hasVehicleAttributes: true,
-    description: "Auto parts and accessories",
+    description: "ShopBD and accessories",
   },
   {
     name: "Electronics",

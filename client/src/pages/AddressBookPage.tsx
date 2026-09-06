@@ -25,6 +25,7 @@ import {
   type Address,
   type AddressInput,
 } from "../features/addresses/addressApi";
+import PageTransition from "../components/PageTransition";
 
 const emptyForm: AddressInput = {
   label: "Home",
@@ -104,155 +105,172 @@ export default function AddressBookPage() {
     return <Container sx={{ py: 4 }}>Loading addresses...</Container>;
 
   return (
-    <Container sx={{ py: 4, maxWidth: "800px !important" }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography variant="h4">Address Book</Typography>
-        {!showForm && (
-          <Button variant="contained" onClick={() => setShowForm(true)}>
-            Add New Address
-          </Button>
-        )}
-      </Box>
+    <PageTransition>
+      <Container sx={{ py: 4, maxWidth: "800px !important" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Typography variant="h4">Address Book</Typography>
+          {!showForm && (
+            <Button variant="contained" onClick={() => setShowForm(true)}>
+              Add New Address
+            </Button>
+          )}
+        </Box>
 
-      {showForm && (
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography sx={{ variant: "h6", mb: 2 }}>
-            {editingId ? "Edit Address" : "New Address"}
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  label="Label (e.g. Home, Office)"
-                  fullWidth
-                  value={form.label}
-                  onChange={(e) => setForm({ ...form, label: e.target.value })}
-                />
+        {showForm && (
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography sx={{ variant: "h6", mb: 2 }}>
+              {editingId ? "Edit Address" : "New Address"}
+            </Typography>
+            <Box component="form" onSubmit={handleSubmit}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    label="Label (e.g. Home, Office)"
+                    fullWidth
+                    value={form.label}
+                    onChange={(e) =>
+                      setForm({ ...form, label: e.target.value })
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    label="Recipient Name"
+                    fullWidth
+                    required
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    label="Phone"
+                    fullWidth
+                    required
+                    value={form.phone}
+                    onChange={(e) =>
+                      setForm({ ...form, phone: e.target.value })
+                    }
+                  />
+                </Grid>
+                <Grid size={12}>
+                  <TextField
+                    label="Street Address"
+                    fullWidth
+                    required
+                    value={form.street}
+                    onChange={(e) =>
+                      setForm({ ...form, street: e.target.value })
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    label="City"
+                    fullWidth
+                    required
+                    value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    label="Postcode"
+                    fullWidth
+                    required
+                    value={form.postcode}
+                    onChange={(e) =>
+                      setForm({ ...form, postcode: e.target.value })
+                    }
+                  />
+                </Grid>
               </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  label="Recipient Name"
-                  fullWidth
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  label="Phone"
-                  fullWidth
-                  required
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
-              </Grid>
-              <Grid size={12}>
-                <TextField
-                  label="Street Address"
-                  fullWidth
-                  required
-                  value={form.street}
-                  onChange={(e) => setForm({ ...form, street: e.target.value })}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="City"
-                  fullWidth
-                  required
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="Postcode"
-                  fullWidth
-                  required
-                  value={form.postcode}
-                  onChange={(e) =>
-                    setForm({ ...form, postcode: e.target.value })
-                  }
-                />
-              </Grid>
-            </Grid>
 
-            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-              <Button type="submit" variant="contained" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Address"}
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingId(null);
-                  setForm(emptyForm);
-                }}
-              >
-                Cancel
-              </Button>
-            </Box>
-          </Box>
-        </Paper>
-      )}
-
-      {(!addresses || addresses.length === 0) && !showForm && (
-        <Alert severity="info">You haven't saved any addresses yet.</Alert>
-      )}
-
-      <Grid container spacing={2}>
-        {addresses?.map((address) => (
-          <Grid key={address._id} size={{ xs: 12, sm: 6 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
+              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Saving..." : "Save Address"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingId(null);
+                    setForm(emptyForm);
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Radio
-                      checked={address.isDefault}
-                      onChange={() => setAsDefault.mutate(address._id)}
-                      size="small"
-                    />
-                    <Chip label={address.label} size="small" />
-                    {address.isDefault && (
-                      <Chip label="Default" size="small" color="primary" />
-                    )}
+                  Cancel
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        )}
+
+        {(!addresses || addresses.length === 0) && !showForm && (
+          <Alert severity="info">You haven't saved any addresses yet.</Alert>
+        )}
+
+        <Grid container spacing={2}>
+          {addresses?.map((address) => (
+            <Grid key={address._id} size={{ xs: 12, sm: 6 }}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Radio
+                        checked={address.isDefault}
+                        onChange={() => setAsDefault.mutate(address._id)}
+                        size="small"
+                      />
+                      <Chip label={address.label} size="small" />
+                      {address.isDefault && (
+                        <Chip label="Default" size="small" color="primary" />
+                      )}
+                    </Box>
+                    <Box>
+                      <IconButton
+                        size="small"
+                        onClick={() => startEdit(address)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => deleteAddress.mutate(address._id)}
+                      >
+                        <DeleteIcon fontSize="small" color="error" />
+                      </IconButton>
+                    </Box>
                   </Box>
-                  <Box>
-                    <IconButton size="small" onClick={() => startEdit(address)}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => deleteAddress.mutate(address._id)}
-                    >
-                      <DeleteIcon fontSize="small" color="error" />
-                    </IconButton>
-                  </Box>
-                </Box>
-                <Typography sx={{ variant: "body2", mt: 1 }}>
-                  <strong>{address.name}</strong> · {address.phone}
-                </Typography>
-                <Typography sx={{ variant: "body2", color: "text.secondary" }}>
-                  {address.street}, {address.city} - {address.postcode}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    </Container>
+                  <Typography sx={{ variant: "body2", mt: 1 }}>
+                    <strong>{address.name}</strong> · {address.phone}
+                  </Typography>
+                  <Typography
+                    sx={{ variant: "body2", color: "text.secondary" }}
+                  >
+                    {address.street}, {address.city} - {address.postcode}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    </PageTransition>
   );
 }

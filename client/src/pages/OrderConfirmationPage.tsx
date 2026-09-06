@@ -8,6 +8,7 @@ import {
   Box,
 } from "@mui/material";
 import { api } from "../lib/api";
+import PageTransition from "../components/PageTransition";
 
 export default function OrderConfirmationPage() {
   const [searchParams] = useSearchParams();
@@ -43,29 +44,31 @@ export default function OrderConfirmationPage() {
   }, [tranId]);
 
   return (
-    <Container sx={{ py: 6, textAlign: "center" }}>
-      {status === "checking" && (
-        <Box>
-          <CircularProgress sx={{ mb: 2 }} />
-          <Typography>Confirming your payment...</Typography>
-        </Box>
-      )}
-      {status === "paid" && (
-        <Alert severity="success">
-          Payment successful! Your order is confirmed.
-        </Alert>
-      )}
-      {status === "pending" && (
-        <Alert severity="info">
-          Still processing — this can take a moment. Check your orders page
-          shortly.
-        </Alert>
-      )}
-      {status === "error" && (
-        <Alert severity="error">
-          Something went wrong confirming your order.
-        </Alert>
-      )}
-    </Container>
+    <PageTransition>
+      <Container sx={{ py: 6, textAlign: "center" }}>
+        {status === "checking" && (
+          <Box>
+            <CircularProgress sx={{ mb: 2 }} />
+            <Typography>Confirming your payment...</Typography>
+          </Box>
+        )}
+        {status === "paid" && (
+          <Alert severity="success">
+            Payment successful! Your order is confirmed.
+          </Alert>
+        )}
+        {status === "pending" && (
+          <Alert severity="info">
+            Still processing — this can take a moment. Check your orders page
+            shortly.
+          </Alert>
+        )}
+        {status === "error" && (
+          <Alert severity="error">
+            Something went wrong confirming your order.
+          </Alert>
+        )}
+      </Container>
+    </PageTransition>
   );
 }

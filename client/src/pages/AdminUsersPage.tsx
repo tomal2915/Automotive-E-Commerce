@@ -18,6 +18,7 @@ import {
   updateUserRoleRequest,
 } from "../features/users/userAdminApi";
 import { useAuthStore } from "../store/authStore";
+import PageTransition from "../components/PageTransition";
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState(0);
@@ -143,35 +144,37 @@ export default function AdminUsersPage() {
   ];
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Typography sx={{ variant: "h4", mb: 3 }}>Manage Users</Typography>
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <Typography sx={{ variant: "h4", mb: 3 }}>Manage Users</Typography>
 
-      <TextField
-        placeholder="Search by name or email..."
-        size="small"
-        fullWidth
-        sx={{ mb: 2, maxWidth: 400 }}
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(0); // reset to first page on new search
-        }}
-      />
-
-      <Box sx={{ height: 600, width: "100%" }}>
-        <DataGrid
-          rows={data?.users ?? []}
-          columns={columns}
-          getRowId={(row) => row._id}
-          loading={isLoading}
-          paginationMode="server"
-          rowCount={data?.pagination.total ?? 0}
-          paginationModel={{ page, pageSize: 20 }}
-          onPaginationModelChange={(model) => setPage(model.page)}
-          pageSizeOptions={[20]}
-          disableRowSelectionOnClick
+        <TextField
+          placeholder="Search by name or email..."
+          size="small"
+          fullWidth
+          sx={{ mb: 2, maxWidth: 400 }}
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(0); // reset to first page on new search
+          }}
         />
-      </Box>
-    </Container>
+
+        <Box sx={{ height: 600, width: "100%" }}>
+          <DataGrid
+            rows={data?.users ?? []}
+            columns={columns}
+            getRowId={(row) => row._id}
+            loading={isLoading}
+            paginationMode="server"
+            rowCount={data?.pagination.total ?? 0}
+            paginationModel={{ page, pageSize: 20 }}
+            onPaginationModelChange={(model) => setPage(model.page)}
+            pageSizeOptions={[20]}
+            disableRowSelectionOnClick
+          />
+        </Box>
+      </Container>
+    </PageTransition>
   );
 }

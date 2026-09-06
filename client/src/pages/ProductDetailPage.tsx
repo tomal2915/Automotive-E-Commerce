@@ -19,6 +19,7 @@ import { useRelatedProducts } from "../features/products/useRelatedProducts";
 import { addToRecentlyViewed } from "../features/products/recentlyViewed";
 import SEO from "../components/SEO";
 import { formatCurrency } from "../utils/formatCurrency"; // adjust relative path per file
+import PageTransition from "../components/PageTransition";
 
 const PLACEHOLDER_IMAGE = "/placeholder-part.svg";
 
@@ -46,117 +47,121 @@ export default function ProductDetailPage() {
   if (!product) return <Container sx={{ py: 4 }}>Product not found</Container>;
 
   return (
-    <Container sx={{ py: 4 }}>
-      <SEO
-        title={product.title}
-        description={product.description.slice(0, 155)} // search engines truncate around here anyway
-        image={product.images?.[0]}
-        type="product"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: product.title,
-          description: product.description,
-          image: product.images?.[0],
-          sku: product.sku,
-          offers: {
-            "@type": "Offer",
-            price: product.price,
-            priceCurrency: "BDT", // was "USD"
-            availability:
-              product.stock > 0
-                ? "https://schema.org/InStock"
-                : "https://schema.org/OutOfStock",
-          },
-          aggregateRating:
-            product.reviewCount > 0
-              ? {
-                  "@type": "AggregateRating",
-                  ratingValue: product.averageRating,
-                  reviewCount: product.reviewCount,
-                }
-              : undefined,
-        }}
-      />
+    <PageTransition>
+      <Container sx={{ py: 4 }}>
+        <SEO
+          title={product.title}
+          description={product.description.slice(0, 155)} // search engines truncate around here anyway
+          image={product.images?.[0]}
+          type="product"
+          jsonLd={{
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.title,
+            description: product.description,
+            image: product.images?.[0],
+            sku: product.sku,
+            offers: {
+              "@type": "Offer",
+              price: product.price,
+              priceCurrency: "BDT", // was "USD"
+              availability:
+                product.stock > 0
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/OutOfStock",
+            },
+            aggregateRating:
+              product.reviewCount > 0
+                ? {
+                    "@type": "AggregateRating",
+                    ratingValue: product.averageRating,
+                    reviewCount: product.reviewCount,
+                  }
+                : undefined,
+          }}
+        />
 
-      <Grid container spacing={4}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <CardMedia
-            component="img"
-            image={product.images?.[0] || PLACEHOLDER_IMAGE}
-            alt={product.title}
-            sx={{ borderRadius: 2, maxHeight: 400, objectFit: "cover" }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Typography sx={{ variant: "h4", component: "h1", mb: 1 }}>
-            {product.title}
-          </Typography>
+        <Grid container spacing={4}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <CardMedia
+              component="img"
+              image={product.images?.[0] || PLACEHOLDER_IMAGE}
+              alt={product.title}
+              sx={{ borderRadius: 2, maxHeight: 400, objectFit: "cover" }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography sx={{ variant: "h4", component: "h1", mb: 1 }}>
+              {product.title}
+            </Typography>
 
-          {product.reviewCount > 0 && (
-            <Box sx={{ mb: 2 }}>
-              <StarRating
-                value={product.averageRating}
-                count={product.reviewCount}
-                size="medium"
-              />
-            </Box>
-          )}
-
-          <Typography sx={{ variant: "body1", color: "text.secondary", mb: 2 }}>
-            {product.description}
-          </Typography>
-
-          <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
-            <Chip label={product.category} />
-            {product.make && product.model && (
-              <Chip label={`${product.make} ${product.model}`} />
-            )}
-            {product.yearRange && (
-              <Chip
-                label={`${product.yearRange.start}-${product.yearRange.end}`}
-              />
-            )}
-          </Box>
-
-          {product.specifications &&
-            Object.keys(product.specifications).length > 0 && (
+            {product.reviewCount > 0 && (
               <Box sx={{ mb: 2 }}>
-                <Typography sx={{ variant: "subtitle2", mb: 1 }}>
-                  Specifications
-                </Typography>
-                <Grid container spacing={1}>
-                  {Object.entries(product.specifications).map(
-                    ([key, value]) => (
-                      <Grid key={key} size={6}>
-                        <Typography sx={{ variant: "body2" }}>
-                          <strong>{key}:</strong> {value}
-                        </Typography>
-                      </Grid>
-                    ),
-                  )}
-                </Grid>
+                <StarRating
+                  value={product.averageRating}
+                  count={product.reviewCount}
+                  size="medium"
+                />
               </Box>
             )}
 
-          <Typography sx={{ variant: "h4", color: "primary", mb: 2 }}>
-            {formatCurrency(product.price)}
-          </Typography>
+            <Typography
+              sx={{ variant: "body1", color: "text.secondary", mb: 2 }}
+            >
+              {product.description}
+            </Typography>
 
-          <Button
-            variant="contained"
-            size="large"
-            disabled={product.stock === 0 || addToCart.isPending}
-            onClick={() => addToCart.mutate({ product })}
-          >
-            Add to Cart
-          </Button>
+            <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
+              <Chip label={product.category} />
+              {product.make && product.model && (
+                <Chip label={`${product.make} ${product.model}`} />
+              )}
+              {product.yearRange && (
+                <Chip
+                  label={`${product.yearRange.start}-${product.yearRange.end}`}
+                />
+              )}
+            </Box>
+
+            {product.specifications &&
+              Object.keys(product.specifications).length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography sx={{ variant: "subtitle2", mb: 1 }}>
+                    Specifications
+                  </Typography>
+                  <Grid container spacing={1}>
+                    {Object.entries(product.specifications).map(
+                      ([key, value]) => (
+                        <Grid key={key} size={6}>
+                          <Typography sx={{ variant: "body2" }}>
+                            <strong>{key}:</strong> {value}
+                          </Typography>
+                        </Grid>
+                      ),
+                    )}
+                  </Grid>
+                </Box>
+              )}
+
+            <Typography sx={{ variant: "h4", color: "primary", mb: 2 }}>
+              {formatCurrency(product.price)}
+            </Typography>
+
+            <Button
+              variant="contained"
+              size="large"
+              disabled={product.stock === 0 || addToCart.isPending}
+              onClick={() => addToCart.mutate({ product })}
+            >
+              Add to Cart
+            </Button>
+          </Grid>
         </Grid>
-      </Grid>
 
-      <ProductReviews productId={product._id} />
+        <ProductReviews productId={product._id} />
 
-      <ProductRow title="Related Products" products={related ?? []} />
-    </Container>
+        <ProductRow title="Related Products" products={related ?? []} />
+      </Container>
+    </PageTransition>
   );
 }

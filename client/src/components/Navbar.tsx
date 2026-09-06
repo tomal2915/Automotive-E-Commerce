@@ -22,6 +22,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useWishlist } from "../features/wishlist/useWishlist";
 import SearchBar from "./SearchBar";
 import NotificationBell from "./NotificationBell";
+import AnimatedBadge from "./AnimatedBadge";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ export default function Navbar() {
           to="/"
           sx={{ textDecoration: "none", color: "inherit", fontWeight: 700 }}
         >
-          AutoParts
+          ShopBD
         </Typography>
 
         <Box sx={{ mx: 2, flexGrow: 1, display: "flex" }}>
@@ -79,7 +80,9 @@ export default function Navbar() {
 
           <IconButton color="inherit" component={RouterLink} to="/cart">
             <Badge badgeContent={itemCount} color="primary">
-              <ShoppingCartIcon />
+              <AnimatedBadge badgeContent={itemCount} color="primary">
+                <ShoppingCartIcon />
+              </AnimatedBadge>
             </Badge>
           </IconButton>
 
