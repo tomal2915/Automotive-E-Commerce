@@ -81,3 +81,30 @@ export const validateCoupon = async (req, res) => {
     res.status(400).json({ valid: false, message: error.message });
   }
 };
+
+// @route PUT /api/v1/coupons/:id (admin only)
+export const updateCoupon = async (req, res) => {
+  try {
+    const coupon = await Coupon.findByIdAndUpdate(req.params.id, req.body, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+    if (!coupon) return res.status(404).json({ message: "Coupon not found" });
+    res.json({ coupon });
+  } catch (error) {
+    res
+      .status(400)
+      .json({ message: "Invalid coupon data", error: error.message });
+  }
+};
+
+// @route DELETE /api/v1/coupons/:id (admin only)
+export const deleteCoupon = async (req, res) => {
+  try {
+    const coupon = await Coupon.findByIdAndDelete(req.params.id);
+    if (!coupon) return res.status(404).json({ message: "Coupon not found" });
+    res.json({ message: "Coupon deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

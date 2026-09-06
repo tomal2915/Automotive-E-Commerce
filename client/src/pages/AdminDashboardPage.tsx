@@ -52,7 +52,7 @@ export default function AdminDashboardPage() {
 
         {summary && <SummaryCards summary={summary} />}
 
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           <Grid size={{ xs: 12, lg: 8 }}>
             {trend && <RevenueTrendChart data={trend} />}
           </Grid>

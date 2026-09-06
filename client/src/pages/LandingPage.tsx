@@ -6,6 +6,7 @@ import FeaturedProducts from "../features/home/FeaturedProducts";
 import NewsletterBanner from "../features/home/NewsletterBanner";
 import CategoryGrid from "../features/categories/CategoryGrid";
 import { Container } from "@mui/material";
+import Testimonials from "../features/home/Testimonials";
 
 export default function LandingPage() {
   return (
@@ -21,6 +22,7 @@ export default function LandingPage() {
         <CategoryGrid />
       </Container>
       <FeaturedProducts />
+      <Testimonials />
       <NewsletterBanner />
     </PageTransition>
   );

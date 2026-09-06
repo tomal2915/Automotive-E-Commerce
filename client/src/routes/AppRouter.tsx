@@ -28,6 +28,7 @@ import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
 import TermsOfServicePage from "../pages/TermsOfServicePage";
 import AdminCategoriesPage from "../pages/AdminCategoriesPage";
 import LandingPage from "../pages/LandingPage";
+import AdminTestimonialsPage from "../pages/AdminTestimonialsPage";
 
 export default function AppRouter() {
   return (
@@ -71,6 +72,7 @@ export default function AppRouter() {
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
 
         <Route path="/admin/categories" element={<AdminCategoriesPage />} />
+        <Route path="/admin/testimonials" element={<AdminTestimonialsPage />} />
       </Route>
     </Routes>
   );

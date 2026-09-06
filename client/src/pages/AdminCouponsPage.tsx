@@ -15,12 +15,17 @@ import {
   Grid,
   Box,
   Chip,
+  IconButton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchCoupons,
   createCouponRequest,
   toggleCouponRequest,
+  updateCouponRequest,
+  deleteCouponRequest,
 } from "../features/coupons/couponApi";
 import { formatCurrency } from "../utils/formatCurrency";
 import PageTransition from "../components/PageTransition";
@@ -74,9 +79,56 @@ export default function AdminCouponsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+
+  const updateCoupon = useMutation({
+    mutationFn: (payload: { id: string; data: any }) =>
+      updateCouponRequest(payload.id, payload.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      setEditingCoupon(null);
+    },
+  });
+
+  const deleteCoupon = useMutation({
+    mutationFn: deleteCouponRequest,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
+  });
+
+  const startEdit = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    setForm({
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: String(coupon.discountValue),
+      maxDiscountAmount: coupon.maxDiscountAmount
+        ? String(coupon.maxDiscountAmount)
+        : "",
+      minOrderAmount: String(coupon.minOrderAmount),
+      expiresAt: coupon.expiresAt.split("T")[0],
+      usageLimit: coupon.usageLimit ? String(coupon.usageLimit) : "",
+    });
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createCoupon.mutate();
+    const payload = {
+      code: form.code,
+      discountType: form.discountType,
+      discountValue: Number(form.discountValue),
+      maxDiscountAmount: form.maxDiscountAmount
+        ? Number(form.maxDiscountAmount)
+        : null,
+      minOrderAmount: form.minOrderAmount ? Number(form.minOrderAmount) : 0,
+      expiresAt: form.expiresAt,
+      usageLimit: form.usageLimit ? Number(form.usageLimit) : null,
+    };
+
+    if (editingCoupon) {
+      updateCoupon.mutate({ id: editingCoupon._id, data: payload });
+    } else {
+      createCoupon.mutate();
+    }
   };
 
   return (
@@ -88,7 +140,11 @@ export default function AdminCouponsPage() {
           <Typography sx={{ variant: "h6", mb: 2 }}>
             Create New Coupon
           </Typography>
-          <Box component="form" onSubmit={handleSubmit}>
+          <Box
+            component="form"
+            onSubmit={handleFormSubmit}
+            key={editingCoupon?._id ?? "new"}
+          >
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 3 }}>
                 <TextField
@@ -227,6 +283,17 @@ export default function AdminCouponsPage() {
                       checked={coupon.isActive}
                       onChange={() => toggleCoupon.mutate(coupon._id)}
                     />
+                  </TableCell>
+                  <TableCell>
+                    <IconButton size="small" onClick={() => startEdit(coupon)}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => deleteCoupon.mutate(coupon._id)}
+                    >
+                      <DeleteIcon fontSize="small" color="error" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}

@@ -36,7 +36,7 @@ export default function ProductListPage() {
       <Container sx={{ py: 4 }}>
         <SEO
           title="ShopBD Catalog"
-          description="Browse thousands of quality automotive parts by make, model, and category. Fast delivery across Bangladesh."
+          description="Browse thousands of quality products by make, model, and category. Fast delivery across Bangladesh."
         />
 
         <Typography sx={{ variant: "h4", mb: 3 }}>ShopBD Catalog</Typography>

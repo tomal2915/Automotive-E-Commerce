@@ -4,6 +4,8 @@ import {
   getAllCoupons,
   toggleCouponStatus,
   validateCoupon,
+  updateCoupon,
+  deleteCoupon,
 } from "../controllers/couponController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 import { verifyRole } from "../middlewares/verifyRole.js";
@@ -22,5 +24,7 @@ router.put(
   verifyRole("admin"),
   toggleCouponStatus,
 );
+router.put("/:id", verifyAccessToken, verifyRole("admin"), updateCoupon);
+router.delete("/:id", verifyAccessToken, verifyRole("admin"), deleteCoupon);
 
 export default router;

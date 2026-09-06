@@ -1,12 +1,22 @@
 import Category from "../models/Category.js";
 
 // @route GET /api/v1/categories
+// Returns top-level categories, each with its subcategories nested in
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true }).sort({
-      name: 1,
-    });
-    res.json({ categories });
+    const allCategories = await Category.find({ isActive: true })
+      .sort({ name: 1 })
+      .lean();
+
+    const topLevel = allCategories.filter((c) => !c.parentCategory);
+    const withChildren = topLevel.map((parent) => ({
+      ...parent,
+      subcategories: allCategories.filter(
+        (c) => c.parentCategory?.toString() === parent._id.toString(),
+      ),
+    }));
+
+    res.json({ categories: withChildren });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -15,9 +25,9 @@ export const getCategories = async (req, res) => {
 // @route POST /api/v1/categories (admin only)
 export const createCategory = async (req, res) => {
   try {
-    const { name, description, hasVehicleAttributes } = req.body;
-
-    const slug = name
+    const { name, description, hasVehicleAttributes, parentCategory } =
+      req.body;
+    const slug = `${name}-${parentCategory || "root"}`
       .toLowerCase()
       .trim()
       .replace(/\s+/g, "-")
@@ -28,6 +38,7 @@ export const createCategory = async (req, res) => {
       slug,
       description,
       hasVehicleAttributes: !!hasVehicleAttributes,
+      parentCategory: parentCategory || null,
       image: req.file?.path || "",
     });
 
@@ -36,7 +47,10 @@ export const createCategory = async (req, res) => {
     if (error.code === 11000) {
       return res
         .status(409)
-        .json({ message: "A category with this name already exists" });
+        .json({
+          message:
+            "A category with this name already exists under the selected parent",
+        });
     }
     res
       .status(400)

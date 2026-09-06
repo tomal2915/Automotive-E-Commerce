@@ -5,6 +5,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
 import type { Summary } from "./analyticsApi";
+import { formatCurrency } from "../../utils/formatCurrency";
 
 interface Props {
   summary: Summary;
@@ -14,7 +15,7 @@ export default function SummaryCards({ summary }: Props) {
   const cards = [
     {
       label: "Total Revenue",
-      value: `$${summary.totalRevenue.toFixed(2)}`,
+      value: formatCurrency(summary.totalRevenue),
       icon: <AttachMoneyIcon />,
       color: "#22c55e",
     },
@@ -45,16 +46,18 @@ export default function SummaryCards({ summary }: Props) {
   ];
 
   return (
-    <Grid container spacing={2} mb={3}>
+    <Grid sxcontainer spacing={2} mb={3}>
       {cards.map((card) => (
         <Grid key={card.label} size={{ xs: 12, sm: 6, md: 2.4 }}>
           <Card>
-            <CardContent>
+            <CardContent sx={{ p: 2.5 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <Box sx={{ color: card.color }}>{card.icon}</Box>
                 <Box>
                   <Typography sx={{ variant: "h6" }}>{card.value}</Typography>
-                  <Typography sx={{ variant: "caption", color: "text.secondary" }}>
+                  <Typography
+                    sx={{ variant: "caption", color: "text.secondary" }}
+                  >
                     {card.label}
                   </Typography>
                 </Box>

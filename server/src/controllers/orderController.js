@@ -100,7 +100,7 @@ export const initiateCheckout = async (req, res) => {
 
       shipping_method: "Courier",
       num_of_item: cart.items.length,
-      product_name: "Automotive Parts",
+      product_name: "products",
       product_category: "Automotive",
       product_profile: "physical-goods",
 

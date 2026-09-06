@@ -18,7 +18,9 @@ export const fetchCoupons = async (): Promise<Coupon[]> => {
   return res.data.coupons;
 };
 
-export const createCouponRequest = async (data: Partial<Coupon>): Promise<Coupon> => {
+export const createCouponRequest = async (
+  data: Partial<Coupon>,
+): Promise<Coupon> => {
   const res = await api.post("/coupons", data);
   return res.data.coupon;
 };
@@ -40,5 +42,18 @@ export const validateCouponRequest = async (
   orderAmount: number,
 ): Promise<CouponValidationResult> => {
   const res = await api.post("/coupons/validate", { code, orderAmount });
+  return res.data;
+};
+
+export const updateCouponRequest = async (
+  id: string,
+  data: Partial<Coupon>,
+): Promise<Coupon> => {
+  const res = await api.put(`/coupons/${id}`, data);
+  return res.data.coupon;
+};
+
+export const deleteCouponRequest = async (id: string) => {
+  const res = await api.delete(`/coupons/${id}`);
   return res.data;
 };

@@ -186,6 +186,13 @@ export default function Navbar() {
                     >
                       Return Requests
                     </MenuItem>
+                    <MenuItem
+                      component={RouterLink}
+                      to="/admin/testimonials"
+                      onClick={handleMenuClose}
+                    >
+                      Manage Testimonials
+                    </MenuItem>
                   </>
                 )}
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>

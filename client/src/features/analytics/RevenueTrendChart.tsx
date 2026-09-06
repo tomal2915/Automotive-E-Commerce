@@ -9,6 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { RevenueTrendPoint } from "./analyticsApi";
+import { formatCurrency } from "../../utils/formatCurrency";
 
 interface Props {
   data: RevenueTrendPoint[];
@@ -37,7 +38,7 @@ export default function RevenueTrendChart({ data }: Props) {
           <Tooltip
             labelFormatter={(date) => new Date(date).toLocaleDateString()}
             formatter={(value: number, name: string) => [
-              name === "revenue" ? `$${value.toFixed(2)}` : value,
+              name === "revenue" ? formatCurrency(value) : value,
               name === "revenue" ? "Revenue" : "Orders",
             ]}
           />

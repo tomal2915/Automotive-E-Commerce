@@ -13,6 +13,7 @@ import {
   CardMedia,
   CardContent,
   IconButton,
+  MenuItem,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,6 +32,7 @@ export default function AdminCategoriesPage() {
     name: "",
     description: "",
     hasVehicleAttributes: false,
+    parentCategory: "",
   });
   const [image, setImage] = useState<File | undefined>();
 
@@ -38,7 +40,12 @@ export default function AdminCategoriesPage() {
     mutationFn: () => createCategoryRequest({ ...form, image }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      setForm({ name: "", description: "", hasVehicleAttributes: false });
+      setForm({
+        name: "",
+        description: "",
+        hasVehicleAttributes: false,
+        parentCategory: "",
+      });
       setImage(undefined);
     },
   });
@@ -58,8 +65,9 @@ export default function AdminCategoriesPage() {
           <Typography sx={{ variant: "h6", mb: 2 }}>
             Add New Category
           </Typography>
+
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid size={{ xs: 12, sm: 3 }}>
               <TextField
                 label="Category Name"
                 fullWidth
@@ -67,7 +75,7 @@ export default function AdminCategoriesPage() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 5 }}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 label="Description"
                 fullWidth
@@ -77,7 +85,7 @@ export default function AdminCategoriesPage() {
                 }
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 3 }}>
+            <Grid size={{ xs: 12, sm: 2 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -92,6 +100,24 @@ export default function AdminCategoriesPage() {
                 }
                 label="Vehicle-based (Make/Model/Year)"
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                select
+                label="Parent Category (optional)"
+                fullWidth
+                value={form.parentCategory}
+                onChange={(e) =>
+                  setForm({ ...form, parentCategory: e.target.value })
+                }
+              >
+                <MenuItem value="">None (Top-level)</MenuItem>
+                {categories?.map((cat) => (
+                  <MenuItem key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
             <Grid size={12}>
               <Button component="label" variant="outlined" size="small">
@@ -156,6 +182,30 @@ export default function AdminCategoriesPage() {
                       <DeleteIcon fontSize="small" color="error" />
                     </IconButton>
                   </Box>
+
+                  {cat.subcategories && cat.subcategories.length > 0 && (
+                    <Box
+                      sx={{
+                        mt: 1,
+                        pl: 1,
+                        borderLeft: 2,
+                        borderColor: "divider",
+                      }}
+                    >
+                      {cat.subcategories.map((sub) => (
+                        <Typography
+                          key={sub._id}
+                          sx={{
+                            variant: "caption",
+                            display: "block",
+                            color: "text.secondary",
+                          }}
+                        >
+                          └ {sub.name}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
                 </CardContent>
               </Card>
             </Grid>

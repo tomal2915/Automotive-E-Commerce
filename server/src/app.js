@@ -27,6 +27,7 @@ import twoFactorRoutes from "./routes/twoFactorRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import testimonialRoutes from "./routes/testimonialRoutes.js";
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use("/api/v1/2fa", twoFactorRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/v1/testimonials", testimonialRoutes);
 
 // These two MUST be last — Express runs middleware top-to-bottom, so
 // anything registered after notFoundHandler/errorHandler would never

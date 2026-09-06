@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const categorySchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, unique: true, trim: true },
+    name: { type: String, required: true, trim: true },
     slug: {
       type: String,
       required: true,
@@ -12,15 +12,23 @@ const categorySchema = new mongoose.Schema(
     },
     description: { type: String, default: "" },
     image: { type: String, default: "" },
-
-    // If true, the frontend shows the automotive-specific fields
-    // (make/model/year) on the product form and the vehicle filter bar.
-    // Every other category just uses generic specifications instead.
     hasVehicleAttributes: { type: Boolean, default: false },
-
     isActive: { type: Boolean, default: true },
+
+    // Self-referencing — null/undefined means this IS a top-level
+    // category. A category with parentCategory set is a subcategory
+    // (e.g. "Men" -> parent "Clothing").
+    parentCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+    },
   },
   { timestamps: true },
 );
+
+// name is unique only WITHIN a parent — "Men" can exist under both
+// "Clothing" and, say, a future "Accessories" category without clashing
+categorySchema.index({ name: 1, parentCategory: 1 }, { unique: true });
 
 export default mongoose.model("Category", categorySchema);
