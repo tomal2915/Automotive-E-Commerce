@@ -27,13 +27,15 @@ import NotFoundPage from "../pages/NotFoundPage";
 import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
 import TermsOfServicePage from "../pages/TermsOfServicePage";
 import AdminCategoriesPage from "../pages/AdminCategoriesPage";
+import LandingPage from "../pages/LandingPage";
 
 export default function AppRouter() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/" element={<ProductListPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/products" element={<ProductListPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />

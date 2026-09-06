@@ -19,7 +19,6 @@ import { setAccessToken } from "../lib/tokenStore";
 import { useAuthStore } from "../store/authStore";
 import TwoFactorLoginStep from "../features/twoFactor/TwoFactorLoginStep";
 import SEO from "../components/SEO";
-import PageTransition from "../components/PageTransition";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -59,7 +58,7 @@ export default function LoginPage() {
   };
 
   return (
-    <PageTransition>
+    <>
       <SEO title="Login" description="Log in to your Shop BD account." />
 
       <Box
@@ -146,6 +145,6 @@ export default function LoginPage() {
           )}
         </Paper>
       </Box>
-    </PageTransition>
+    </>
   );
 }

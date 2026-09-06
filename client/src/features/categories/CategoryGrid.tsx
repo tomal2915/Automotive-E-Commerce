@@ -25,7 +25,7 @@ export default function CategoryGrid() {
             <Card>
               <CardActionArea
                 onClick={() =>
-                  navigate(`/?category=${encodeURIComponent(cat.name)}`)
+                  navigate(`/products?category=${encodeURIComponent(cat.name)}`)
                 }
               >
                 <CardMedia
