@@ -20,14 +20,23 @@ export default function AdminProductEditPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: (payload: { values: ProductFormValues; images: File[] }) =>
+    mutationFn: (payload: {
+      values: ProductFormValues;
+      images: File[];
+      specifications: Record<string, string>;
+    }) =>
       updateProductRequest(id!, {
         ...payload.values,
-        yearRangeStart: Number(payload.values.yearRangeStart),
-        yearRangeEnd: Number(payload.values.yearRangeEnd),
+        yearRangeStart: payload.values.yearRangeStart
+          ? Number(payload.values.yearRangeStart)
+          : undefined,
+        yearRangeEnd: payload.values.yearRangeEnd
+          ? Number(payload.values.yearRangeEnd)
+          : undefined,
         price: Number(payload.values.price),
         stock: Number(payload.values.stock),
         images: payload.images,
+        specifications: payload.specifications,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
@@ -36,30 +45,28 @@ export default function AdminProductEditPage() {
     },
   });
 
-  if (isLoading) return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading...</Container>;
-  if (!product) return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Product not found</Container>;
+  if (isLoading)
+    return (
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading...</Container>
+    );
+  if (!product)
+    return (
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
+        Product not found
+      </Container>
+    );
 
   return (
     <PageTransition>
       <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
-        <Typography sx={{ variant: "h4", mb: 3 }}>Edit Product</Typography>
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          Edit Product
+        </Typography>
         <ProductForm
+          key={product._id} // forces a fresh mount once the real product data has loaded, so the form's useState picks up actual values instead of empty initial state
+          initialProduct={product} // THIS was missing — without it, the form never knows this is edit mode
           onSubmit={(values, images, specifications) =>
-            mutation.mutate({
-              values: {
-                ...values,
-                yearRangeStart: values.yearRangeStart
-                  ? Number(values.yearRangeStart)
-                  : undefined,
-                yearRangeEnd: values.yearRangeEnd
-                  ? Number(values.yearRangeEnd)
-                  : undefined,
-                price: Number(values.price),
-                stock: Number(values.stock),
-              },
-              images,
-              specifications,
-            })
+            mutation.mutate({ values, images, specifications })
           }
           isSubmitting={mutation.isPending}
           errorMessage={(mutation.error as any)?.response?.data?.message}
