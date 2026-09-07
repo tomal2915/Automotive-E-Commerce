@@ -14,38 +14,53 @@ import {
   CardContent,
   IconButton,
   MenuItem,
+  Alert,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCategories } from "../features/categories/useCategories";
 import {
   createCategoryRequest,
+  updateCategoryRequest,
   deleteCategoryRequest,
+  type Category,
 } from "../features/categories/categoryApi";
 import PageTransition from "../components/PageTransition";
+
+const emptyForm = {
+  name: "",
+  description: "",
+  hasVehicleAttributes: false,
+  parentCategory: "",
+};
 
 export default function AdminCategoriesPage() {
   const queryClient = useQueryClient();
   const { data: categories } = useCategories();
 
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    hasVehicleAttributes: false,
-    parentCategory: "",
-  });
+  const [form, setForm] = useState(emptyForm);
   const [image, setImage] = useState<File | undefined>();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const createCategory = useMutation({
     mutationFn: () => createCategoryRequest({ ...form, image }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
-      setForm({
-        name: "",
-        description: "",
-        hasVehicleAttributes: false,
-        parentCategory: "",
-      });
+      setForm(emptyForm);
+      setImage(undefined);
+    },
+  });
+
+  const updateCategory = useMutation({
+    mutationFn: (payload: {
+      id: string;
+      data: typeof form & { image?: File };
+    }) => updateCategoryRequest(payload.id, payload.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setEditingId(null);
+      setForm(emptyForm);
       setImage(undefined);
     },
   });
@@ -56,14 +71,53 @@ export default function AdminCategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ["categories"] }),
   });
 
+  const startEdit = (cat: Category) => {
+    setEditingId(cat._id);
+    setForm({
+      name: cat.name,
+      description: cat.description || "",
+      hasVehicleAttributes: cat.hasVehicleAttributes,
+      parentCategory: cat.parentCategory || "",
+    });
+    setImage(undefined);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setImage(undefined);
+  };
+
+  const handleSubmit = () => {
+    if (editingId) {
+      updateCategory.mutate({ id: editingId, data: { ...form, image } });
+    } else {
+      createCategory.mutate();
+    }
+  };
+
+  // Flat list of all top-level categories, used for the parent-selector
+  // dropdown — a subcategory shouldn't be able to select itself as its
+  // own parent, so we exclude the one currently being edited
+  const parentOptions = categories?.filter((c) => c._id !== editingId) ?? [];
+
   return (
     <PageTransition>
       <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
-        <Typography sx={{ variant: "h4", mb: 3 }}>Manage Categories</Typography>
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          Manage Categories
+        </Typography>
 
-        <Paper sx={{ p: 3, mb: 4 }}>
-          <Typography sx={{ variant: "h6", mb: 2 }}>
-            Add New Category
+        {(createCategory.isError || updateCategory.isError) && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {((createCategory.error || updateCategory.error) as any)?.response
+              ?.data?.message || "Something went wrong"}
+          </Alert>
+        )}
+
+        <Paper sx={{ p: 3, mb: 4 }} key={editingId ?? "new"}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            {editingId ? "Edit Category" : "Add New Category"}
           </Typography>
 
           <Grid container spacing={2}>
@@ -98,7 +152,7 @@ export default function AdminCategoriesPage() {
                     }
                   />
                 }
-                label="Vehicle-based (Make/Model/Year)"
+                label="Vehicle-based"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -112,7 +166,7 @@ export default function AdminCategoriesPage() {
                 }
               >
                 <MenuItem value="">None (Top-level)</MenuItem>
-                {categories?.map((cat) => (
+                {parentOptions.map((cat) => (
                   <MenuItem key={cat._id} value={cat._id}>
                     {cat.name}
                   </MenuItem>
@@ -138,11 +192,26 @@ export default function AdminCategoriesPage() {
             <Grid size={12}>
               <Button
                 variant="contained"
-                onClick={() => createCategory.mutate()}
-                disabled={!form.name || createCategory.isPending}
+                onClick={handleSubmit}
+                disabled={
+                  !form.name ||
+                  createCategory.isPending ||
+                  updateCategory.isPending
+                }
               >
-                {createCategory.isPending ? "Creating..." : "Create Category"}
+                {editingId
+                  ? updateCategory.isPending
+                    ? "Saving..."
+                    : "Save Changes"
+                  : createCategory.isPending
+                    ? "Creating..."
+                    : "Create Category"}
               </Button>
+              {editingId && (
+                <Button sx={{ ml: 1 }} onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
             </Grid>
           </Grid>
         </Paper>
@@ -175,12 +244,17 @@ export default function AdminCategoriesPage() {
                           : "Standard category"}
                       </Typography>
                     </Box>
-                    <IconButton
-                      size="small"
-                      onClick={() => deleteCategory.mutate(cat._id)}
-                    >
-                      <DeleteIcon fontSize="small" color="error" />
-                    </IconButton>
+                    <Box>
+                      <IconButton size="small" onClick={() => startEdit(cat)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => deleteCategory.mutate(cat._id)}
+                      >
+                        <DeleteIcon fontSize="small" color="error" />
+                      </IconButton>
+                    </Box>
                   </Box>
 
                   {cat.subcategories && cat.subcategories.length > 0 && (
@@ -193,16 +267,36 @@ export default function AdminCategoriesPage() {
                       }}
                     >
                       {cat.subcategories.map((sub) => (
-                        <Typography
+                        <Box
                           key={sub._id}
                           sx={{
-                            variant: "caption",
-                            display: "block",
-                            color: "text.secondary",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                           }}
                         >
-                          └ {sub.name}
-                        </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: "block" }}
+                          >
+                            └ {sub.name}
+                          </Typography>
+                          <Box>
+                            <IconButton
+                              size="small"
+                              onClick={() => startEdit(sub)}
+                            >
+                              <EditIcon sx={{ fontSize: 14 }} />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => deleteCategory.mutate(sub._id)}
+                            >
+                              <DeleteIcon sx={{ fontSize: 14 }} color="error" />
+                            </IconButton>
+                          </Box>
+                        </Box>
                       ))}
                     </Box>
                   )}

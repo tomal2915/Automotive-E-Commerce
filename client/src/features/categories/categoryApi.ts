@@ -42,3 +42,29 @@ export const deleteCategoryRequest = async (id: string) => {
   const res = await api.delete(`/categories/${id}`);
   return res.data;
 };
+
+export const updateCategoryRequest = async (
+  id: string,
+  data: {
+    name?: string;
+    description?: string;
+    hasVehicleAttributes?: boolean;
+    parentCategory?: string;
+    image?: File;
+  },
+): Promise<Category> => {
+  const formData = new FormData();
+  if (data.name !== undefined) formData.append("name", data.name);
+  if (data.description !== undefined)
+    formData.append("description", data.description);
+  if (data.hasVehicleAttributes !== undefined)
+    formData.append("hasVehicleAttributes", String(data.hasVehicleAttributes));
+  if (data.parentCategory !== undefined)
+    formData.append("parentCategory", data.parentCategory);
+  if (data.image) formData.append("image", data.image);
+
+  const res = await api.put(`/categories/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data.category;
+};

@@ -1,5 +1,10 @@
 import Category from "../models/Category.js";
 
+// Correctly interprets the string "true"/"false" that always arrives from
+// FormData — a naive !!value is WRONG here, since any non-empty string
+// (including the literal text "false") is truthy in JavaScript.
+const parseBoolean = (value) => value === true || value === "true";
+
 // @route GET /api/v1/categories
 // Returns top-level categories, each with its subcategories nested in
 export const getCategories = async (req, res) => {
@@ -37,8 +42,9 @@ export const createCategory = async (req, res) => {
       name,
       slug,
       description,
-      hasVehicleAttributes: !!hasVehicleAttributes,
-      parentCategory: parentCategory || null,
+      hasVehicleAttributes: parseBoolean(hasVehicleAttributes),
+      parentCategory:
+        parentCategory && parentCategory.trim() !== "" ? parentCategory : null,
       image: req.file?.path || "",
     });
 
@@ -59,21 +65,52 @@ export const createCategory = async (req, res) => {
 };
 
 // @route PUT /api/v1/categories/:id (admin only)
+// @route PUT /api/v1/categories/:id (admin only)
 export const updateCategory = async (req, res) => {
   try {
     const updateData = { ...req.body };
+
+    // Same string-boolean trap as create — must convert explicitly
+    if ("hasVehicleAttributes" in updateData) {
+      updateData.hasVehicleAttributes = parseBoolean(
+        updateData.hasVehicleAttributes,
+      );
+    }
+
+    // An empty string means "no parent selected" — must become null,
+    // never left as "" (Mongoose can't cast an empty string to ObjectId
+    // and will throw, silently failing the whole update from the
+    // frontend's perspective)
+    if ("parentCategory" in updateData) {
+      updateData.parentCategory =
+        updateData.parentCategory && updateData.parentCategory.trim() !== ""
+          ? updateData.parentCategory
+          : null;
+    }
+
     if (req.file) updateData.image = req.file.path;
 
     const category = await Category.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      },
     );
+
     if (!category)
       return res.status(404).json({ message: "Category not found" });
-
     res.json({ category });
   } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(409)
+        .json({
+          message:
+            "A category with this name already exists under the selected parent",
+        });
+    }
     res
       .status(400)
       .json({ message: "Invalid update data", error: error.message });
