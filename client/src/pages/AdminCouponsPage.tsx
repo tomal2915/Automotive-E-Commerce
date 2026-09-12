@@ -20,79 +20,93 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
 import {
   fetchCoupons,
   createCouponRequest,
   toggleCouponRequest,
   updateCouponRequest,
   deleteCouponRequest,
+  type Coupon,
 } from "../features/coupons/couponApi";
 import { formatCurrency } from "../utils/formatCurrency";
 import PageTransition from "../components/PageTransition";
 
+const emptyForm = {
+  code: "",
+  discountType: "percentage",
+  discountValue: "",
+  maxDiscountAmount: "",
+  minOrderAmount: "",
+  expiresAt: "",
+  usageLimit: "",
+};
+
 export default function AdminCouponsPage() {
   const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
   const { data: coupons } = useQuery({
     queryKey: ["coupons"],
     queryFn: fetchCoupons,
   });
 
-  const [form, setForm] = useState({
-    code: "",
-    discountType: "percentage",
-    discountValue: "",
-    maxDiscountAmount: "",
-    minOrderAmount: "",
-    expiresAt: "",
-    usageLimit: "",
-  });
+  const [form, setForm] = useState(emptyForm);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
 
   const createCoupon = useMutation({
-    mutationFn: () =>
-      createCouponRequest({
-        code: form.code,
-        discountType: form.discountType as "percentage" | "fixed",
-        discountValue: Number(form.discountValue),
-        maxDiscountAmount: form.maxDiscountAmount
-          ? Number(form.maxDiscountAmount)
-          : null,
-        minOrderAmount: form.minOrderAmount ? Number(form.minOrderAmount) : 0,
-        expiresAt: form.expiresAt,
-        usageLimit: form.usageLimit ? Number(form.usageLimit) : null,
-      }),
+    mutationFn: (payload: any) => createCouponRequest(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["coupons"] });
-      setForm({
-        code: "",
-        discountType: "percentage",
-        discountValue: "",
-        maxDiscountAmount: "",
-        minOrderAmount: "",
-        expiresAt: "",
-        usageLimit: "",
-      });
+      enqueueSnackbar("Coupon created successfully", { variant: "success" });
+      setForm(emptyForm);
     },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to create coupon",
+        { variant: "error" },
+      ),
   });
 
   const toggleCoupon = useMutation({
     mutationFn: toggleCouponRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      enqueueSnackbar("Coupon status updated", { variant: "success" });
+    },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to update coupon status",
+        { variant: "error" },
+      ),
   });
-
-  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
 
   const updateCoupon = useMutation({
     mutationFn: (payload: { id: string; data: any }) =>
       updateCouponRequest(payload.id, payload.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      enqueueSnackbar("Coupon updated successfully", { variant: "success" });
       setEditingCoupon(null);
+      setForm(emptyForm);
     },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to update coupon",
+        { variant: "error" },
+      ),
   });
 
   const deleteCoupon = useMutation({
     mutationFn: deleteCouponRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      enqueueSnackbar("Coupon deleted successfully", { variant: "success" });
+    },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to delete coupon",
+        { variant: "error" },
+      ),
   });
 
   const startEdit = (coupon: Coupon) => {
@@ -110,11 +124,16 @@ export default function AdminCouponsPage() {
     });
   };
 
+  const cancelEdit = () => {
+    setEditingCoupon(null);
+    setForm(emptyForm);
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
       code: form.code,
-      discountType: form.discountType,
+      discountType: form.discountType as "percentage" | "fixed",
       discountValue: Number(form.discountValue),
       maxDiscountAmount: form.maxDiscountAmount
         ? Number(form.maxDiscountAmount)
@@ -127,18 +146,20 @@ export default function AdminCouponsPage() {
     if (editingCoupon) {
       updateCoupon.mutate({ id: editingCoupon._id, data: payload });
     } else {
-      createCoupon.mutate();
+      createCoupon.mutate(payload);
     }
   };
 
   return (
     <PageTransition>
       <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
-        <Typography sx={{ variant: "h4", mb: 3 }}>Manage Coupons</Typography>
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          Manage Coupons
+        </Typography>
 
         <Paper sx={{ p: 3, mb: 4 }}>
-          <Typography sx={{ variant: "h6", mb: 2 }}>
-            Create New Coupon
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            {editingCoupon ? "Edit Coupon" : "Create New Coupon"}
           </Typography>
           <Box
             component="form"
@@ -164,7 +185,16 @@ export default function AdminCouponsPage() {
                   fullWidth
                   value={form.discountType}
                   onChange={(e) =>
-                    setForm({ ...form, discountType: e.target.value })
+                    setForm({
+                      ...form,
+                      discountType: e.target.value,
+                      // Max discount only applies to percentage coupons —
+                      // clear it so a stale value can't silently persist
+                      maxDiscountAmount:
+                        e.target.value === "fixed"
+                          ? ""
+                          : form.maxDiscountAmount,
+                    })
                   }
                 >
                   <MenuItem value="percentage">Percentage (%)</MenuItem>
@@ -183,17 +213,19 @@ export default function AdminCouponsPage() {
                   }
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <TextField
-                  label="Max Discount (৳, optional)"
-                  type="number"
-                  fullWidth
-                  value={form.maxDiscountAmount}
-                  onChange={(e) =>
-                    setForm({ ...form, maxDiscountAmount: e.target.value })
-                  }
-                />
-              </Grid>
+              {form.discountType === "percentage" && (
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <TextField
+                    label="Max Discount (৳, optional)"
+                    type="number"
+                    fullWidth
+                    value={form.maxDiscountAmount}
+                    onChange={(e) =>
+                      setForm({ ...form, maxDiscountAmount: e.target.value })
+                    }
+                  />
+                </Grid>
+              )}
               <Grid size={{ xs: 12, sm: 3 }}>
                 <TextField
                   label="Min Order Amount"
@@ -231,16 +263,27 @@ export default function AdminCouponsPage() {
               </Grid>
               <Grid
                 size={{ xs: 12, sm: 3 }}
-                sx={{ display: "flex", alignItems: "center" }}
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
               >
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={createCoupon.isPending}
+                  disabled={createCoupon.isPending || updateCoupon.isPending}
                   fullWidth
                 >
-                  {createCoupon.isPending ? "Creating..." : "Create Coupon"}
+                  {editingCoupon
+                    ? updateCoupon.isPending
+                      ? "Saving..."
+                      : "Update Coupon"
+                    : createCoupon.isPending
+                      ? "Creating..."
+                      : "Create Coupon"}
                 </Button>
+                {editingCoupon && (
+                  <Button onClick={cancelEdit} fullWidth>
+                    Cancel
+                  </Button>
+                )}
               </Grid>
             </Grid>
           </Box>
@@ -256,6 +299,7 @@ export default function AdminCouponsPage() {
                 <TableCell>Expires</TableCell>
                 <TableCell>Usage</TableCell>
                 <TableCell>Active</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -268,7 +312,8 @@ export default function AdminCouponsPage() {
                     {coupon.discountType === "percentage"
                       ? `${coupon.discountValue}%`
                       : `${formatCurrency(coupon.discountValue)}`}
-                    {coupon.maxDiscountAmount &&
+                    {coupon.discountType === "percentage" &&
+                      coupon.maxDiscountAmount &&
                       ` (max ${formatCurrency(coupon.maxDiscountAmount)})`}
                   </TableCell>
                   <TableCell>{formatCurrency(coupon.minOrderAmount)}</TableCell>

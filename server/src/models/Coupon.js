@@ -33,4 +33,14 @@ const couponSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// maxDiscountAmount only means something for percentage discounts (it caps
+// the absolute payout). On a fixed-amount coupon it's meaningless, so
+// silently null it out here rather than trusting every caller (controller,
+// admin UI, future API consumers) to remember to omit it.
+couponSchema.pre("validate", function () {
+  if (this.discountType === "fixed") {
+    this.maxDiscountAmount = null;
+  }
+});
+
 export default mongoose.model("Coupon", couponSchema);
