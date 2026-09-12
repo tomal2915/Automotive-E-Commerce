@@ -1,11 +1,17 @@
 import { api } from "../../lib/api";
 
+export interface MediaRef {
+  _id: string;
+  url: string;
+  thumbnailUrl: string;
+}
+
 export interface Category {
   _id: string;
   name: string;
   slug: string;
   description: string;
-  image: string;
+  image: MediaRef | null;
   hasVehicleAttributes: boolean;
   isActive: boolean;
   parentCategory: string | null;
@@ -22,25 +28,10 @@ export const createCategoryRequest = async (data: {
   description: string;
   hasVehicleAttributes: boolean;
   parentCategory?: string;
-  image?: File;
+  image?: string | null; // Media _id chosen via MediaPicker
 }): Promise<Category> => {
-  const formData = new FormData();
-  formData.append("name", data.name);
-  formData.append("description", data.description);
-  formData.append("hasVehicleAttributes", String(data.hasVehicleAttributes));
-  if (data.parentCategory)
-    formData.append("parentCategory", data.parentCategory);
-  if (data.image) formData.append("image", data.image);
-
-  const res = await api.post("/categories", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const res = await api.post("/categories", data);
   return res.data.category;
-};
-
-export const deleteCategoryRequest = async (id: string) => {
-  const res = await api.delete(`/categories/${id}`);
-  return res.data;
 };
 
 export const updateCategoryRequest = async (
@@ -50,23 +41,15 @@ export const updateCategoryRequest = async (
     description?: string;
     hasVehicleAttributes?: boolean;
     parentCategory?: string;
-    image?: File;
+    image?: string | null;
     removeImage?: boolean;
   },
 ): Promise<Category> => {
-  const formData = new FormData();
-  if (data.name !== undefined) formData.append("name", data.name);
-  if (data.description !== undefined)
-    formData.append("description", data.description);
-  if (data.hasVehicleAttributes !== undefined)
-    formData.append("hasVehicleAttributes", String(data.hasVehicleAttributes));
-  if (data.parentCategory !== undefined)
-    formData.append("parentCategory", data.parentCategory);
-  if (data.image) formData.append("image", data.image);
-  if (data.removeImage) formData.append("removeImage", "true");
-
-  const res = await api.put(`/categories/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const res = await api.put(`/categories/${id}`, data);
   return res.data.category;
+};
+
+export const deleteCategoryRequest = async (id: string) => {
+  const res = await api.delete(`/categories/${id}`);
+  return res.data;
 };
