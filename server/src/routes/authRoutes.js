@@ -5,27 +5,19 @@ import {
   refreshTokenHandler,
   logoutUser,
   getCurrentUser,
-} from "../controllers/authController.js";
-import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
-import {
   forgotPassword,
   resetPassword,
-} from "../controllers/authController.js";
-import {
   verifyEmail,
   resendVerificationEmail,
+  getSession, // ADD THIS
 } from "../controllers/authController.js";
+import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 import {
   authLimiter,
   emailActionLimiter,
 } from "../middlewares/rateLimiters.js";
 
 const router = express.Router();
-
-// Temporary test route to confirm the middleware works
-router.get("/me", verifyAccessToken, (req, res) => {
-  res.json({ message: "You are authenticated", user: req.user });
-});
 
 router.post("/register", authLimiter, registerUser);
 router.post("/login", authLimiter, loginUser);
@@ -39,5 +31,7 @@ router.post(
   emailActionLimiter,
   resendVerificationEmail,
 );
-router.get("/me", verifyAccessToken, getCurrentUser);
+
+router.get("/session", verifyAccessToken, getSession);
+
 export default router;

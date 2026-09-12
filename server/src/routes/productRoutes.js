@@ -9,9 +9,10 @@ import {
   getSearchSuggestions,
   getRelatedProducts,
   getProductsByIds,
+  previewVariantCombinations,
 } from "../controllers/productController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
-import { verifyRole } from "../middlewares/verifyRole.js";
+import { requirePermission } from "../middlewares/requirePermission.js";
 import { uploadProductImages } from "../middlewares/uploadImage.js";
 import { handleUploadError } from "../middlewares/handleUploadError.js";
 
@@ -27,19 +28,30 @@ router.get("/:id/related", getRelatedProducts);
 router.post(
   "/",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   uploadProductImages,
   handleUploadError,
   createProduct,
 );
+router.post(
+  "/generate-variants",
+  verifyAccessToken,
+  previewVariantCombinations,
+);
 router.put(
   "/:id",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:update"),
   uploadProductImages,
   handleUploadError,
   updateProduct,
 );
-router.delete("/:id", verifyAccessToken, verifyRole("admin"), deleteProduct);
+
+router.delete(
+  "/:id",
+  verifyAccessToken,
+  requirePermission("product:delete"),
+  deleteProduct,
+);
 
 export default router;

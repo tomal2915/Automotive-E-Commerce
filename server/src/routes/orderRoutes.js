@@ -15,7 +15,7 @@ import {
   getPendingReturns,
 } from "../controllers/orderController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
-import { verifyRole } from "../middlewares/verifyRole.js";
+import { requirePermission } from "../middlewares/requirePermission.js";
 
 const router = express.Router();
 
@@ -25,11 +25,11 @@ router.get("/my/all", verifyAccessToken, getMyOrders);
 router.get("/:transactionId", verifyAccessToken, getOrderByTransactionId);
 
 // Admin-only routes
-router.get("/admin/all", verifyAccessToken, verifyRole("admin"), getAllOrders);
+router.get("/admin/all", verifyAccessToken, requirePermission("product:create"), getAllOrders);
 router.put(
   "/admin/:id/status",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   updateOrderStatus,
 );
 
@@ -45,13 +45,13 @@ router.post("/:id/return", verifyAccessToken, requestReturn);
 router.get(
   "/admin/returns",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   getPendingReturns,
 );
 router.put(
   "/admin/:id/return-review",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   reviewReturnRequest,
 );
 

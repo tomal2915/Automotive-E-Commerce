@@ -7,11 +7,11 @@ import {
   getLowStockProducts,
 } from "../controllers/analyticsController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
-import { verifyRole } from "../middlewares/verifyRole.js";
+import { requirePermission } from "../middlewares/requirePermission.js";
 
 const router = express.Router();
 
-router.use(verifyAccessToken, verifyRole("admin"));
+router.use(verifyAccessToken, requirePermission("product:create"));
 
 router.get("/summary", getSummary);
 router.get("/revenue-trend", getRevenueTrend);

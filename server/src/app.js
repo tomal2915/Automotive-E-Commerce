@@ -29,6 +29,16 @@ import analyticsRoutes from "./routes/analyticsRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import testimonialRoutes from "./routes/testimonialRoutes.js";
 
+//new
+import mediaRoutes from "./routes/mediaRoutes.js";
+import brandRoutes from "./routes/brandRoutes.js";
+import roleRoutes from "./routes/roleRoutes.js";
+import permissionRoutes from "./routes/permissionRoutes.js";
+import attributeRoutes from "./routes/attributeRoutes.js";
+
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.js";
+
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -55,6 +65,10 @@ app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
 });
 
+// router.post("/", requirePermission("roles:create"), createRole);
+// Publicly viewable API docs — not behind auth, since it's just documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/cart", cartRoutes);
@@ -69,6 +83,12 @@ app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/categories", categoryRoutes);
 app.use("/api/v1/testimonials", testimonialRoutes);
+
+app.use("/api/v1/media", mediaRoutes);
+app.use("/api/v1/brands", brandRoutes);
+app.use("/api/v1/attributes", attributeRoutes);
+app.use("/api/v1/permissions", permissionRoutes);
+app.use("/api/v1/roles", roleRoutes);
 
 // These two MUST be last — Express runs middleware top-to-bottom, so
 // anything registered after notFoundHandler/errorHandler would never

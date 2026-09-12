@@ -51,6 +51,7 @@ export const updateCategoryRequest = async (
     hasVehicleAttributes?: boolean;
     parentCategory?: string;
     image?: File;
+    removeImage?: boolean;
   },
 ): Promise<Category> => {
   const formData = new FormData();
@@ -62,6 +63,7 @@ export const updateCategoryRequest = async (
   if (data.parentCategory !== undefined)
     formData.append("parentCategory", data.parentCategory);
   if (data.image) formData.append("image", data.image);
+  if (data.removeImage) formData.append("removeImage", "true");
 
   const res = await api.put(`/categories/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },

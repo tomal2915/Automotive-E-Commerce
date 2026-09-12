@@ -11,8 +11,6 @@ import {
   isDisposableEmail,
   isPlausibleEmail,
 } from "../utils/emailValidator.js";
-import speakeasy from "speakeasy";
-import bcrypt from "bcryptjs";
 import { getRefreshCookieOptions } from "../utils/cookieOptions.js";
 
 // @route POST /api/v1/auth/register
@@ -115,9 +113,14 @@ export const loginUser = async (req, res) => {
         .json({ message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email }).select(
-      "+password +twoFactorEnabled +failedLoginAttempts +accountLockedUntil",
-    );
+    const user = await User.findOne({ email })
+      .select(
+        "+password +twoFactorEnabled +failedLoginAttempts +accountLockedUntil",
+      )
+      .populate({
+        path: "role",
+        populate: { path: "permissions", select: "name" },
+      });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -172,7 +175,8 @@ export const loginUser = async (req, res) => {
       return res.json({ requiresTwoFactor: true, twoFactorToken });
     }
 
-    const accessToken = generateAccessToken(user);
+    const permissionNames = user.role.permissions.map((p) => p.name);
+    const accessToken = generateAccessToken(user, permissionNames);
     const refreshToken = generateRefreshToken(user);
 
     user.refreshTokens.push({ token: refreshToken });
@@ -243,7 +247,22 @@ export const refreshTokenHandler = async (req, res) => {
     }
 
     // --- Rotation ---
-    const newAccessToken = generateAccessToken(foundUser);
+    const foundUserWithRole = await User.findById(foundUser._id).populate({
+      path: "role",
+      populate: { path: "permissions", select: "name" },
+    });
+
+    if (!foundUserWithRole?.role?.permissions) {
+      return res.status(401).json({
+        message:
+          "Your account's role configuration is invalid. Please log in again.",
+      });
+    }
+
+    const permissionNames = foundUserWithRole.role.permissions.map(
+      (p) => p.name,
+    );
+    const newAccessToken = generateAccessToken(foundUser, permissionNames);
     const newRefreshToken = generateRefreshToken(foundUser);
 
     // Atomic update: pull the old token and push the new one in ONE operation.
@@ -499,6 +518,33 @@ export const resendVerificationEmail = async (req, res) => {
     });
 
     res.json(genericResponse);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route GET /api/v1/auth/session
+// Returns the current user, their role, and a flat permission-name list —
+// the frontend uses this to decide what to render/enable
+export const getSession = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate({
+      path: "role",
+      populate: { path: "permissions", select: "name" },
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+      },
+      role: { id: user.role._id, name: user.role.name },
+      permissions: user.role.permissions.map((p) => p.name),
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

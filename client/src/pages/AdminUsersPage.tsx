@@ -6,14 +6,17 @@ import {
   TextField,
   IconButton,
   Chip,
-  Switch,
+  Select,
+  MenuItem,
   Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchAllUsers,
+  fetchRoleOptions,
   deleteUserRequest,
   updateUserRoleRequest,
 } from "../features/users/userAdminApi";
@@ -31,15 +34,20 @@ export default function AdminUsersPage() {
     queryFn: () => fetchAllUsers({ page: page + 1, limit: 20, search }),
   });
 
+  const { data: roleOptions, isError: roleOptionsError } = useQuery({
+    queryKey: ["role-options"],
+    queryFn: fetchRoleOptions,
+  });
+
   const deleteUser = useMutation({
     mutationFn: deleteUserRequest,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 
-  const toggleRole = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: "user" | "admin" }) =>
-      updateUserRoleRequest(id, role),
+  const changeRole = useMutation({
+    mutationFn: ({ id, roleId }: { id: string; roleId: string }) =>
+      updateUserRoleRequest(id, roleId),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
   });
@@ -54,19 +62,14 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleRoleToggle = (
+  const handleRoleChange = (
     id: string,
-    currentRole: "user" | "admin",
+    newRoleId: string,
+    newRoleName: string,
     name: string,
   ) => {
-    const newRole = currentRole === "admin" ? "user" : "admin";
-    const confirmMsg =
-      newRole === "admin"
-        ? `Make "${name}" an admin? They will get full access to manage products, orders, coupons, and users.`
-        : `Remove admin access from "${name}"?`;
-
-    if (window.confirm(confirmMsg)) {
-      toggleRole.mutate({ id, role: newRole });
+    if (window.confirm(`Change "${name}"'s role to "${newRoleName}"?`)) {
+      changeRole.mutate({ id, roleId: newRoleId });
     }
   };
 
@@ -93,24 +96,50 @@ export default function AdminUsersPage() {
     },
     {
       field: "role",
-      headerName: "Admin Access",
-      width: 150,
+      headerName: "Role",
+      width: 180,
       renderCell: (params) => {
         const isSelf = params.row._id === currentUser?.id;
+        const currentRoleId = params.row.role?._id ?? "";
+
+        if (roleOptionsError) {
+          return (
+            <Chip label="Failed to load roles" size="small" color="error" />
+          );
+        }
+
+        if (!roleOptions) {
+          return <CircularProgress size={18} />;
+        }
+
         return (
           <Tooltip title={isSelf ? "You can't change your own role" : ""}>
-            <span>
-              <Switch
-                checked={params.row.role === "admin"}
-                disabled={isSelf}
-                onChange={() =>
-                  handleRoleToggle(
-                    params.row._id,
-                    params.row.role,
-                    params.row.name,
-                  )
-                }
-              />
+            <span style={{ width: "100%" }}>
+              <Select
+                size="small"
+                fullWidth
+                value={currentRoleId}
+                disabled={isSelf || changeRole.isPending}
+                onChange={(e) => {
+                  const selected = roleOptions.roles.find(
+                    (r) => r._id === e.target.value,
+                  );
+                  if (selected) {
+                    handleRoleChange(
+                      params.row._id,
+                      selected._id,
+                      selected.name,
+                      params.row.name,
+                    );
+                  }
+                }}
+              >
+                {roleOptions.roles.map((r) => (
+                  <MenuItem key={r._id} value={r._id}>
+                    {r.name}
+                  </MenuItem>
+                ))}
+              </Select>
             </span>
           </Tooltip>
         );
@@ -156,7 +185,7 @@ export default function AdminUsersPage() {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setPage(0); // reset to first page on new search
+            setPage(0);
           }}
         />
 

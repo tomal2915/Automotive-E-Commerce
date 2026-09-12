@@ -10,7 +10,7 @@ import {
   deleteTestimonial,
 } from "../controllers/testimonialController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
-import { verifyRole } from "../middlewares/verifyRole.js";
+import { requirePermission } from "../middlewares/requirePermission.js";
 
 const avatarStorage = new CloudinaryStorage({
   cloudinary,
@@ -27,27 +27,27 @@ router.get("/", getTestimonials);
 router.get(
   "/admin/all",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   getAllTestimonials,
 );
 router.post(
   "/",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   uploadAvatar,
   createTestimonial,
 );
 router.put(
   "/:id",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   uploadAvatar,
   updateTestimonial,
 );
 router.delete(
   "/:id",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   deleteTestimonial,
 );
 

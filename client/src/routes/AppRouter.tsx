@@ -31,6 +31,11 @@ import LandingPage from "../pages/LandingPage";
 import AdminTestimonialsPage from "../pages/AdminTestimonialsPage";
 import AdminLayout from "../layouts/AdminLayout";
 
+import AdminBrandsPage from "../pages/AdminBrandsPage";
+import RequirePermission from "./RequirePermission";
+import AdminRolesPage from "../pages/AdminRolesPage";
+import AdminPermissionsPage from "../pages/AdminPermissionsPage";
+
 export default function AppRouter() {
   return (
     <Routes>
@@ -59,16 +64,30 @@ export default function AppRouter() {
       <Route element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-          <Route path="/admin/products" element={<AdminProductListPage />} />
-          <Route
-            path="/admin/products/new"
-            element={<AdminProductCreatePage />}
-          />
-          <Route
-            path="/admin/products/:id/edit"
-            element={<AdminProductEditPage />}
-          />
+          <Route element={<RequirePermission permission="product:watch" />}>
+            <Route path="/admin/products" element={<AdminProductListPage />} />
+            <Route
+              path="/admin/products/new"
+              element={<AdminProductCreatePage />}
+            />
+            <Route
+              path="/admin/products/:id/edit"
+              element={<AdminProductEditPage />}
+            />
+          </Route>
           <Route path="/admin/categories" element={<AdminCategoriesPage />} />
+          <Route path="/admin/brands" element={<AdminBrandsPage />} />
+
+          <Route element={<RequirePermission permission="role:watch" />}>
+            <Route path="/admin/roles" element={<AdminRolesPage />} />
+          </Route>
+          <Route element={<RequirePermission permission="permission:watch" />}>
+            <Route
+              path="/admin/permissions"
+              element={<AdminPermissionsPage />}
+            />
+          </Route>
+
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/returns" element={<AdminReturnsPage />} />
           <Route path="/admin/coupons" element={<AdminCouponsPage />} />

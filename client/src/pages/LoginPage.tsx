@@ -23,6 +23,7 @@ import SEO from "../components/SEO";
 export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useAuthStore((state) => state.setUser);
+  const setPermissions = useAuthStore((state) => state.setPermissions);
   const [showResend, setShowResend] = useState(false);
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
   const [twoFactorToken, setTwoFactorToken] = useState("");
@@ -46,6 +47,9 @@ export default function LoginPage() {
       }
       setAccessToken(data.accessToken);
       setUser(data.user);
+      const permissionNames =
+        data.user.role?.permissions?.map((p: any) => p.name) || [];
+      setPermissions(permissionNames, data.user.role?.name || null); // ← undefined
       navigate("/");
     },
     onError: (error: any) => {
@@ -85,8 +89,10 @@ export default function LoginPage() {
             <>
               {mutation.isError && (
                 <Alert severity="error" sx={{ mb: 2 }}>
-                  {(mutation.error as any)?.response?.data?.message ||
-                    "Invalid email or password"}
+                  {(mutation.error as any)?.response
+                    ? (mutation.error as any)?.response?.data?.message ||
+                      "Invalid email or password"
+                    : "Can't reach the server. Please check your connection and try again."}
                   {showResend && (
                     <MuiLink
                       component={RouterLink}

@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     password: { type: String, required: true, minlength: 8, select: false },
-    role: { type: String, enum: ["user", "admin"], default: "user" },
+    // OLD: role: { type: String, enum: ["user", "admin"], default: "user" },
+    // NEW:
+    role: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
 
     // Profile fields
     phone: { type: String, trim: true, default: "" },

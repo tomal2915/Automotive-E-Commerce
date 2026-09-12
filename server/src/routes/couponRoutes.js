@@ -8,7 +8,7 @@ import {
   deleteCoupon,
 } from "../controllers/couponController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
-import { verifyRole } from "../middlewares/verifyRole.js";
+import { requirePermission } from "../middlewares/requirePermission.js";
 
 const router = express.Router();
 
@@ -16,15 +16,15 @@ const router = express.Router();
 router.post("/validate", verifyAccessToken, validateCoupon);
 
 // Admin only
-router.post("/", verifyAccessToken, verifyRole("admin"), createCoupon);
-router.get("/", verifyAccessToken, verifyRole("admin"), getAllCoupons);
+router.post("/", verifyAccessToken, requirePermission("product:create"), createCoupon);
+router.get("/", verifyAccessToken, requirePermission("product:create"), getAllCoupons);
 router.put(
   "/:id/toggle",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   toggleCouponStatus,
 );
-router.put("/:id", verifyAccessToken, verifyRole("admin"), updateCoupon);
-router.delete("/:id", verifyAccessToken, verifyRole("admin"), deleteCoupon);
+router.put("/:id", verifyAccessToken, requirePermission("product:create"), updateCoupon);
+router.delete("/:id", verifyAccessToken, requirePermission("product:create"), deleteCoupon);
 
 export default router;

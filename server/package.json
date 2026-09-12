@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "backup": "node scripts/backup.js",
     "test": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
-    "seed:categories": "node scripts/seedCategories.js"
+    "seed:rbac": "node scripts/seedRBAC.js",
+    "migrate:user-roles": "node scripts/migrateUsersToRoles.js"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +36,8 @@
     "sanitize-html": "^2.17.7",
     "speakeasy": "^2.0.0",
     "sslcommerz-lts": "^1.2.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^14.0.2",
     "winston": "^3.19.0",
     "zod": "^4.5.4"

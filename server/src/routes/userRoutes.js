@@ -10,7 +10,7 @@ import {
   deleteUser,
   updateUserRole,
 } from "../controllers/userController.js";
-import { verifyRole } from "../middlewares/verifyRole.js";
+import { requirePermission } from "../middlewares/requirePermission.js";
 
 const router = express.Router();
 
@@ -22,8 +22,8 @@ router.put("/profile", uploadAvatar, handleUploadError, updateProfile);
 router.put("/change-password", changePassword);
 
 // Admin-only user management
-router.get("/admin/all", verifyRole("admin"), getAllUsers);
-router.delete("/admin/:id", verifyRole("admin"), deleteUser);
-router.put("/admin/:id/role", verifyRole("admin"), updateUserRole);
+router.get("/admin/all", requirePermission("user:watch"), getAllUsers);
+router.delete("/admin/:id", requirePermission("user:delete"), deleteUser);
+router.put("/admin/:id/role", requirePermission("user:update"), updateUserRole);
 
 export default router;

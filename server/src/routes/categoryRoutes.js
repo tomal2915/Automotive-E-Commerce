@@ -6,7 +6,7 @@ import {
   deleteCategory,
 } from "../controllers/categoryController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
-import { verifyRole } from "../middlewares/verifyRole.js";
+import { requirePermission } from "../middlewares/requirePermission.js";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary.js";
@@ -28,17 +28,17 @@ router.get("/", getCategories);
 router.post(
   "/",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   uploadCategoryImage,
   createCategory,
 );
 router.put(
   "/:id",
   verifyAccessToken,
-  verifyRole("admin"),
+  requirePermission("product:create"),
   uploadCategoryImage,
   updateCategory,
 );
-router.delete("/:id", verifyAccessToken, verifyRole("admin"), deleteCategory);
+router.delete("/:id", verifyAccessToken, requirePermission("product:create"), deleteCategory);
 
 export default router;

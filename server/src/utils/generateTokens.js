@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 
-export const generateAccessToken = (user) => {
+export const generateAccessToken = (user, permissions = []) => {
   return jwt.sign(
-    { userId: user._id, role: user.role },
+    { userId: user._id, roleId: user.role, permissions }, // permissions baked into the token itself
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: "15m" },
   );

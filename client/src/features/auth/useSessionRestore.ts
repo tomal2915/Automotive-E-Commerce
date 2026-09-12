@@ -3,13 +3,11 @@ import axios from "axios";
 import { setAccessToken } from "../../lib/tokenStore";
 import { useAuthStore } from "../../store/authStore";
 import { api } from "../../lib/api";
-import type { AuthUser } from "./authApi";
 
 export const useSessionRestore = () => {
   const [isRestoring, setIsRestoring] = useState(true);
   const setUser = useAuthStore((state) => state.setUser);
-  // Guards against React StrictMode's intentional double-invoke of effects
-  // in development, which would otherwise fire this restore call twice.
+  const setPermissions = useAuthStore((state) => state.setPermissions);
   const hasRun = useRef(false);
 
   useEffect(() => {
@@ -27,8 +25,9 @@ export const useSessionRestore = () => {
         const { accessToken } = res.data;
         setAccessToken(accessToken);
 
-        const meRes = await api.get<{ user: AuthUser }>("/auth/me");
-        setUser(meRes.data.user);
+        const sessionRes = await api.get("/auth/session");
+        setUser(sessionRes.data.user);
+        setPermissions(sessionRes.data.permissions, sessionRes.data.role.name);
       } catch {
         setAccessToken(null);
         setUser(null);
@@ -38,7 +37,7 @@ export const useSessionRestore = () => {
     };
 
     restoreSession();
-  }, [setUser]);
+  }, [setUser, setPermissions]);
 
   return { isRestoring };
 };

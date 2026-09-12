@@ -1,6 +1,7 @@
 import { Container, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSnackbar } from "notistack";
 import ProductForm, {
   type ProductFormValues,
 } from "../features/products/ProductForm";
@@ -12,6 +13,7 @@ export default function AdminProductEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -41,6 +43,7 @@ export default function AdminProductEditPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      enqueueSnackbar("Product updated successfully", { variant: "success" });
       navigate("/admin/products");
     },
   });

@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import Product from "../models/Product.js";
+import { generateVariantCombinations } from "../utils/variantGenerator.js";
 
 export const getProducts = async (req, res) => {
   try {
@@ -81,43 +83,96 @@ export const getProductById = async (req, res) => {
 
 // @route POST /api/v1/products (admin only)
 export const createProduct = async (req, res) => {
+  const session = await mongoose.startSession();
   try {
-    const imageUrls = (req.files || []).map((file) => file.path);
+    let createdProduct;
 
-    const productData = {
-      title: req.body.title,
-      description: req.body.description,
-      sku: req.body.sku,
-      category: req.body.category,
-      price: Number(req.body.price),
-      stock: Number(req.body.stock),
-      images: imageUrls,
-    };
+    // Wrapped in a transaction: if variant validation fails partway
+    // through, no half-built product survives — atomic all-or-nothing
+    await session.withTransaction(async () => {
+      const imageUrls = (req.files || []).map((file) => file.path);
+      const hasVariants =
+        req.body.hasVariants === "true" || req.body.hasVariants === true;
 
-    // Automotive fields — only included when actually provided (category
-    // has vehicle attributes). Sending them for a non-automotive product
-    // is harmless too, but the frontend won't send them in that case.
-    if (req.body.make) productData.make = req.body.make;
-    if (req.body.model) productData.model = req.body.model;
-    if (req.body.yearRangeStart && req.body.yearRangeEnd) {
-      productData.yearRange = {
-        start: Number(req.body.yearRangeStart),
-        end: Number(req.body.yearRangeEnd),
+      const baseData = {
+        title: req.body.title,
+        description: req.body.description,
+        category: req.body.category,
+        brand: req.body.brand || null,
+        images: imageUrls,
+        hasVariants,
       };
-    }
 
-    // Generic specifications — sent as JSON string from the frontend
-    // form (since FormData can't nest objects), parsed back here
-    if (req.body.specifications) {
-      productData.specifications = JSON.parse(req.body.specifications);
-    }
+      if (req.body.make) baseData.make = req.body.make;
+      if (req.body.model) baseData.model = req.body.model;
+      if (req.body.yearRangeStart && req.body.yearRangeEnd) {
+        baseData.yearRange = {
+          start: Number(req.body.yearRangeStart),
+          end: Number(req.body.yearRangeEnd),
+        };
+      }
+      if (req.body.specifications)
+        baseData.specifications = JSON.parse(req.body.specifications);
 
-    const product = await Product.create(productData);
-    res.status(201).json({ product });
+      if (hasVariants) {
+        const variantsInput = JSON.parse(req.body.variants || "[]");
+
+        // Reject duplicate SKUs within this submission before it ever
+        // touches the database
+        const skus = variantsInput.map((v) => v.sku);
+        if (new Set(skus).size !== skus.length) {
+          throw new Error("Duplicate SKU found among the submitted variants");
+        }
+
+        // Reject two variants with the identical attribute-value combination
+        const comboKeys = variantsInput.map((v) =>
+          v.attributeValues
+            .map((av) => `${av.attribute}:${av.value}`)
+            .sort()
+            .join("|"),
+        );
+        if (new Set(comboKeys).size !== comboKeys.length) {
+          throw new Error("Duplicate variant attribute combination found");
+        }
+
+        baseData.variants = variantsInput;
+        baseData.sku = undefined;
+      } else {
+        baseData.sku = req.body.sku;
+        baseData.price = Number(req.body.price);
+        if (req.body.salePrice) baseData.salePrice = Number(req.body.salePrice);
+        baseData.stock = Number(req.body.stock);
+      }
+
+      const [product] = await Product.create([baseData], { session });
+      createdProduct = product;
+    });
+
+    res.status(201).json({ product: createdProduct });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(409)
+        .json({ message: "Duplicate SKU or slug", error: error.message });
+    }
+    res.status(400).json({ message: error.message || "Invalid product data" });
+  } finally {
+    await session.endSession();
+  }
+};
+
+// @route POST /api/v1/products/generate-variants
+// Helper endpoint the frontend calls after the admin picks attributes/values —
+// returns every combination for the admin to review before saving
+export const previewVariantCombinations = async (req, res) => {
+  try {
+    const { attributeSelections } = req.body; // [{ attributeId, attributeName, values: [{valueId, valueLabel}] }]
+    const combinations = generateVariantCombinations(attributeSelections);
+    res.json({ combinations });
   } catch (error) {
     res
       .status(400)
-      .json({ message: "Invalid product data", error: error.message });
+      .json({ message: "Invalid attribute selection", error: error.message });
   }
 };
 
@@ -156,34 +211,90 @@ export const getFilterOptions = async (req, res) => {
 // @route PUT /api/v1/products/:id (admin only)
 export const updateProduct = async (req, res) => {
   try {
-    const updateData = { ...req.body };
-
-    // Only overwrite images if new ones were uploaded in this request
-    if (req.files && req.files.length > 0) {
-      updateData.images = req.files.map((file) => file.path);
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
 
+    if (req.body.title !== undefined) product.title = req.body.title;
+    if (req.body.description !== undefined)
+      product.description = req.body.description;
+    if (req.body.category !== undefined) product.category = req.body.category;
+    if (req.body.brand !== undefined) product.brand = req.body.brand || null;
+
+    if (req.body.make !== undefined) product.make = req.body.make;
+    if (req.body.model !== undefined) product.model = req.body.model;
     if (req.body.yearRangeStart && req.body.yearRangeEnd) {
-      updateData.yearRange = {
+      product.yearRange = {
         start: Number(req.body.yearRangeStart),
         end: Number(req.body.yearRangeEnd),
       };
     }
 
-    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    if (req.body.specifications) {
+      product.specifications = JSON.parse(req.body.specifications);
     }
+
+    const hasVariants =
+      req.body.hasVariants === "true" || req.body.hasVariants === true;
+    product.hasVariants = hasVariants;
+
+    if (hasVariants) {
+      const variantsInput = req.body.variants
+        ? JSON.parse(req.body.variants)
+        : [];
+
+      const skus = variantsInput.map((v) => v.sku);
+      if (new Set(skus).size !== skus.length) {
+        return res
+          .status(400)
+          .json({
+            message: "Duplicate SKU found among the submitted variants",
+          });
+      }
+
+      const comboKeys = variantsInput.map((v) =>
+        v.attributeValues
+          .map((av) => `${av.attribute}:${av.value}`)
+          .sort()
+          .join("|"),
+      );
+      if (new Set(comboKeys).size !== comboKeys.length) {
+        return res
+          .status(400)
+          .json({ message: "Duplicate variant attribute combination found" });
+      }
+
+      product.variants = variantsInput;
+      product.sku = undefined;
+      product.price = undefined;
+      product.salePrice = undefined;
+      product.stock = undefined;
+    } else {
+      product.sku = req.body.sku;
+      product.price = Number(req.body.price);
+      product.salePrice = req.body.salePrice
+        ? Number(req.body.salePrice)
+        : undefined;
+      product.stock = Number(req.body.stock);
+      product.variants = [];
+    }
+
+    if (req.files && req.files.length > 0) {
+      product.images = req.files.map((file) => file.path);
+    }
+
+    await product.save();
 
     res.json({ product });
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Invalid update data", error: error.message });
+    console.error(error);
+    if (error.code === 11000) {
+      return res
+        .status(409)
+        .json({ message: "Duplicate SKU or slug", error: error.message });
+    }
+    res.status(400).json({ message: error.message || "Invalid update data" });
   }
 };
 

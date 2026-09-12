@@ -14,7 +14,10 @@ import {
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import { Switch, FormControlLabel } from "@mui/material";
+import VariantBuilder, { type VariantRow } from "./VariantBuilder";
 import { useCategories } from "../categories/useCategories";
+import { useBrands } from "../brands/useBrands";
 import type { Product } from "./productTypes";
 
 export interface ProductFormValues {
@@ -22,6 +25,7 @@ export interface ProductFormValues {
   description: string;
   sku: string;
   category: string;
+  brand: string;
   make: string;
   model: string;
   yearRangeStart: string;
@@ -50,17 +54,24 @@ export default function ProductForm({
   submitLabel,
 }: Props) {
   const { data: categories } = useCategories();
+  const { data: brands } = useBrands();
 
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>(
     initialProduct?.images ?? [],
   );
 
+  const [hasVariants, setHasVariants] = useState(
+    initialProduct?.hasVariants ?? false,
+  );
+  const [variants, setVariants] = useState<VariantRow[]>([]);
+
   const [form, setForm] = useState<ProductFormValues>({
     title: initialProduct?.title ?? "",
     description: initialProduct?.description ?? "",
     sku: initialProduct?.sku ?? "",
     category: initialProduct?.category ?? "",
+    brand: initialProduct?.brand ?? "",
     make: initialProduct?.make ?? "",
     model: initialProduct?.model ?? "",
     yearRangeStart: initialProduct?.yearRange
@@ -91,6 +102,7 @@ export default function ProductForm({
         description: initialProduct.description,
         sku: initialProduct.sku,
         category: initialProduct.category,
+        brand: initialProduct.brand ?? "",
         make: initialProduct.make ?? "",
         model: initialProduct.model ?? "",
         yearRangeStart: initialProduct.yearRange
@@ -210,33 +222,81 @@ export default function ProductForm({
               value={form.category}
               onChange={handleChange("category")}
             >
+              {form.category &&
+                !categories?.some((cat) => cat.name === form.category) && (
+                  <MenuItem value={form.category} disabled>
+                    {form.category} (category no longer exists — please
+                    reselect)
+                  </MenuItem>
+                )}
               {categories?.map((cat) => (
                 <MenuItem key={cat._id} value={cat.name}>
                   {cat.name}
                 </MenuItem>
               ))}
+              {(!categories || categories.length === 0) && (
+                <MenuItem value="" disabled>
+                  No categories available — create one first
+                </MenuItem>
+              )}
             </TextField>
           </Grid>
-          <Grid size={{ xs: 6, sm: 3 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Price"
-              type="number"
+              select
+              label="Brand (optional)"
               fullWidth
-              required
-              value={form.price}
-              onChange={handleChange("price")}
+              value={form.brand}
+              onChange={handleChange("brand")}
+            >
+              <MenuItem value="">No Brand</MenuItem>
+              {brands?.map((brand) => (
+                <MenuItem key={brand._id} value={brand._id}>
+                  {brand.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid size={12}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={hasVariants}
+                  onChange={(e) => setHasVariants(e.target.checked)}
+                />
+              }
+              label="This product has variants (e.g. different sizes/colors, each with its own price & stock)"
             />
           </Grid>
-          <Grid size={{ xs: 6, sm: 3 }}>
-            <TextField
-              label="Stock"
-              type="number"
-              fullWidth
-              required
-              value={form.stock}
-              onChange={handleChange("stock")}
-            />
-          </Grid>
+
+          {!hasVariants ? (
+            <>
+              <Grid size={{ xs: 6, sm: 3 }}>
+                <TextField
+                  label="Price"
+                  type="number"
+                  fullWidth
+                  required
+                  value={form.price}
+                  onChange={handleChange("price")}
+                />
+              </Grid>
+              <Grid size={{ xs: 6, sm: 3 }}>
+                <TextField
+                  label="Stock"
+                  type="number"
+                  fullWidth
+                  required
+                  value={form.stock}
+                  onChange={handleChange("stock")}
+                />
+              </Grid>
+            </>
+          ) : (
+            <Grid size={12}>
+              <VariantBuilder variants={variants} onChange={setVariants} />
+            </Grid>
+          )}
 
           {/* Vehicle-specific fields — only shown when the selected category is vehicle-based */}
           {showVehicleFields && (

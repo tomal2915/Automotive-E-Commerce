@@ -219,7 +219,7 @@ export default function Navbar() {
                       >
                         Address Book
                       </MenuItem>
-                      {user?.role === "admin" && (
+                      {user?.role?.name === "Super Admin" && (
                         <MenuItem
                           component={RouterLink}
                           to="/admin/dashboard"
@@ -311,7 +311,7 @@ export default function Navbar() {
                   <ListItemText primary="Address Book" />
                 </ListItemButton>
 
-                {user?.role === "admin" && (
+                {user?.role?.name === "Super Admin" && (
                   <>
                     <Divider sx={{ my: 1 }} />
                     <ListItemButton

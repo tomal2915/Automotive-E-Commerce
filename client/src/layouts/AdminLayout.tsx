@@ -18,24 +18,98 @@ import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import CategoryIcon from "@mui/icons-material/Category";
+import BrandingWatermarkIcon from "@mui/icons-material/BrandingWatermark";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import PeopleIcon from "@mui/icons-material/People";
 import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
 import RateReviewIcon from "@mui/icons-material/RateReview";
+import PermMediaIcon from "@mui/icons-material/PermMedia";
+// ASSUMPTION: adjust this path to wherever usePermission actually lives
+
+import TuneIcon from '@mui/icons-material/Tune';
+import SecurityIcon from '@mui/icons-material/Security';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import { useAuthStore } from "../store/authStore";
 
 const ADMIN_NAV_ITEMS = [
-  { label: "Dashboard", path: "/admin/dashboard", icon: <DashboardIcon /> },
-  { label: "Products", path: "/admin/products", icon: <InventoryIcon /> },
-  { label: "Categories", path: "/admin/categories", icon: <CategoryIcon /> },
-  { label: "Orders", path: "/admin/orders", icon: <ShoppingBagIcon /> },
-  { label: "Returns", path: "/admin/returns", icon: <AssignmentReturnIcon /> },
-  { label: "Coupons", path: "/admin/coupons", icon: <LocalOfferIcon /> },
-  { label: "Users", path: "/admin/users", icon: <PeopleIcon /> },
+  {
+    label: "Dashboard",
+    path: "/admin/dashboard",
+    icon: <DashboardIcon />,
+    permission: "dashboard:watch",
+  },
+  {
+    label: "Products",
+    path: "/admin/products",
+    icon: <InventoryIcon />,
+    permission: "product:watch",
+  },
+  {
+    label: "Categories",
+    path: "/admin/categories",
+    icon: <CategoryIcon />,
+    permission: "category:watch",
+  },
+  {
+    label: "Brands",
+    path: "/admin/brands",
+    icon: <BrandingWatermarkIcon />,
+    permission: "brand:watch",
+  },
+  {
+    label: "Attributes",
+    path: "/admin/attributes",
+    icon: <TuneIcon />,
+    permission: "attribute:watch",
+  },
+  {
+    label: "Media Library",
+    path: "/admin/media",
+    icon: <PermMediaIcon />,
+    permission: "media:watch",
+  },
+  {
+    label: "Orders",
+    path: "/admin/orders",
+    icon: <ShoppingBagIcon />,
+    permission: "order:watch",
+  },
+  {
+    label: "Returns",
+    path: "/admin/returns",
+    icon: <AssignmentReturnIcon />,
+    permission: "order:watch",
+  },
+  {
+    label: "Coupons",
+    path: "/admin/coupons",
+    icon: <LocalOfferIcon />,
+    permission: "coupon:watch",
+  },
+  {
+    label: "Users",
+    path: "/admin/users",
+    icon: <PeopleIcon />,
+    permission: "user:watch",
+  },
+  {
+    label: "Roles",
+    path: "/admin/roles",
+    icon: <SecurityIcon />,
+    permission: "role:watch",
+  },
+  {
+    label: "Permissions",
+    path: "/admin/permissions",
+    icon: <VpnKeyIcon />,
+    permission: "permission:watch",
+  },
   {
     label: "Testimonials",
     path: "/admin/testimonials",
     icon: <RateReviewIcon />,
+    permission: "testimonial:watch",
   },
 ];
 
@@ -47,6 +121,11 @@ export default function AdminLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const permissions = useAuthStore((state) => state.permissions);
+  const visibleItems = ADMIN_NAV_ITEMS.filter((item) =>
+    permissions.includes(item.permission),
+  );
+
   const sidebarContent = (
     <Box sx={{ width: SIDEBAR_WIDTH }}>
       <Toolbar /> {/* aligns sidebar content below the fixed top navbar */}
@@ -57,7 +136,7 @@ export default function AdminLayout() {
       </Box>
       <Divider />
       <List>
-        {ADMIN_NAV_ITEMS.map((item) => (
+        {visibleItems.map((item) => (
           <ListItemButton
             key={item.path}
             component={RouterLink}

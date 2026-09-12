@@ -51,12 +51,10 @@ export const createCategory = async (req, res) => {
     res.status(201).json({ category });
   } catch (error) {
     if (error.code === 11000) {
-      return res
-        .status(409)
-        .json({
-          message:
-            "A category with this name already exists under the selected parent",
-        });
+      return res.status(409).json({
+        message:
+          "A category with this name already exists under the selected parent",
+      });
     }
     res
       .status(400)
@@ -70,17 +68,12 @@ export const updateCategory = async (req, res) => {
   try {
     const updateData = { ...req.body };
 
-    // Same string-boolean trap as create — must convert explicitly
     if ("hasVehicleAttributes" in updateData) {
       updateData.hasVehicleAttributes = parseBoolean(
         updateData.hasVehicleAttributes,
       );
     }
 
-    // An empty string means "no parent selected" — must become null,
-    // never left as "" (Mongoose can't cast an empty string to ObjectId
-    // and will throw, silently failing the whole update from the
-    // frontend's perspective)
     if ("parentCategory" in updateData) {
       updateData.parentCategory =
         updateData.parentCategory && updateData.parentCategory.trim() !== ""
@@ -88,15 +81,19 @@ export const updateCategory = async (req, res) => {
           : null;
     }
 
-    if (req.file) updateData.image = req.file.path;
+    // New file always wins. Otherwise, an explicit removeImage flag clears
+    // the existing image. Without either, the image is left untouched.
+    if (req.file) {
+      updateData.image = req.file.path;
+    } else if (parseBoolean(updateData.removeImage)) {
+      updateData.image = "";
+    }
+    delete updateData.removeImage; // never persist this — it's a signal, not a schema field
 
     const category = await Category.findByIdAndUpdate(
       req.params.id,
       updateData,
-      {
-        returnDocument: "after",
-        runValidators: true,
-      },
+      { returnDocument: "after", runValidators: true },
     );
 
     if (!category)
@@ -104,12 +101,10 @@ export const updateCategory = async (req, res) => {
     res.json({ category });
   } catch (error) {
     if (error.code === 11000) {
-      return res
-        .status(409)
-        .json({
-          message:
-            "A category with this name already exists under the selected parent",
-        });
+      return res.status(409).json({
+        message:
+          "A category with this name already exists under the selected parent",
+      });
     }
     res
       .status(400)

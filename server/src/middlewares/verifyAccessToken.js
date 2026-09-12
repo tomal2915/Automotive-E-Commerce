@@ -11,15 +11,16 @@ export const verifyAccessToken = (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-    if (err) {
-      // Expired or invalid access token -> frontend should call refresh-token
+    if (err)
       return res
         .status(401)
         .json({ message: "Access token expired or invalid" });
-    }
 
-    // Attach decoded payload to the request for later use in controllers
-    req.user = { id: decoded.userId, role: decoded.role };
+    req.user = {
+      id: decoded.userId,
+      roleId: decoded.roleId,
+      permissions: decoded.permissions || [], // now available on every request, no extra DB hit
+    };
     next();
   });
 };

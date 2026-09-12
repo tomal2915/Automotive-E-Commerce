@@ -5,6 +5,7 @@ import { validatePasswordStrength } from "../utils/passwordValidator.js";
 import Cart from "../models/Cart.js";
 import Wishlist from "../models/Wishlist.js";
 import Address from "../models/Address.js";
+import Role from "../models/Role.js";
 
 // @route GET /api/v1/users/profile
 // Returns the full profile of the logged-in user
@@ -150,6 +151,7 @@ export const getAllUsers = async (req, res) => {
     const [users, total] = await Promise.all([
       User.find(filter)
         .select("name email role isEmailVerified createdAt")
+        .populate("role", "name")
         .skip(skip)
         .limit(limitNum)
         .sort({ createdAt: -1 }),
@@ -209,13 +211,13 @@ export const deleteUser = async (req, res) => {
 // Promotes a user to admin, or demotes an admin back to a regular user
 export const updateUserRole = async (req, res) => {
   try {
-    const { role } = req.body;
+    const { roleId } = req.body;
 
-    if (!["user", "admin"].includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
+    if (!roleId) {
+      return res.status(400).json({ message: "roleId is required" });
     }
 
-    // Prevent an admin from demoting themselves — same self-lockout
+    // Prevent an admin from changing their own role — same self-lockout
     // concern as deletion. If they need to step down, another admin
     // should do it.
     if (req.params.id === req.user.id) {
@@ -224,11 +226,18 @@ export const updateUserRole = async (req, res) => {
         .json({ message: "You cannot change your own role" });
     }
 
+    const role = await Role.findOne({ _id: roleId, status: "active" });
+    if (!role) {
+      return res.status(400).json({ message: "Invalid or inactive role" });
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { role },
+      { role: role._id },
       { new: true },
-    ).select("name email role");
+    )
+      .select("name email role")
+      .populate("role", "name");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -236,7 +245,7 @@ export const updateUserRole = async (req, res) => {
 
     res.json({
       user,
-      message: `${user.name} is now ${role === "admin" ? "an admin" : "a regular user"}`,
+      message: `${user.name} is now assigned the "${role.name}" role`,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

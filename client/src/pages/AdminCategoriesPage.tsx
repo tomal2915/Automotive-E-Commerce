@@ -19,6 +19,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
 import { useCategories } from "../features/categories/useCategories";
 import {
   createCategoryRequest,
@@ -38,15 +39,19 @@ const emptyForm = {
 export default function AdminCategoriesPage() {
   const queryClient = useQueryClient();
   const { data: categories } = useCategories();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [form, setForm] = useState(emptyForm);
   const [image, setImage] = useState<File | undefined>();
+  const [existingImage, setExistingImage] = useState<string>("");
+  const [removeImage, setRemoveImage] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const createCategory = useMutation({
     mutationFn: () => createCategoryRequest({ ...form, image }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      enqueueSnackbar("Category created successfully", { variant: "success" });
       setForm(emptyForm);
       setImage(undefined);
     },
@@ -55,20 +60,25 @@ export default function AdminCategoriesPage() {
   const updateCategory = useMutation({
     mutationFn: (payload: {
       id: string;
-      data: typeof form & { image?: File };
+      data: typeof form & { image?: File; removeImage?: boolean };
     }) => updateCategoryRequest(payload.id, payload.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      enqueueSnackbar("Category updated successfully", { variant: "success" });
       setEditingId(null);
       setForm(emptyForm);
       setImage(undefined);
+      setExistingImage("");
+      setRemoveImage(false);
     },
   });
 
   const deleteCategory = useMutation({
     mutationFn: deleteCategoryRequest,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["categories"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      enqueueSnackbar("Category deleted successfully", { variant: "success" });
+    },
   });
 
   const startEdit = (cat: Category) => {
@@ -80,17 +90,24 @@ export default function AdminCategoriesPage() {
       parentCategory: cat.parentCategory || "",
     });
     setImage(undefined);
+    setExistingImage(cat.image || "");
+    setRemoveImage(false);
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setForm(emptyForm);
     setImage(undefined);
+    setExistingImage("");
+    setRemoveImage(false);
   };
 
   const handleSubmit = () => {
     if (editingId) {
-      updateCategory.mutate({ id: editingId, data: { ...form, image } });
+      updateCategory.mutate({
+        id: editingId,
+        data: { ...form, image, removeImage },
+      });
     } else {
       createCategory.mutate();
     }
@@ -180,13 +197,56 @@ export default function AdminCategoriesPage() {
                   type="file"
                   hidden
                   accept="image/*"
-                  onChange={(e) => setImage(e.target.files?.[0])}
+                  onChange={(e) => {
+                    setImage(e.target.files?.[0]);
+                    setRemoveImage(false);
+                  }}
                 />
               </Button>
+
               {image && (
                 <Typography variant="caption" sx={{ ml: 1 }}>
                   {image.name}
                 </Typography>
+              )}
+
+              {/* Existing image preview — only when editing and no new file chosen and not marked for removal */}
+              {!image && existingImage && !removeImage && (
+                <Box
+                  sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <Box
+                    component="img"
+                    src={existingImage}
+                    alt="Current"
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      objectFit: "cover",
+                      borderRadius: 1,
+                    }}
+                  />
+                  <Button
+                    size="small"
+                    color="error"
+                    onClick={() => setRemoveImage(true)}
+                  >
+                    Remove Image
+                  </Button>
+                </Box>
+              )}
+
+              {removeImage && (
+                <Box
+                  sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <Typography variant="caption" color="error">
+                    Image will be removed on save.
+                  </Typography>
+                  <Button size="small" onClick={() => setRemoveImage(false)}>
+                    Undo
+                  </Button>
+                </Box>
               )}
             </Grid>
             <Grid size={12}>
