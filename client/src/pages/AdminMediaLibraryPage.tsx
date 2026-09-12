@@ -51,14 +51,17 @@ export default function AdminMediaLibraryPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-library"] });
+      enqueueSnackbar("Files update successfully", { variant: "success" });
       setEditingItem(null);
     },
   });
 
   const deleteItem = useMutation({
     mutationFn: deleteMediaRequest,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["media-library"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["media-library"] });
+      enqueueSnackbar("Files deleted", { variant: "success" });
+    },
     onError: (err: any) =>
       enqueueSnackbar(err?.response?.data?.message || "Delete failed", {
         variant: "error",

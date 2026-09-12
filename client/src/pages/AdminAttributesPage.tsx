@@ -8,8 +8,6 @@ import {
   Grid,
   Box,
   MenuItem,
-  Card,
-  CardContent,
   Chip,
   IconButton,
   Accordion,
@@ -171,6 +169,7 @@ export default function AdminAttributesPage() {
                 </Typography>
                 <IconButton
                   size="small"
+                  component="div"
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteAttribute.mutate(attr._id);
