@@ -67,6 +67,7 @@ export default function ProfilePage() {
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
+        avatar: updatedUser.avatar,
       });
     },
   });
@@ -104,12 +105,18 @@ export default function ProfilePage() {
   };
 
   if (isLoading)
-    return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading profile...</Container>;
+    return (
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
+        Loading profile...
+      </Container>
+    );
 
   return (
     <PageTransition>
       <Container sx={{ py: 4, maxWidth: "700px !important" }}>
-        <Typography sx={{ variant: "h4", mb: 3 }}>My Profile</Typography>
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          My Profile
+        </Typography>
 
         {/* --- Profile Info Form --- */}
         <Paper sx={{ p: 3, mb: 3 }}>
@@ -206,7 +213,9 @@ export default function ProfilePage() {
 
         {/* --- Change Password Form --- */}
         <Paper sx={{ p: 3 }}>
-          <Typography sx={{ variant: "h6", mb: 2 }}>Change Password</Typography>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Change Password
+          </Typography>
           <Divider sx={{ mb: 2 }} />
 
           {changePassword.isError && (
@@ -260,12 +269,9 @@ export default function ProfilePage() {
               {changePassword.isPending ? "Changing..." : "Change Password"}
             </Button>
             <Typography
-              sx={{
-                variant: "caption",
-                display: "block",
-                color: "text.secondary",
-                mt: 1,
-              }}
+              variant="caption"
+              display="block"
+              sx={{ color: "text.secondary", mt: 1 }}
             >
               Changing your password will log you out of all devices.
             </Typography>
