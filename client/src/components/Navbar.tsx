@@ -41,7 +41,7 @@ export default function Navbar() {
   const isMobile = useMediaQuery(theme.breakpoints.down("md")); // < 900px
 
   const navigate = useNavigate();
-  const { user, isAuthenticated, setUser } = useAuthStore();
+  const { user, isAuthenticated, setUser, hasPermission } = useAuthStore();
   const { data: cart } = useCart();
   const { data: wishlist } = useWishlist();
 
@@ -219,7 +219,7 @@ export default function Navbar() {
                       >
                         Address Book
                       </MenuItem>
-                      {user?.role?.name === "Super Admin" && (
+                      {hasPermission("dashboard:watch") && (
                         <MenuItem
                           component={RouterLink}
                           to="/admin/dashboard"
@@ -311,7 +311,7 @@ export default function Navbar() {
                   <ListItemText primary="Address Book" />
                 </ListItemButton>
 
-                {user?.role?.name === "Super Admin" && (
+                {hasPermission("dashboard:watch") && (
                   <>
                     <Divider sx={{ my: 1 }} />
                     <ListItemButton
