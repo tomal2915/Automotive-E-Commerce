@@ -86,6 +86,10 @@ export default function AdminAttributesPage() {
         [variables.attrId]: { value: "", referenceValue: "" },
       });
     },
+    onError: (err: any) =>
+      enqueueSnackbar(err?.response?.data?.message || "Failed to add value", {
+        variant: "error",
+      }),
   });
 
   const removeValue = useMutation({
@@ -163,7 +167,7 @@ export default function AdminAttributesPage() {
                   pr: 2,
                 }}
               >
-                <Typography>
+                <Typography component="span">
                   {attr.name}{" "}
                   <Chip label={attr.type} size="small" sx={{ ml: 1 }} />
                 </Typography>
