@@ -18,6 +18,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
 import { useBrands } from "../features/brands/useBrands";
 import {
   createBrandRequest,
@@ -38,6 +39,7 @@ const emptyForm = {
 
 export default function AdminBrandsPage() {
   const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
   const { data: brands } = useBrands();
 
   const canCreate = usePermission("brand:create");
@@ -53,9 +55,15 @@ export default function AdminBrandsPage() {
     mutationFn: () => createBrandRequest(form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["brands"] });
+      enqueueSnackbar("Brand created successfully", { variant: "success" });
       setForm(emptyForm);
       setLogoPreview(null);
     },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to create brand",
+        { variant: "error" },
+      ),
   });
 
   const updateBrand = useMutation({
@@ -63,15 +71,31 @@ export default function AdminBrandsPage() {
       updateBrandRequest(payload.id, payload.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["brands"] });
+      enqueueSnackbar("Brand updated successfully", { variant: "success" });
       setEditingId(null);
       setForm(emptyForm);
       setLogoPreview(null);
     },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to update brand",
+        { variant: "error" },
+      ),
   });
 
   const deleteBrand = useMutation({
     mutationFn: deleteBrandRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["brands"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["brands"] });
+      enqueueSnackbar("Brand deleted successfully", { variant: "success" });
+    },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to delete brand",
+        {
+          variant: "error",
+        },
+      ),
   });
 
   const startEdit = (brand: Brand) => {
