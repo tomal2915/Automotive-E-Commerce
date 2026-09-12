@@ -400,8 +400,9 @@ export const getProductsByIds = async (req, res) => {
 
     const products = await Product.find({ _id: { $in: idArray } })
       .select(
-        "title price images make model category averageRating reviewCount yearRange stock",
+        "title price mediaRefs make model category averageRating reviewCount yearRange stock",
       )
+      .populate("mediaRefs.media")
       .lean();
 
     // Preserve the original order (most-recently-viewed-first), since
