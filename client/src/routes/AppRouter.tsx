@@ -35,6 +35,7 @@ import AdminBrandsPage from "../pages/AdminBrandsPage";
 import RequirePermission from "./RequirePermission";
 import AdminRolesPage from "../pages/AdminRolesPage";
 import AdminPermissionsPage from "../pages/AdminPermissionsPage";
+import AdminAttributesPage from "../pages/AdminAttributesPage";
 
 export default function AppRouter() {
   return (
@@ -77,6 +78,7 @@ export default function AppRouter() {
           </Route>
           <Route path="/admin/categories" element={<AdminCategoriesPage />} />
           <Route path="/admin/brands" element={<AdminBrandsPage />} />
+          <Route path="/admin/attributes" element={<AdminAttributesPage />} />
 
           <Route element={<RequirePermission permission="role:watch" />}>
             <Route path="/admin/roles" element={<AdminRolesPage />} />

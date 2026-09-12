@@ -19,6 +19,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
 import {
   fetchAttributes,
   createAttributeRequest,
@@ -31,6 +32,7 @@ import PageTransition from "../components/PageTransition";
 
 export default function AdminAttributesPage() {
   const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
   const { data: attributes } = useQuery({
     queryKey: ["attributes"],
     queryFn: fetchAttributes,
@@ -45,14 +47,27 @@ export default function AdminAttributesPage() {
     mutationFn: () => createAttributeRequest(form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["attributes"] });
+      enqueueSnackbar("Attribute created successfully", { variant: "success" });
       setForm({ name: "", type: "dropdown" });
     },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to create attribute",
+        { variant: "error" },
+      ),
   });
 
   const deleteAttribute = useMutation({
     mutationFn: deleteAttributeRequest,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["attributes"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["attributes"] });
+      enqueueSnackbar("Attribute deleted successfully", { variant: "success" });
+    },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to delete attribute",
+        { variant: "error" },
+      ),
   });
 
   const addValue = useMutation({
@@ -67,6 +82,7 @@ export default function AdminAttributesPage() {
       }),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["attributes"] });
+      enqueueSnackbar("Value added successfully", { variant: "success" });
       setValueInputs({
         ...valueInputs,
         [variables.attrId]: { value: "", referenceValue: "" },
@@ -77,10 +93,15 @@ export default function AdminAttributesPage() {
   const removeValue = useMutation({
     mutationFn: (payload: { attrId: string; valueId: string }) =>
       removeAttributeValueRequest(payload.attrId, payload.valueId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["attributes"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["attributes"] });
+      enqueueSnackbar("Value removed successfully", { variant: "success" });
+    },
     onError: (err: any) =>
-      alert(err?.response?.data?.message || "Failed to remove value"),
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to remove value",
+        { variant: "error" },
+      ),
   });
 
   return (
