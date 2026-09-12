@@ -13,8 +13,6 @@ import {
 } from "../controllers/productController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 import { requirePermission } from "../middlewares/requirePermission.js";
-import { uploadProductImages } from "../middlewares/uploadImage.js";
-import { handleUploadError } from "../middlewares/handleUploadError.js";
 
 const router = express.Router();
 
@@ -29,8 +27,6 @@ router.post(
   "/",
   verifyAccessToken,
   requirePermission("product:create"),
-  uploadProductImages,
-  handleUploadError,
   createProduct,
 );
 router.post(
@@ -42,8 +38,6 @@ router.put(
   "/:id",
   verifyAccessToken,
   requirePermission("product:update"),
-  uploadProductImages,
-  handleUploadError,
   updateProduct,
 );
 

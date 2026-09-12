@@ -11,6 +11,7 @@ export const getCategories = async (req, res) => {
   try {
     const allCategories = await Category.find({ isActive: true })
       .sort({ name: 1 })
+      .populate("image")
       .lean();
 
     const topLevel = allCategories.filter((c) => !c.parentCategory);
@@ -30,7 +31,7 @@ export const getCategories = async (req, res) => {
 // @route POST /api/v1/categories (admin only)
 export const createCategory = async (req, res) => {
   try {
-    const { name, description, hasVehicleAttributes, parentCategory } =
+    const { name, description, hasVehicleAttributes, parentCategory, image } =
       req.body;
     const slug = `${name}-${parentCategory || "root"}`
       .toLowerCase()
@@ -45,7 +46,7 @@ export const createCategory = async (req, res) => {
       hasVehicleAttributes: parseBoolean(hasVehicleAttributes),
       parentCategory:
         parentCategory && parentCategory.trim() !== "" ? parentCategory : null,
-      image: req.file?.path || "",
+      image: image || null, // Media _id selected via MediaPicker
     });
 
     res.status(201).json({ category });
@@ -83,18 +84,20 @@ export const updateCategory = async (req, res) => {
 
     // New file always wins. Otherwise, an explicit removeImage flag clears
     // the existing image. Without either, the image is left untouched.
-    if (req.file) {
-      updateData.image = req.file.path;
-    } else if (parseBoolean(updateData.removeImage)) {
-      updateData.image = "";
+    if (parseBoolean(updateData.removeImage)) {
+      updateData.image = null;
+    } else if (!updateData.image) {
+      delete updateData.image; // no change requested — keep existing reference
     }
+    // otherwise updateData.image is a Media _id string from MediaPicker,
+    // passed through as-is
     delete updateData.removeImage; // never persist this — it's a signal, not a schema field
 
     const category = await Category.findByIdAndUpdate(
       req.params.id,
       updateData,
       { returnDocument: "after", runValidators: true },
-    );
+    ).populate("image");
 
     if (!category)
       return res.status(404).json({ message: "Category not found" });

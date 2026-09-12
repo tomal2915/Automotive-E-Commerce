@@ -11,7 +11,12 @@ const categorySchema = new mongoose.Schema(
       index: true,
     },
     description: { type: String, default: "" },
-    image: { type: String, default: "" },
+    // References the shared Media Library instead of storing a raw URL
+    image: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Media",
+      default: null,
+    },
     hasVehicleAttributes: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
 

@@ -69,7 +69,9 @@ export const getProducts = async (req, res) => {
 // @route GET /api/v1/products/:id
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate(
+      "mediaRefs.media",
+    );
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -90,16 +92,22 @@ export const createProduct = async (req, res) => {
     // Wrapped in a transaction: if variant validation fails partway
     // through, no half-built product survives — atomic all-or-nothing
     await session.withTransaction(async () => {
-      const imageUrls = (req.files || []).map((file) => file.path);
       const hasVariants =
         req.body.hasVariants === "true" || req.body.hasVariants === true;
+
+      // Images now come from the shared Media Library — the frontend
+      // uploads via /media/upload separately, then sends the chosen
+      // Media _ids here as mediaRefs
+      const mediaRefsInput = Array.isArray(req.body.mediaRefs)
+        ? req.body.mediaRefs
+        : [];
 
       const baseData = {
         title: req.body.title,
         description: req.body.description,
         category: req.body.category,
         brand: req.body.brand || null,
-        images: imageUrls,
+        mediaRefs: mediaRefsInput,
         hasVariants,
       };
 
@@ -246,11 +254,9 @@ export const updateProduct = async (req, res) => {
 
       const skus = variantsInput.map((v) => v.sku);
       if (new Set(skus).size !== skus.length) {
-        return res
-          .status(400)
-          .json({
-            message: "Duplicate SKU found among the submitted variants",
-          });
+        return res.status(400).json({
+          message: "Duplicate SKU found among the submitted variants",
+        });
       }
 
       const comboKeys = variantsInput.map((v) =>
@@ -280,8 +286,8 @@ export const updateProduct = async (req, res) => {
       product.variants = [];
     }
 
-    if (req.files && req.files.length > 0) {
-      product.images = req.files.map((file) => file.path);
+    if (Array.isArray(req.body.mediaRefs)) {
+      product.mediaRefs = req.body.mediaRefs;
     }
 
     await product.save();
@@ -352,6 +358,7 @@ export const getSearchSuggestions = async (req, res) => {
 export const getRelatedProducts = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
+
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     const orConditions = [{ category: product.category }];
@@ -368,6 +375,7 @@ export const getRelatedProducts = async (req, res) => {
       .select(
         "title price images make model category averageRating reviewCount yearRange stock",
       )
+      .populate("mediaRefs.media")
       .limit(8)
       .lean();
 
