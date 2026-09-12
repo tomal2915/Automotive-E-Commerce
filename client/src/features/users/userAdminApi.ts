@@ -24,7 +24,7 @@ export const fetchAllUsers = async (params: {
 };
 
 export const fetchRoleOptions = async (): Promise<{ roles: RoleOption[] }> => {
-  const res = await api.get("/role/options");
+  const res = await api.get("/roles/options");
   return res.data;
 };
 

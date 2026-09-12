@@ -20,6 +20,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
 import { fetchPermissions } from "../features/permissions/permissionApi";
 import {
   fetchRoles,
@@ -46,6 +47,7 @@ const emptyForm = { name: "", description: "" };
 
 export default function AdminRolesPage() {
   const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
   const { data: roles } = useQuery({
     queryKey: ["roles"],
     queryFn: fetchRoles,
@@ -71,8 +73,13 @@ export default function AdminRolesPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
+      enqueueSnackbar("Role created successfully", { variant: "success" });
       resetForm();
     },
+    onError: (err: any) =>
+      enqueueSnackbar(err?.response?.data?.message || "Failed to create role", {
+        variant: "error",
+      }),
   });
 
   const updateRole = useMutation({
@@ -80,15 +87,25 @@ export default function AdminRolesPage() {
       updateRoleRequest(payload.id, payload.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
+      enqueueSnackbar("Role updated successfully", { variant: "success" });
       resetForm();
     },
+    onError: (err: any) =>
+      enqueueSnackbar(err?.response?.data?.message || "Failed to update role", {
+        variant: "error",
+      }),
   });
 
   const deleteRole = useMutation({
     mutationFn: deleteRoleRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["roles"] });
+      enqueueSnackbar("Role deleted successfully", { variant: "success" });
+    },
     onError: (err: any) =>
-      alert(err?.response?.data?.message || "Delete failed"),
+      enqueueSnackbar(err?.response?.data?.message || "Failed to delete role", {
+        variant: "error",
+      }),
   });
 
   const resetForm = () => {
@@ -132,6 +149,10 @@ export default function AdminRolesPage() {
 
   const grantAll = () => {
     setSelectedPermissions(new Set(permData?.flat.map((p) => p._id) ?? []));
+  };
+
+  const clearAll = () => {
+    setSelectedPermissions(new Set());
   };
 
   const handleSubmit = () => {
@@ -184,9 +205,14 @@ export default function AdminRolesPage() {
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
             <Typography variant="body2">Permissions</Typography>
-            <Button size="small" onClick={grantAll}>
-              Grant All (Admin Shortcut)
-            </Button>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button size="small" onClick={grantAll}>
+                Grant All (Admin Shortcut)
+              </Button>
+              <Button size="small" color="error" onClick={clearAll}>
+                Clear All
+              </Button>
+            </Box>
           </Box>
 
           <Box sx={{ overflowX: "auto" }}>
