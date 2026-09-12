@@ -1,5 +1,6 @@
 import Media from "../models/Media.js";
 import Product from "../models/Product.js";
+import MediaFolder from "../models/MediaFolder.js";
 
 const inferType = (mimeType) => {
   if (mimeType.startsWith("image/")) return "image";
@@ -42,10 +43,19 @@ export const uploadMedia = async (req, res) => {
 // @route GET /api/v1/media (permission: media:read)
 export const getMediaLibrary = async (req, res) => {
   try {
-    const { page = 1, limit = 24, type, search } = req.query;
+    const { page = 1, limit = 24, type, search, folderId } = req.query;
 
     const filter = {};
     if (type) filter.type = type;
+
+    // "root" is an explicit sentinel meaning "top-level files only" —
+    // omitting folderId entirely means "don't filter by folder at all"
+    if (folderId === "root") {
+      filter.folder = null;
+    } else if (folderId) {
+      filter.folder = folderId;
+    }
+
     if (search)
       filter.$or = [
         { fileName: new RegExp(search, "i") },
@@ -114,5 +124,36 @@ export const deleteMedia = async (req, res) => {
     res.json({ message: "Media deleted" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route PUT /api/v1/media/:id/move (permission: media:write)
+// Moves a file into a different folder. NOTE: this only updates the DB
+// reference — it does NOT physically relocate the asset inside Cloudinary.
+// The folder here is a logical grouping for your admin UI, not a guarantee
+// that Cloudinary's own storage layout matches it after a move.
+export const moveMedia = async (req, res) => {
+  try {
+    const { folderId } = req.body;
+
+    if (folderId) {
+      const folderExists = await MediaFolder.findById(folderId);
+      if (!folderExists) {
+        return res.status(400).json({ message: "Target folder not found" });
+      }
+    }
+
+    const media = await Media.findByIdAndUpdate(
+      req.params.id,
+      { folder: folderId || null },
+      { returnDocument: "after", runValidators: true },
+    );
+    if (!media) return res.status(404).json({ message: "Media not found" });
+
+    res.json({ media });
+  } catch (error) {
+    res
+      .status(400)
+      .json({ message: "Invalid move request", error: error.message });
   }
 };

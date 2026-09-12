@@ -10,6 +10,7 @@ const MODULES = {
   role: ["watch", "create", "read", "update", "delete"],
   user: ["watch", "create", "read", "update", "delete"],
   media: ["watch", "read", "upload", "write", "delete"],
+  mediaFolder: ["create", "update", "delete"],
   category: ["watch", "create", "read", "update", "delete"],
   brand: ["watch", "create", "read", "update", "delete"],
   attribute: ["watch", "create", "read", "update", "delete"],

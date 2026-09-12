@@ -22,6 +22,13 @@ const mediaSchema = new mongoose.Schema(
     // refuse deletion while still attached, and lets the admin UI show
     // "used in 3 products" instead of guessing
     usageCount: { type: Number, default: 0 },
+
+    // null = "Uncategorized" / root-level file
+    folder: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "MediaFolder",
+      default: null,
+    },
   },
   { timestamps: true },
 );
