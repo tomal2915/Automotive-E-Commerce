@@ -8,7 +8,6 @@ import {
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 import { requirePermission } from "../middlewares/requirePermission.js";
 
-
 const router = express.Router();
 
 router.get("/", getCategories);
@@ -24,6 +23,11 @@ router.put(
   requirePermission("category:update"),
   updateCategory,
 );
-router.delete("/:id", verifyAccessToken, requirePermission("product:create"), deleteCategory);
+router.delete(
+  "/:id",
+  verifyAccessToken,
+  requirePermission("category:delete"),
+  deleteCategory,
+);
 
 export default router;
