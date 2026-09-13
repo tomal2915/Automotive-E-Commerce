@@ -1,51 +1,43 @@
-import { Container, Typography, Grid, Box } from "@mui/material";
+import { Suspense, lazy } from "react";
+import { Container, Typography, Grid, Box, Skeleton } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import {
-  fetchSummary,
-  fetchRevenueTrend,
-  fetchTopProducts,
-  fetchOrderStatusBreakdown,
-  fetchLowStockProducts,
-} from "../features/analytics/analyticsApi";
+import { fetchDashboardBundle } from "../features/analytics/analyticsApi";
 import SummaryCards from "../features/analytics/SummaryCards";
-import RevenueTrendChart from "../features/analytics/RevenueTrendChart";
-import TopProductsChart from "../features/analytics/TopProductsChart";
 import OrderStatusWidget from "../features/analytics/OrderStatusWidget";
 import LowStockWidget from "../features/analytics/LowStockWidget";
 import PageTransition from "../components/PageTransition";
 
+// Code-split the two Recharts-based components — Recharts is a heavy
+// library to parse/execute, and this defers that cost out of the main
+// bundle's initial render, splitting it into a separate chunk that loads
+// only once the rest of the dashboard has already painted.
+const RevenueTrendChart = lazy(
+  () => import("../features/analytics/RevenueTrendChart"),
+);
+const TopProductsChart = lazy(
+  () => import("../features/analytics/TopProductsChart"),
+);
+
+const ChartSkeleton = () => <Skeleton variant="rounded" height={300} />;
+
 export default function AdminDashboardPage() {
-  const { data: summary, isLoading: loadingSummary } = useQuery({
-    queryKey: ["analytics-summary"],
-    queryFn: fetchSummary,
+  // ONE request instead of five — see Step "analytics bundle" fix
+  const { data, isLoading } = useQuery({
+    queryKey: ["analytics-dashboard-bundle"],
+    queryFn: fetchDashboardBundle,
   });
 
-  const { data: trend } = useQuery({
-    queryKey: ["analytics-revenue-trend"],
-    queryFn: () => fetchRevenueTrend(30),
-  });
-
-  const { data: topProducts } = useQuery({
-    queryKey: ["analytics-top-products"],
-    queryFn: () => fetchTopProducts(10),
-  });
-
-  const { data: statusBreakdown } = useQuery({
-    queryKey: ["analytics-status-breakdown"],
-    queryFn: fetchOrderStatusBreakdown,
-  });
-
-  const { data: lowStock } = useQuery({
-    queryKey: ["analytics-low-stock"],
-    queryFn: () => fetchLowStockProducts(5),
-  });
-
-  if (loadingSummary)
+  if (isLoading) {
     return (
       <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
-        Loading dashboard...
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          Analytics Dashboard
+        </Typography>
+        <Skeleton variant="rounded" height={100} sx={{ mb: 2 }} />
+        <Skeleton variant="rounded" height={300} />
       </Container>
     );
+  }
 
   return (
     <PageTransition>
@@ -55,21 +47,29 @@ export default function AdminDashboardPage() {
         </Typography>
 
         <Box sx={{ mb: 3 }}>
-          {summary && <SummaryCards summary={summary} />}
+          {data && <SummaryCards summary={data.summary} />}
         </Box>
 
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, lg: 8 }}>
-            {trend && <RevenueTrendChart data={trend} />}
+            {data && (
+              <Suspense fallback={<ChartSkeleton />}>
+                <RevenueTrendChart data={data.revenueTrend} />
+              </Suspense>
+            )}
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
-            {statusBreakdown && <OrderStatusWidget data={statusBreakdown} />}
+            {data && <OrderStatusWidget data={data.orderStatusBreakdown} />}
           </Grid>
           <Grid size={{ xs: 12, lg: 8 }}>
-            {topProducts && <TopProductsChart data={topProducts} />}
+            {data && (
+              <Suspense fallback={<ChartSkeleton />}>
+                <TopProductsChart data={data.topProducts} />
+              </Suspense>
+            )}
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
-            {lowStock && <LowStockWidget data={lowStock} />}
+            {data && <LowStockWidget data={data.lowStockProducts} />}
           </Grid>
         </Grid>
       </Container>

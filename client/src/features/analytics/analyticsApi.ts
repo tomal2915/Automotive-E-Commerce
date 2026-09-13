@@ -33,6 +33,23 @@ export interface LowStockProduct {
   category: string;
 }
 
+export interface DashboardBundle {
+  summary: Summary;
+  revenueTrend: RevenueTrendPoint[];
+  topProducts: TopProduct[];
+  orderStatusBreakdown: StatusBreakdown[];
+  lowStockProducts: LowStockProduct[];
+}
+
+// NEW — one call fetches everything the dashboard page needs, instead of
+// 5 separate round trips + 5 separate React Query loading states
+export const fetchDashboardBundle = async (): Promise<DashboardBundle> => {
+  const res = await api.get("/analytics/dashboard");
+  return res.data;
+};
+
+// Kept for backward compatibility / other potential consumers — no
+// longer used by AdminDashboardPage itself
 export const fetchSummary = async (): Promise<Summary> => {
   const res = await api.get("/analytics/summary");
   return res.data;
