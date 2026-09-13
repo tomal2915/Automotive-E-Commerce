@@ -9,7 +9,13 @@ const parseBoolean = (value) => value === true || value === "true";
 // Returns top-level categories, each with its subcategories nested in
 export const getCategories = async (req, res) => {
   try {
-    const allCategories = await Category.find({ isActive: true })
+    const allCategories = await Category.find({
+      isActive: true,
+      // Guard against any un-migrated legacy string image values —
+      // populate() throws a CastError on those, which would otherwise
+      // 500 the entire endpoint for every category, not just the bad one
+      $or: [{ image: null }, { image: { $type: "objectId" } }],
+    })
       .sort({ name: 1 })
       .populate("image")
       .lean();
