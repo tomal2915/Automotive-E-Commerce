@@ -15,7 +15,7 @@ export default function NewsletterBanner() {
   };
 
   return (
-    <Box sx={{ bgcolor: "background.paper", py: 6 }}>
+    <Box sx={{ bgcolor: "#0B1D3A", py: 7 }}>
       <Container>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -24,10 +24,10 @@ export default function NewsletterBanner() {
           transition={{ duration: 0.5 }}
         >
           <Box sx={{ textAlign: "center", maxWidth: 500, mx: "auto" }}>
-            <Typography variant="h5" fontWeight={700} mb={1}>
+            <Typography variant="h5" fontWeight={700} mb={1} sx={{ color: "#fff" }}>
               Get exclusive deals in your inbox
             </Typography>
-            <Typography color="text.secondary" mb={3}>
+            <Typography sx={{ color: "rgba(255,255,255,0.7)" }} mb={3}>
               Subscribe for early access to sales, new arrivals, and special
               discounts.
             </Typography>
@@ -44,10 +44,16 @@ export default function NewsletterBanner() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                sx={{
+                  bgcolor: "#fff",
+                  borderRadius: 1,
+                  "& fieldset": { border: "none" },
+                }}
               />
               <Button
                 type="submit"
                 variant="contained"
+                sx={{ bgcolor: "#FF6B35", "&:hover": { bgcolor: "#e85a28" } }}
                 component={motion.button}
                 whileTap={{ scale: 0.95 }}
               >
