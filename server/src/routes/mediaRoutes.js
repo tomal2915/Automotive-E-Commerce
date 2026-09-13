@@ -23,6 +23,8 @@ import { requirePermission } from "../middlewares/requirePermission.js"; // buil
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req) => {
+    console.log("upload req.body:", req.body); // temporary debug
+    
     // req.body.folderId must be sent as a plain form field BEFORE the
     // "files" field in the FormData — multer parses fields in stream
     // order, so if folderId comes after files it won't be populated yet

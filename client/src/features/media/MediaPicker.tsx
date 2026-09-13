@@ -58,6 +58,7 @@ export default function MediaPicker({ open, onClose, onSelect }: Props) {
   });
 
   const handleClose = () => {
+    (document.activeElement as HTMLElement)?.blur();
     setCurrentFolderId(null); // reset navigation for next open
     onClose();
   };

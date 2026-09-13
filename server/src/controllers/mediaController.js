@@ -48,6 +48,8 @@ export const getMediaLibrary = async (req, res) => {
     const filter = {};
     if (type) filter.type = type;
 
+    console.log("getMediaLibrary filter:", filter, "raw folderId:", folderId);
+
     // "root" is an explicit sentinel meaning "top-level files only" —
     // omitting folderId entirely means "don't filter by folder at all"
     if (folderId === "root") {

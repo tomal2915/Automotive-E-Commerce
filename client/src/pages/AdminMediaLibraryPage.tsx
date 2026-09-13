@@ -232,10 +232,11 @@ export default function AdminMediaLibraryPage() {
   const createFolder = useMutation({
     mutationFn: (name: string) =>
       createFolderRequest({ name, parentFolder: currentFolderId }),
-    onSuccess: () => {
+    onSuccess: (newFolder) => {
       queryClient.invalidateQueries({ queryKey: ["media-folders"] });
       enqueueSnackbar("Folder created", { variant: "success" });
       closeFolderDialog();
+      setCurrentFolderId(newFolder._id); // navigate straight into the new folder
     },
     onError: (err: any) =>
       enqueueSnackbar(
