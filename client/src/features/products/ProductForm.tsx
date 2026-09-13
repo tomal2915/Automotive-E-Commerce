@@ -9,16 +9,17 @@ import {
   IconButton,
   Typography,
   MenuItem,
-  Chip,
 } from "@mui/material";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import { Switch, FormControlLabel } from "@mui/material";
 import VariantBuilder, { type VariantRow } from "./VariantBuilder";
 import { useCategories } from "../categories/useCategories";
 import { useBrands } from "../brands/useBrands";
-import type { Product } from "./productTypes";
+import MediaPicker from "../media/MediaPicker";
+import type { MediaItem } from "../media/mediaApi";
+import type { Product, MediaRef } from "./productTypes";
 
 export interface ProductFormValues {
   title: string;
@@ -38,7 +39,7 @@ interface Props {
   initialProduct?: Product;
   onSubmit: (
     values: ProductFormValues,
-    images: File[],
+    mediaRefs: string[],
     specifications: Record<string, string>,
   ) => void;
   isSubmitting: boolean;
@@ -56,10 +57,12 @@ export default function ProductForm({
   const { data: categories } = useCategories();
   const { data: brands } = useBrands();
 
-  const [images, setImages] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>(
-    initialProduct?.images ?? [],
+  // Holds full media objects (so thumbnails can be shown) — only the
+  // _ids are sent on submit
+  const [selectedMedia, setSelectedMedia] = useState<(MediaRef | MediaItem)[]>(
+    initialProduct?.mediaRefs ?? [],
   );
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const [hasVariants, setHasVariants] = useState(
     initialProduct?.hasVariants ?? false,
@@ -84,8 +87,6 @@ export default function ProductForm({
     stock: initialProduct ? String(initialProduct.stock) : "",
   });
 
-  // Generic specifications — a list of {key, value} pairs the admin can
-  // freely add/remove, since different categories need different attributes
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>(
     initialProduct?.specifications
       ? Object.entries(initialProduct.specifications).map(([key, value]) => ({
@@ -114,13 +115,10 @@ export default function ProductForm({
         price: String(initialProduct.price),
         stock: String(initialProduct.stock),
       });
-      setPreviews(initialProduct.images ?? []);
+      setSelectedMedia(initialProduct.mediaRefs ?? []);
     }
   }, [initialProduct]);
 
-  // Determine whether the selected category needs vehicle fields — this
-  // is the core of "dynamic" form: same form, different fields shown
-  // depending on which category is picked
   const selectedCategory = categories?.find((c) => c.name === form.category);
   const showVehicleFields = selectedCategory?.hasVehicleAttributes ?? false;
 
@@ -130,27 +128,15 @@ export default function ProductForm({
       setForm({ ...form, [field]: e.target.value });
     };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    if (previews.length + files.length > 5) {
-      alert("Maximum 5 images allowed");
-      return;
-    }
-    setImages((prev) => [...prev, ...files]);
-    setPreviews((prev) => [
-      ...prev,
-      ...files.map((f) => URL.createObjectURL(f)),
-    ]);
+  const handleMediaSelect = (media: MediaItem) => {
+    if (selectedMedia.length >= 5) return; // cap enforced silently — button disables at 5 anyway
+    if (selectedMedia.some((m) => m._id === media._id)) return; // no duplicates
+    setSelectedMedia((prev) => [...prev, media]);
+    setPickerOpen(false);
   };
 
-  const removeImage = (index: number) => {
-    const newImageStartIndex = previews.length - images.length;
-    if (index >= newImageStartIndex) {
-      setImages((prev) =>
-        prev.filter((_, i) => i !== index - newImageStartIndex),
-      );
-    }
-    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  const removeMedia = (id: string) => {
+    setSelectedMedia((prev) => prev.filter((m) => m._id !== id));
   };
 
   const updateSpec = (index: number, field: "key" | "value", value: string) => {
@@ -170,7 +156,11 @@ export default function ProductForm({
     specs.forEach(({ key, value }) => {
       if (key.trim()) specifications[key.trim()] = value.trim();
     });
-    onSubmit(form, images, specifications);
+    onSubmit(
+      form,
+      selectedMedia.map((m) => m._id),
+      specifications,
+    );
   };
 
   return (
@@ -298,7 +288,6 @@ export default function ProductForm({
             </Grid>
           )}
 
-          {/* Vehicle-specific fields — only shown when the selected category is vehicle-based */}
           {showVehicleFields && (
             <>
               <Grid size={12}>
@@ -343,10 +332,11 @@ export default function ProductForm({
             </>
           )}
 
-          {/* Generic specifications — available for every category */}
           <Grid size={12}>
             <Typography
-              sx={{ variant: "subtitle2", color: "text.secondary", mb: 1 }}
+              variant="subtitle2"
+              color="text.secondary"
+              sx={{ mb: 1 }}
             >
               Specifications (e.g. Brand, Size, Color, Warranty)
             </Typography>
@@ -378,27 +368,21 @@ export default function ProductForm({
 
           <Grid size={12}>
             <Button
-              component="label"
               variant="outlined"
-              startIcon={<CloudUploadIcon />}
+              startIcon={<PhotoLibraryIcon />}
+              onClick={() => setPickerOpen(true)}
+              disabled={selectedMedia.length >= 5}
             >
-              Upload Images (max 5)
-              <input
-                type="file"
-                hidden
-                multiple
-                accept="image/*"
-                onChange={handleImageSelect}
-              />
+              Choose Images from Library ({selectedMedia.length}/5)
             </Button>
 
-            {previews.length > 0 && (
+            {selectedMedia.length > 0 && (
               <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
-                {previews.map((src, i) => (
-                  <Box key={i} sx={{ position: "relative" }}>
+                {selectedMedia.map((media) => (
+                  <Box key={media._id} sx={{ position: "relative" }}>
                     <img
-                      src={src}
-                      alt={`preview-${i}`}
+                      src={media.thumbnailUrl || media.url}
+                      alt="Product"
                       style={{
                         width: 100,
                         height: 100,
@@ -408,7 +392,7 @@ export default function ProductForm({
                     />
                     <IconButton
                       size="small"
-                      onClick={() => removeImage(i)}
+                      onClick={() => removeMedia(media._id)}
                       sx={{
                         position: "absolute",
                         top: -8,
@@ -436,6 +420,12 @@ export default function ProductForm({
           </Grid>
         </Grid>
       </Box>
+
+      <MediaPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={handleMediaSelect}
+      />
     </Paper>
   );
 }

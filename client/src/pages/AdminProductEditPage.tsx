@@ -24,7 +24,7 @@ export default function AdminProductEditPage() {
   const mutation = useMutation({
     mutationFn: (payload: {
       values: ProductFormValues;
-      images: File[];
+      mediaRefs: string[];
       specifications: Record<string, string>;
     }) =>
       updateProductRequest(id!, {
@@ -37,7 +37,7 @@ export default function AdminProductEditPage() {
           : undefined,
         price: Number(payload.values.price),
         stock: Number(payload.values.stock),
-        images: payload.images,
+        mediaRefs: payload.mediaRefs,
         specifications: payload.specifications,
       }),
     onSuccess: () => {
@@ -46,6 +46,11 @@ export default function AdminProductEditPage() {
       enqueueSnackbar("Product updated successfully", { variant: "success" });
       navigate("/admin/products");
     },
+    onError: (err: any) =>
+      enqueueSnackbar(
+        err?.response?.data?.message || "Failed to update product",
+        { variant: "error" },
+      ),
   });
 
   if (isLoading)
@@ -68,8 +73,8 @@ export default function AdminProductEditPage() {
         <ProductForm
           key={product._id} // forces a fresh mount once the real product data has loaded, so the form's useState picks up actual values instead of empty initial state
           initialProduct={product} // THIS was missing — without it, the form never knows this is edit mode
-          onSubmit={(values, images, specifications) =>
-            mutation.mutate({ values, images, specifications })
+          onSubmit={(values, mediaRefs, specifications) =>
+            mutation.mutate({ values, mediaRefs, specifications })
           }
           isSubmitting={mutation.isPending}
           errorMessage={(mutation.error as any)?.response?.data?.message}
