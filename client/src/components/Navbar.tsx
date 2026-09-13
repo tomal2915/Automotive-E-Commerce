@@ -30,6 +30,13 @@ import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./NotificationBell";
 import SearchBar from "./SearchBar";
 import AnimatedBadge from "./AnimatedBadge";
+import CategoryMegaMenu, {
+  CategoryColumnList,
+} from "../features/categories/CategoryMegaMenu";
+import { useCategories } from "../features/categories/useCategories";
+import Collapse from "@mui/material/Collapse";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuthStore } from "../store/authStore";
 import { useCart } from "../features/cart/useCart";
 import { useWishlist } from "../features/wishlist/useWishlist";
@@ -48,6 +55,8 @@ export default function Navbar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const { data: categories } = useCategories();
 
   const itemCount =
     cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
@@ -240,6 +249,9 @@ export default function Navbar() {
             </Box>
           )}
         </Toolbar>
+
+        {/* Full-width category bar — desktop only, sits directly under the main toolbar row */}
+        {!isMobile && <CategoryMegaMenu />}
       </AppBar>
 
       {/* Mobile navigation drawer — replaces the avatar dropdown menu entirely on small screens */}
@@ -266,13 +278,27 @@ export default function Navbar() {
             <ListItemButton component={RouterLink} to="/" onClick={closeDrawer}>
               <ListItemText primary="Home" />
             </ListItemButton>
-            <ListItemButton
-              component={RouterLink}
-              to="/products"
-              onClick={closeDrawer}
-            >
+            <ListItemButton onClick={() => setCategoriesOpen((o) => !o)}>
               <ListItemText primary="Shop" />
+              {categoriesOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </ListItemButton>
+            <Collapse in={categoriesOpen} timeout="auto" unmountOnExit>
+              <Box sx={{ pl: 2 }}>
+                <ListItemButton
+                  component={RouterLink}
+                  to="/products"
+                  onClick={closeDrawer}
+                >
+                  <ListItemText primary="All Products" />
+                </ListItemButton>
+                {categories && (
+                  <CategoryColumnList
+                    categories={categories}
+                    onNavigate={closeDrawer}
+                  />
+                )}
+              </Box>
+            </Collapse>
 
             {isAuthenticated ? (
               <>
