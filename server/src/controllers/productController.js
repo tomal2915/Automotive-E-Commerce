@@ -48,7 +48,11 @@ export const getProducts = async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     const [products, total] = await Promise.all([
-      Product.find(filter).skip(skip).limit(limitNum).sort({ createdAt: -1 }),
+      Product.find(filter)
+        .populate("mediaRefs.media")
+        .skip(skip)
+        .limit(limitNum)
+        .sort({ createdAt: -1 }),
       Product.countDocuments(filter),
     ]);
 

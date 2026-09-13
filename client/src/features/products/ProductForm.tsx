@@ -242,13 +242,13 @@ export default function ProductForm({
               onChange={handleChange("brand")}
             >
               <MenuItem value="">No Brand</MenuItem>
-              {form.brand &&
-                brands &&
-                !brands.some((b) => b._id === form.brand) && (
-                  <MenuItem value={form.brand} disabled>
-                    (brand no longer exists — please reselect)
-                  </MenuItem>
-                )}
+              {form.brand && !brands?.some((b) => b._id === form.brand) && (
+                <MenuItem value={form.brand} disabled>
+                  {brands
+                    ? "(brand no longer exists — please reselect)"
+                    : "Loading..."}
+                </MenuItem>
+              )}
               {brands?.map((brand) => (
                 <MenuItem key={brand._id} value={brand._id}>
                   {brand.name}

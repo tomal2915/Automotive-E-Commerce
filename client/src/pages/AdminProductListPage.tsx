@@ -51,19 +51,23 @@ export default function AdminProductListPage() {
       headerName: "",
       width: 60,
       sortable: false,
-      renderCell: (params) => (
-        <img
-          src={params.row.images?.[0] || "/placeholder-part.svg"}
-          alt=""
-          style={{
-            width: 40,
-            height: 40,
-            objectFit: "cover",
-            borderRadius: 4,
-            marginTop: 8,
-          }}
-        />
-      ),
+      renderCell: (params) => {
+        const thumbnail = params.row.mediaRefs?.[0]?.media?.thumbnailUrl
+          ?? params.row.mediaRefs?.[0]?.media?.url;
+        return (
+          <img
+            src={thumbnail || "/placeholder-part.svg"}
+            alt=""
+            style={{
+              width: 40,
+              height: 40,
+              objectFit: "cover",
+              borderRadius: 4,
+              marginTop: 8,
+            }}
+          />
+        );
+      },
     },
     { field: "title", headerName: "Title", flex: 1 },
     { field: "make", headerName: "Make", width: 110 },
@@ -122,7 +126,7 @@ export default function AdminProductListPage() {
             mb: 3,
           }}
         >
-          <Typography sx={{ variant: "h4" }}>Manage Products</Typography>
+          <Typography variant="h4">Manage Products</Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
