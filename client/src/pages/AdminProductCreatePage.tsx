@@ -55,6 +55,7 @@ export default function AdminProductCreatePage() {
           onSubmit={(values, mediaRefs, specifications) =>
             mutation.mutate({ values, mediaRefs, specifications })
           }
+          onCancel={() => navigate("/admin/products")}
           isSubmitting={mutation.isPending}
           errorMessage={(mutation.error as any)?.response?.data?.message}
           submitLabel="Create Product"
