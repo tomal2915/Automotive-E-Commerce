@@ -1,16 +1,41 @@
 import { api } from "../../lib/api";
-import type { Product, ProductFilters, ProductsResponse } from "./productTypes";
+import type {
+  Product,
+  ProductFilters,
+  ProductsResponse,
+  MediaRef,
+} from "./productTypes";
+
+// Backend returns mediaRefs as nested subdocuments:
+// { _id, media: { _id, url, thumbnailUrl }, isThumbnail, isGallery, sortOrder }
+// The frontend only cares about the flat Media info, so unwrap it here —
+// once, at the API boundary — rather than teaching every consumer about
+// the nested shape.
+interface RawMediaRef {
+  media: MediaRef | null;
+  isThumbnail?: boolean;
+}
+
+const normalizeProduct = (raw: any): Product => ({
+  ...raw,
+  mediaRefs: (raw.mediaRefs ?? [])
+    .filter((ref: RawMediaRef) => ref.media) // drop any dangling/unpopulated refs
+    .map((ref: RawMediaRef) => ref.media as MediaRef),
+});
 
 export const fetchProducts = async (
   filters: ProductFilters,
 ): Promise<ProductsResponse> => {
   const res = await api.get("/products", { params: filters });
-  return res.data;
+  return {
+    ...res.data,
+    products: res.data.products.map(normalizeProduct),
+  };
 };
 
 export const fetchProductById = async (id: string): Promise<Product> => {
   const res = await api.get(`/products/${id}`);
-  return res.data.product;
+  return normalizeProduct(res.data.product);
 };
 
 export const fetchAdminProducts = async (params: {
@@ -18,7 +43,10 @@ export const fetchAdminProducts = async (params: {
   limit?: number;
 }): Promise<ProductsResponse> => {
   const res = await api.get("/products", { params });
-  return res.data;
+  return {
+    ...res.data,
+    products: res.data.products.map(normalizeProduct),
+  };
 };
 
 export const deleteProductRequest = async (id: string) => {
@@ -26,50 +54,17 @@ export const deleteProductRequest = async (id: string) => {
   return res.data;
 };
 
-interface ProductFormInput {
-  title: string;
-  description: string;
-  partNumber: string;
-  make: string;
-  model: string;
-  yearRangeStart: number;
-  yearRangeEnd: number;
-  category: string;
-  price: number;
-  stock: number;
-  images: File[]; // new images to add/replace, may be empty
-}
-
-export const updateProductRequest = async (
-  id: string,
-  data: ProductFormInput,
-): Promise<Product> => {
-  const formData = new FormData();
-  formData.append("title", data.title);
-  formData.append("description", data.description);
-  formData.append("partNumber", data.partNumber);
-  formData.append("make", data.make);
-  formData.append("model", data.model);
-  formData.append("yearRangeStart", String(data.yearRangeStart));
-  formData.append("yearRangeEnd", String(data.yearRangeEnd));
-  formData.append("category", data.category);
-  formData.append("price", String(data.price));
-  formData.append("stock", String(data.stock));
-  data.images.forEach((file) => formData.append("images", file));
-
-  const res = await api.put(`/products/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return res.data.product;
-};
-
-export const fetchRelatedProducts = async (productId: string): Promise<Product[]> => {
+export const fetchRelatedProducts = async (
+  productId: string,
+): Promise<Product[]> => {
   const res = await api.get(`/products/${productId}/related`);
-  return res.data.related;
+  return res.data.related.map(normalizeProduct);
 };
 
 export const fetchProductsByIds = async (ids: string[]): Promise<Product[]> => {
   if (ids.length === 0) return [];
-  const res = await api.get("/products/batch", { params: { ids: ids.join(",") } });
-  return res.data.products;
+  const res = await api.get("/products/batch", {
+    params: { ids: ids.join(",") },
+  });
+  return res.data.products.map(normalizeProduct);
 };
