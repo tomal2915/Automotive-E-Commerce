@@ -17,6 +17,8 @@ export const uploadMedia = async (req, res) => {
       return res.status(400).json({ message: "No files were uploaded" });
     }
 
+    const { folderId } = req.body;
+
     const created = await Promise.all(
       files.map((file) =>
         Media.create({
@@ -30,6 +32,7 @@ export const uploadMedia = async (req, res) => {
           type: inferType(file.mimetype),
           size: file.size,
           uploadedBy: req.user.id,
+          folder: folderId || null,
         }),
       ),
     );
@@ -47,8 +50,6 @@ export const getMediaLibrary = async (req, res) => {
 
     const filter = {};
     if (type) filter.type = type;
-
-    console.log("getMediaLibrary filter:", filter, "raw folderId:", folderId);
 
     // "root" is an explicit sentinel meaning "top-level files only" —
     // omitting folderId entirely means "don't filter by folder at all"
