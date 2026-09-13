@@ -1,5 +1,19 @@
 import Category from "../models/Category.js";
 
+// Recursively nests categories under their parent, to unlimited depth —
+// e.g. Electronics -> Phone -> Touch / Non-Touch, Electronics -> Headphones
+const buildCategoryTree = (categories, parentId = null) =>
+  categories
+    .filter((c) =>
+      parentId
+        ? c.parentCategory?.toString() === parentId.toString()
+        : !c.parentCategory,
+    )
+    .map((c) => ({
+      ...c,
+      subcategories: buildCategoryTree(categories, c._id),
+    }));
+
 // Correctly interprets the string "true"/"false" that always arrives from
 // FormData — a naive !!value is WRONG here, since any non-empty string
 // (including the literal text "false") is truthy in JavaScript.
@@ -20,15 +34,7 @@ export const getCategories = async (req, res) => {
       .populate("image")
       .lean();
 
-    const topLevel = allCategories.filter((c) => !c.parentCategory);
-    const withChildren = topLevel.map((parent) => ({
-      ...parent,
-      subcategories: allCategories.filter(
-        (c) => c.parentCategory?.toString() === parent._id.toString(),
-      ),
-    }));
-
-    res.json({ categories: withChildren });
+    res.json({ categories: buildCategoryTree(allCategories) });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -69,6 +75,18 @@ export const createCategory = async (req, res) => {
   }
 };
 
+// Recursively collects every descendant id of a category — used to stop
+// a category from being re-parented under its own descendant, which
+// would create a circular reference and break tree building
+const getDescendantIds = async (categoryId) => {
+  const children = await Category.find({ parentCategory: categoryId }).select(
+    "_id",
+  );
+  const childIds = children.map((c) => c._id.toString());
+  const nestedIds = await Promise.all(childIds.map(getDescendantIds));
+  return [...childIds, ...nestedIds.flat()];
+};
+
 // @route PUT /api/v1/categories/:id (admin only)
 // @route PUT /api/v1/categories/:id (admin only)
 export const updateCategory = async (req, res) => {
@@ -86,6 +104,21 @@ export const updateCategory = async (req, res) => {
         updateData.parentCategory && updateData.parentCategory.trim() !== ""
           ? updateData.parentCategory
           : null;
+    }
+
+    if (updateData.parentCategory) {
+      if (updateData.parentCategory === req.params.id) {
+        return res
+          .status(400)
+          .json({ message: "A category cannot be its own parent" });
+      }
+      const descendantIds = await getDescendantIds(req.params.id);
+      if (descendantIds.includes(updateData.parentCategory)) {
+        return res.status(400).json({
+          message:
+            "Cannot set a subcategory as the parent — this would create a circular reference",
+        });
+      }
     }
 
     // New file always wins. Otherwise, an explicit removeImage flag clears

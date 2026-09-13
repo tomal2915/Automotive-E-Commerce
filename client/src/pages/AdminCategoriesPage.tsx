@@ -38,6 +38,81 @@ const emptyForm = {
   parentCategory: "",
 };
 
+// Flattens the nested category tree into a single list with depth info —
+// used to build the "Parent Category" dropdown, which needs every
+// category (at any nesting level) as a selectable option
+const flattenCategories = (
+  cats: Category[],
+  depth = 0,
+): { cat: Category; depth: number }[] =>
+  cats.flatMap((cat) => [
+    { cat, depth },
+    ...flattenCategories(cat.subcategories ?? [], depth + 1),
+  ]);
+
+// Collects a category's own id plus every descendant's id — used to stop
+// the parent dropdown from offering a category's own descendants as its
+// new parent, which would create a circular reference
+const getDescendantIds = (cat: Category): string[] => [
+  cat._id,
+  ...(cat.subcategories ?? []).flatMap(getDescendantIds),
+];
+
+// Recursively renders a category's subcategory tree to any depth
+function SubcategoryList({
+  categories,
+  depth,
+  onEdit,
+  onDelete,
+}: {
+  categories: Category[];
+  depth: number;
+  onEdit: (cat: Category) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <>
+      {categories.map((sub) => (
+        <Box key={sub._id} sx={{ pl: depth > 1 ? 1.5 : 0 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block" }}
+            >
+              └ {sub.name}
+            </Typography>
+            <Box>
+              <IconButton size="small" onClick={() => onEdit(sub)}>
+                <EditIcon sx={{ fontSize: 14 }} />
+              </IconButton>
+              <IconButton size="small" onClick={() => onDelete(sub._id)}>
+                <DeleteIcon sx={{ fontSize: 14 }} color="error" />
+              </IconButton>
+            </Box>
+          </Box>
+          {sub.subcategories && sub.subcategories.length > 0 && (
+            <Box sx={{ borderLeft: 2, borderColor: "divider" }}>
+              <SubcategoryList
+                categories={sub.subcategories}
+                depth={depth + 1}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            </Box>
+          )}
+        </Box>
+      ))}
+    </>
+  );
+}
+
 export default function AdminCategoriesPage() {
   const queryClient = useQueryClient();
   const { data: categories } = useCategories();
@@ -132,7 +207,14 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const parentOptions = categories?.filter((c) => c._id !== editingId) ?? [];
+  const flatCategories = categories ? flattenCategories(categories) : [];
+  const editingCategory = flatCategories.find(
+    (f) => f.cat._id === editingId,
+  )?.cat;
+  const excludedIds = editingCategory ? getDescendantIds(editingCategory) : [];
+  const parentOptions = flatCategories.filter(
+    ({ cat }) => !excludedIds.includes(cat._id),
+  );
 
   const displayImage = selectedImage
     ? { url: selectedImage.thumbnailUrl || selectedImage.url }
@@ -198,8 +280,9 @@ export default function AdminCategoriesPage() {
                 }
               >
                 <MenuItem value="">None (Top-level)</MenuItem>
-                {parentOptions.map((cat) => (
+                {parentOptions.map(({ cat, depth }) => (
                   <MenuItem key={cat._id} value={cat._id}>
+                    {"— ".repeat(depth)}
                     {cat.name}
                   </MenuItem>
                 ))}
@@ -337,38 +420,12 @@ export default function AdminCategoriesPage() {
                         borderColor: "divider",
                       }}
                     >
-                      {cat.subcategories.map((sub) => (
-                        <Box
-                          key={sub._id}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: "block" }}
-                          >
-                            └ {sub.name}
-                          </Typography>
-                          <Box>
-                            <IconButton
-                              size="small"
-                              onClick={() => startEdit(sub)}
-                            >
-                              <EditIcon sx={{ fontSize: 14 }} />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => deleteCategory.mutate(sub._id)}
-                            >
-                              <DeleteIcon sx={{ fontSize: 14 }} color="error" />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                      ))}
+                      <SubcategoryList
+                        categories={cat.subcategories}
+                        depth={1}
+                        onEdit={startEdit}
+                        onDelete={(id) => deleteCategory.mutate(id)}
+                      />
                     </Box>
                   )}
                 </CardContent>
