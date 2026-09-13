@@ -1,3 +1,5 @@
+import { Button } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { Container, Typography, Grid, Box } from "@mui/material";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -34,6 +36,9 @@ export default function FeaturedProducts() {
         <Typography variant="h5" fontWeight={700}>
           Trending Now
         </Typography>
+        <Button component={RouterLink} to="/products" sx={{ color: "#FF6B35" }}>
+          View all
+        </Button>
       </Box>
 
       <motion.div
