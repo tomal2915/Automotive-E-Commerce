@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useCategories } from "./useCategories";
+import type { Category } from "./categoryApi";
 
 export default function CategoryGrid() {
   const { data: categories } = useCategories();
@@ -18,7 +19,7 @@ export default function CategoryGrid() {
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>
+      <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>
         Shop by Category
       </Typography>
       <Grid container spacing={2}>
@@ -43,7 +44,7 @@ export default function CategoryGrid() {
               >
                 <CardMedia
                   component="img"
-                  image={cat.image || "/placeholder-part.svg"}
+                  image={cat.image?.thumbnailUrl || cat.image?.url || "/placeholder-part.svg"}
                   alt={cat.name}
                   sx={{ height: 120, objectFit: "cover", flexShrink: 0 }}
                 />
