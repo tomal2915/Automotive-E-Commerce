@@ -52,7 +52,22 @@ export default function TrustBadges() {
             <Grid key={badge.title} size={{ xs: 6, md: 3 }}>
               <motion.div variants={itemVariants}>
                 <Box sx={{ textAlign: "center" }}>
-                  <Box sx={{ color: "primary.main", mb: 1 }}>{badge.icon}</Box>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      mx: "auto",
+                      mb: 1.5,
+                      borderRadius: "50%",
+                      bgcolor: "rgba(255,107,53,0.1)",
+                      color: "#FF6B35",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {badge.icon}
+                  </Box>
                   <Typography variant="subtitle1" fontWeight={700}>
                     {badge.title}
                   </Typography>
