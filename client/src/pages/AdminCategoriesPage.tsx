@@ -9,15 +9,17 @@ import {
   Box,
   FormControlLabel,
   Switch,
-  Card,
-  CardMedia,
-  CardContent,
   IconButton,
   MenuItem,
   Alert,
+  Collapse,
+  Chip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
 import { useCategories } from "../features/categories/useCategories";
@@ -38,9 +40,9 @@ const emptyForm = {
   parentCategory: "",
 };
 
-// Flattens the nested category tree into a single list with depth info —
-// used to build the "Parent Category" dropdown, which needs every
-// category (at any nesting level) as a selectable option
+// Flattens the nested tree into a single list with depth info — used to
+// build the "Parent Category" dropdown, which needs every category (at
+// any nesting level) as a selectable/re-parentable option.
 const flattenCategories = (
   cats: Category[],
   depth = 0,
@@ -50,66 +52,124 @@ const flattenCategories = (
     ...flattenCategories(cat.subcategories ?? [], depth + 1),
   ]);
 
-// Collects a category's own id plus every descendant's id — used to stop
-// the parent dropdown from offering a category's own descendants as its
-// new parent, which would create a circular reference
+// A category's own id plus every descendant's id — used to stop the
+// parent dropdown from offering a category's own descendants as its new
+// parent, which would create a circular reference.
 const getDescendantIds = (cat: Category): string[] => [
   cat._id,
   ...(cat.subcategories ?? []).flatMap(getDescendantIds),
 ];
 
-// Recursively renders a category's subcategory tree to any depth
-function SubcategoryList({
-  categories,
-  depth,
-  onEdit,
-  onDelete,
-}: {
-  categories: Category[];
+interface TreeNodeProps {
+  cat: Category;
   depth: number;
+  expandedIds: Set<string>;
+  onToggleExpand: (id: string) => void;
   onEdit: (cat: Category) => void;
-  onDelete: (id: string) => void;
-}) {
+  onAddChild: (cat: Category) => void;
+  onDelete: (id: string, name: string) => void;
+  highlightId: string | null;
+}
+
+// One row of the tree, rendered recursively for its children when expanded.
+function CategoryTreeNode({
+  cat,
+  depth,
+  expandedIds,
+  onToggleExpand,
+  onEdit,
+  onAddChild,
+  onDelete,
+  highlightId,
+}: TreeNodeProps) {
+  const hasChildren = (cat.subcategories?.length ?? 0) > 0;
+  const isExpanded = expandedIds.has(cat._id);
+  const isHighlighted = cat._id === highlightId;
+
   return (
-    <>
-      {categories.map((sub) => (
-        <Box key={sub._id} sx={{ pl: depth > 1 ? 1.5 : 0 }}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: "block" }}
-            >
-              └ {sub.name}
-            </Typography>
-            <Box>
-              <IconButton size="small" onClick={() => onEdit(sub)}>
-                <EditIcon sx={{ fontSize: 14 }} />
-              </IconButton>
-              <IconButton size="small" onClick={() => onDelete(sub._id)}>
-                <DeleteIcon sx={{ fontSize: 14 }} color="error" />
-              </IconButton>
-            </Box>
-          </Box>
-          {sub.subcategories && sub.subcategories.length > 0 && (
-            <Box sx={{ borderLeft: 2, borderColor: "divider" }}>
-              <SubcategoryList
-                categories={sub.subcategories}
-                depth={depth + 1}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            </Box>
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          pl: depth * 3,
+          py: 0.75,
+          borderRadius: 1,
+          bgcolor: isHighlighted ? "action.selected" : "transparent",
+          "&:hover": { bgcolor: "action.hover" },
+        }}
+      >
+        <IconButton
+          size="small"
+          onClick={() => hasChildren && onToggleExpand(cat._id)}
+          sx={{ visibility: hasChildren ? "visible" : "hidden" }}
+        >
+          {isExpanded ? (
+            <ExpandMoreIcon fontSize="small" />
+          ) : (
+            <ChevronRightIcon fontSize="small" />
           )}
-        </Box>
-      ))}
-    </>
+        </IconButton>
+
+        {cat.image && (
+          <Box
+            component="img"
+            src={cat.image.thumbnailUrl || cat.image.url}
+            sx={{
+              width: 24,
+              height: 24,
+              objectFit: "cover",
+              borderRadius: 0.5,
+            }}
+          />
+        )}
+
+        <Typography sx={{ flex: 1, fontWeight: depth === 0 ? 600 : 400 }}>
+          {cat.name}
+        </Typography>
+
+        {cat.hasVehicleAttributes && (
+          <Chip label="Vehicle" size="small" variant="outlined" />
+        )}
+
+        <IconButton
+          size="small"
+          onClick={() => onAddChild(cat)}
+          title="Add subcategory"
+        >
+          <AddIcon fontSize="small" color="primary" />
+        </IconButton>
+        <IconButton size="small" onClick={() => onEdit(cat)} title="Edit">
+          <EditIcon fontSize="small" />
+        </IconButton>
+        <IconButton
+          size="small"
+          onClick={() => onDelete(cat._id, cat.name)}
+          title="Delete"
+        >
+          <DeleteIcon fontSize="small" color="error" />
+        </IconButton>
+      </Box>
+
+      {hasChildren && (
+        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+          {cat.subcategories!.map((sub) => (
+            <CategoryTreeNode
+              key={sub._id}
+              cat={sub}
+              depth={depth + 1}
+              expandedIds={expandedIds}
+              onToggleExpand={onToggleExpand}
+              onEdit={onEdit}
+              onAddChild={onAddChild}
+              onDelete={onDelete}
+              highlightId={highlightId}
+            />
+          ))}
+        </Collapse>
+      )}
+    </Box>
   );
 }
 
@@ -119,20 +179,24 @@ export default function AdminCategoriesPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const [form, setForm] = useState(emptyForm);
-  const [selectedImage, setSelectedImage] = useState<MediaItem | null>(null); // newly picked
-  const [existingImage, setExistingImage] = useState<Category["image"]>(null); // currently saved
+  const [selectedImage, setSelectedImage] = useState<MediaItem | null>(null);
+  const [existingImage, setExistingImage] = useState<Category["image"]>(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [addingUnderId, setAddingUnderId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const createCategory = useMutation({
     mutationFn: () =>
       createCategoryRequest({ ...form, image: selectedImage?._id }),
-    onSuccess: () => {
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       enqueueSnackbar("Category created successfully", { variant: "success" });
-      setForm(emptyForm);
-      setSelectedImage(null);
+      if (created.parentCategory) {
+        setExpandedIds((prev) => new Set(prev).add(created.parentCategory!));
+      }
+      resetForm();
     },
     onError: (err: any) =>
       enqueueSnackbar(
@@ -149,11 +213,7 @@ export default function AdminCategoriesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       enqueueSnackbar("Category updated successfully", { variant: "success" });
-      setEditingId(null);
-      setForm(emptyForm);
-      setSelectedImage(null);
-      setExistingImage(null);
-      setRemoveImage(false);
+      resetForm();
     },
     onError: (err: any) =>
       enqueueSnackbar(
@@ -175,8 +235,18 @@ export default function AdminCategoriesPage() {
       ),
   });
 
+  const resetForm = () => {
+    setForm(emptyForm);
+    setSelectedImage(null);
+    setExistingImage(null);
+    setRemoveImage(false);
+    setEditingId(null);
+    setAddingUnderId(null);
+  };
+
   const startEdit = (cat: Category) => {
     setEditingId(cat._id);
+    setAddingUnderId(null);
     setForm({
       name: cat.name,
       description: cat.description || "",
@@ -188,12 +258,35 @@ export default function AdminCategoriesPage() {
     setRemoveImage(false);
   };
 
-  const cancelEdit = () => {
+  const startAddChild = (parent: Category) => {
     setEditingId(null);
-    setForm(emptyForm);
+    setAddingUnderId(parent._id);
+    setForm({ ...emptyForm, parentCategory: parent._id });
     setSelectedImage(null);
     setExistingImage(null);
     setRemoveImage(false);
+    setExpandedIds((prev) => new Set(prev).add(parent._id));
+  };
+
+  const startAddRoot = () => {
+    resetForm();
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    if (
+      window.confirm(`Delete "${name}"? Its subcategories must be empty first.`)
+    ) {
+      deleteCategory.mutate(id);
+    }
   };
 
   const handleSubmit = () => {
@@ -216,6 +309,10 @@ export default function AdminCategoriesPage() {
     ({ cat }) => !excludedIds.includes(cat._id),
   );
 
+  const addingUnderName = addingUnderId
+    ? flatCategories.find((f) => f.cat._id === addingUnderId)?.cat.name
+    : null;
+
   const displayImage = selectedImage
     ? { url: selectedImage.thumbnailUrl || selectedImage.url }
     : !removeImage && existingImage
@@ -224,14 +321,18 @@ export default function AdminCategoriesPage() {
 
   return (
     <PageTransition>
-      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }} maxWidth="lg">
         <Typography variant="h4" sx={{ mb: 3 }}>
           Manage Categories
         </Typography>
 
-        <Paper sx={{ p: 3, mb: 4 }} key={editingId ?? "new"}>
+        <Paper sx={{ p: 3, mb: 4 }} key={editingId ?? addingUnderId ?? "new"}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            {editingId ? "Edit Category" : "Add New Category"}
+            {editingId
+              ? `Edit Category — ${form.name || "..."}`
+              : addingUnderId
+                ? `Add Subcategory under "${addingUnderName}"`
+                : "Add New Root Category"}
           </Typography>
 
           <Grid container spacing={2}>
@@ -359,10 +460,12 @@ export default function AdminCategoriesPage() {
                     : "Save Changes"
                   : createCategory.isPending
                     ? "Creating..."
-                    : "Create Category"}
+                    : addingUnderId
+                      ? "Add Subcategory"
+                      : "Create Category"}
               </Button>
-              {editingId && (
-                <Button sx={{ ml: 1 }} onClick={cancelEdit}>
+              {(editingId || addingUnderId) && (
+                <Button sx={{ ml: 1 }} onClick={resetForm}>
                   Cancel
                 </Button>
               )}
@@ -370,69 +473,41 @@ export default function AdminCategoriesPage() {
           </Grid>
         </Paper>
 
-        <Grid container spacing={2}>
-          {categories?.map((cat) => (
-            <Grid key={cat._id} size={{ xs: 12, sm: 6, md: 4 }}>
-              <Card>
-                {cat.image && (
-                  <CardMedia
-                    component="img"
-                    height="120"
-                    image={cat.image.thumbnailUrl || cat.image.url}
-                    alt={cat.name}
-                  />
-                )}
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="subtitle1">{cat.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {cat.hasVehicleAttributes
-                          ? "Vehicle-based category"
-                          : "Standard category"}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <IconButton size="small" onClick={() => startEdit(cat)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => deleteCategory.mutate(cat._id)}
-                      >
-                        <DeleteIcon fontSize="small" color="error" />
-                      </IconButton>
-                    </Box>
-                  </Box>
+        <Paper sx={{ p: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 1,
+            }}
+          >
+            <Typography variant="h6">Category Tree</Typography>
+            <Button size="small" startIcon={<AddIcon />} onClick={startAddRoot}>
+              Add Root Category
+            </Button>
+          </Box>
 
-                  {cat.subcategories && cat.subcategories.length > 0 && (
-                    <Box
-                      sx={{
-                        mt: 1,
-                        pl: 1,
-                        borderLeft: 2,
-                        borderColor: "divider",
-                      }}
-                    >
-                      <SubcategoryList
-                        categories={cat.subcategories}
-                        depth={1}
-                        onEdit={startEdit}
-                        onDelete={(id) => deleteCategory.mutate(id)}
-                      />
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
+          {categories?.map((cat) => (
+            <CategoryTreeNode
+              key={cat._id}
+              cat={cat}
+              depth={0}
+              expandedIds={expandedIds}
+              onToggleExpand={toggleExpand}
+              onEdit={startEdit}
+              onAddChild={startAddChild}
+              onDelete={handleDelete}
+              highlightId={editingId ?? addingUnderId}
+            />
           ))}
-        </Grid>
+
+          {(!categories || categories.length === 0) && (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+              No categories yet — add your first root category above.
+            </Typography>
+          )}
+        </Paper>
 
         <MediaPicker
           open={pickerOpen}
