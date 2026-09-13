@@ -47,15 +47,15 @@ router.get(
   requirePermission("media:watch"),
   getFolderBreadcrumb,
 );
-router.post("/folders", requirePermission("mediaFolder:create"), createFolder);
+router.post("/folders", requirePermission("mediafolder:create"), createFolder);
 router.put(
   "/folders/:id",
-  requirePermission("mediaFolder:update"),
+  requirePermission("mediafolder:update"),
   renameFolder,
 );
 router.delete(
   "/folders/:id",
-  requirePermission("mediaFolder:delete"),
+  requirePermission("mediafolder:delete"),
   deleteFolder,
 );
 
