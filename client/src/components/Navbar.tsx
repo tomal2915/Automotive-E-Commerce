@@ -43,6 +43,8 @@ import { useWishlist } from "../features/wishlist/useWishlist";
 import { setAccessToken } from "../lib/tokenStore";
 import { api } from "../lib/api";
 
+export const NAVBAR_APPBAR_ID = "app-navbar";
+
 export default function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md")); // < 900px
@@ -79,6 +81,7 @@ export default function Navbar() {
   return (
     <>
       <AppBar
+        id={NAVBAR_APPBAR_ID}
         position="fixed"
         elevation={1}
         sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}

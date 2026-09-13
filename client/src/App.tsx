@@ -1,6 +1,6 @@
-import { Toolbar } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
 import AppRouter from "./routes/AppRouter";
-import Navbar from "./components/Navbar";
+import Navbar, { NAVBAR_APPBAR_ID } from "./components/Navbar";
 import { useSessionRestore } from "./features/auth/useSessionRestore";
 import { CircularProgress, Box } from "@mui/material";
 import { AppErrorBoundary } from "./components/ErrorBoundary";
@@ -8,6 +8,22 @@ import Footer from "./components/Footer";
 
 function App() {
   const { isRestoring } = useSessionRestore();
+
+  const [navbarHeight, setNavbarHeight] = useState(64);
+
+  // Measures the AppBar's actual rendered height (main toolbar + the
+  // category bar row when present) instead of assuming a fixed value —
+  // so this keeps working if the navbar's height changes again later
+  // (extra rows, responsive breakpoints, etc).
+  useEffect(() => {
+    const measure = () => {
+      const el = document.getElementById(NAVBAR_APPBAR_ID);
+      if (el) setNavbarHeight(el.offsetHeight);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [isRestoring]);
 
   if (isRestoring) {
     return (
@@ -27,8 +43,8 @@ function App() {
   return (
     <AppErrorBoundary>
       <Navbar />
-      <Toolbar />
-      <Box sx={{ minHeight: "calc(100vh - 200px)" }}>
+      <Box sx={{ height: navbarHeight }} />
++      <Box sx={{ minHeight: `calc(100vh - ${navbarHeight}px - 200px)` }}>
         <AppRouter />
       </Box>
       <Footer />
