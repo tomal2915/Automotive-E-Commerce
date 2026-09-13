@@ -107,7 +107,12 @@ export const createProduct = async (req, res) => {
         description: req.body.description,
         category: req.body.category,
         brand: req.body.brand || null,
-        mediaRefs: mediaRefsInput,
+        mediaRefs: mediaRefsInput.map((mediaId, index) => ({
+          media: mediaId,
+          isThumbnail: index === 0,
+          isGallery: true,
+          sortOrder: index,
+        })),
         hasVariants,
       };
 
@@ -120,10 +125,10 @@ export const createProduct = async (req, res) => {
         };
       }
       if (req.body.specifications)
-        baseData.specifications = JSON.parse(req.body.specifications);
+        baseData.specifications = req.body.specifications;
 
       if (hasVariants) {
-        const variantsInput = JSON.parse(req.body.variants || "[]");
+        const variantsInput = req.body.variants || [];
 
         // Reject duplicate SKUs within this submission before it ever
         // touches the database
@@ -240,7 +245,7 @@ export const updateProduct = async (req, res) => {
     }
 
     if (req.body.specifications) {
-      product.specifications = JSON.parse(req.body.specifications);
+      product.specifications = req.body.specifications;
     }
 
     const hasVariants =
@@ -248,9 +253,7 @@ export const updateProduct = async (req, res) => {
     product.hasVariants = hasVariants;
 
     if (hasVariants) {
-      const variantsInput = req.body.variants
-        ? JSON.parse(req.body.variants)
-        : [];
+      const variantsInput = req.body.variants || [];
 
       const skus = variantsInput.map((v) => v.sku);
       if (new Set(skus).size !== skus.length) {
@@ -287,7 +290,12 @@ export const updateProduct = async (req, res) => {
     }
 
     if (Array.isArray(req.body.mediaRefs)) {
-      product.mediaRefs = req.body.mediaRefs;
+      product.mediaRefs = req.body.mediaRefs.map((mediaId, index) => ({
+        media: mediaId,
+        isThumbnail: index === 0,
+        isGallery: true,
+        sortOrder: index,
+      }));
     }
 
     await product.save();

@@ -185,7 +185,10 @@ export default function AdminBrandsPage() {
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={() => setPickerOpen(true)}
+                    onClick={(e) => {
+                      e.currentTarget.blur();
+                      setPickerOpen(true);
+                    }}
                   >
                     {logoPreview ? "Change Logo" : "Pick Logo from Library"}
                   </Button>
@@ -284,7 +287,6 @@ export default function AdminBrandsPage() {
           open={pickerOpen}
           onClose={() => setPickerOpen(false)}
           onSelect={(media) => {
-            (document.activeElement as HTMLElement)?.blur();
             setForm({ ...form, logo: media._id });
             setLogoPreview({ url: media.thumbnailUrl || media.url });
             setPickerOpen(false);

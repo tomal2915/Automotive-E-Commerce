@@ -370,7 +370,10 @@ export default function ProductForm({
             <Button
               variant="outlined"
               startIcon={<PhotoLibraryIcon />}
-              onClick={() => setPickerOpen(true)}
+              onClick={(e) => {
+                e.currentTarget.blur();
+                setPickerOpen(true);
+              }}
               disabled={selectedMedia.length >= 5}
             >
               Choose Images from Library ({selectedMedia.length}/5)

@@ -210,7 +210,10 @@ export default function AdminCategoriesPage() {
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() => setPickerOpen(true)}
+                onClick={(e) => {
+                  e.currentTarget.blur();
+                  setPickerOpen(true);
+                }}
               >
                 Choose Image
               </Button>
