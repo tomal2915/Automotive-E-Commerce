@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import AppRouter from "./routes/AppRouter";
 import Navbar, { NAVBAR_APPBAR_ID } from "./components/Navbar";
 import { useSessionRestore } from "./features/auth/useSessionRestore";
@@ -8,7 +9,8 @@ import Footer from "./components/Footer";
 
 function App() {
   const { isRestoring } = useSessionRestore();
-
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const [navbarHeight, setNavbarHeight] = useState(64);
 
   // Measures the AppBar's actual rendered height (main toolbar + the
@@ -43,11 +45,11 @@ function App() {
   return (
     <AppErrorBoundary>
       <Navbar />
-      <Box sx={{ height: navbarHeight }} />
-+      <Box sx={{ minHeight: `calc(100vh - ${navbarHeight}px - 200px)` }}>
+      <Box sx={{ height: navbarHeight }} />{" "}
+      <Box sx={{ minHeight: `calc(100vh - ${navbarHeight}px - 200px)` }}>
         <AppRouter />
       </Box>
-      <Footer />
+      {!isAdminRoute && <Footer />}
     </AppErrorBoundary>
   );
 }

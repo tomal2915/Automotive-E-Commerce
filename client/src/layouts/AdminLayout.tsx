@@ -27,9 +27,9 @@ import RateReviewIcon from "@mui/icons-material/RateReview";
 import PermMediaIcon from "@mui/icons-material/PermMedia";
 // ASSUMPTION: adjust this path to wherever usePermission actually lives
 
-import TuneIcon from '@mui/icons-material/Tune';
-import SecurityIcon from '@mui/icons-material/Security';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import TuneIcon from "@mui/icons-material/Tune";
+import SecurityIcon from "@mui/icons-material/Security";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import { useAuthStore } from "../store/authStore";
 
 const ADMIN_NAV_ITEMS = [
@@ -178,7 +178,17 @@ export default function AdminLayout() {
         </Drawer>
       )}
 
-      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          minWidth: 0,
+          // On desktop, the permanent Drawer is position:fixed and doesn't
+          // push content — so this content box must explicitly account for
+          // the sidebar's width itself, otherwise it renders full-width
+          // UNDER the sidebar (which is exactly what was happening to Footer).
+          width: { xs: "100%", md: `calc(100% - ${SIDEBAR_WIDTH}px)` },
+        }}
+      >
         {isMobile && (
           <Box
             sx={{

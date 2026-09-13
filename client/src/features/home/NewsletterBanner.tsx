@@ -24,7 +24,12 @@ export default function NewsletterBanner() {
           transition={{ duration: 0.5 }}
         >
           <Box sx={{ textAlign: "center", maxWidth: 500, mx: "auto" }}>
-            <Typography variant="h5" fontWeight={700} mb={1} sx={{ color: "#fff" }}>
+            <Typography
+              variant="h5"
+              fontWeight={700}
+              mb={1}
+              sx={{ color: "#fff" }}
+            >
               Get exclusive deals in your inbox
             </Typography>
             <Typography sx={{ color: "rgba(255,255,255,0.7)" }} mb={3}>
