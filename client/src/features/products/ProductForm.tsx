@@ -20,6 +20,20 @@ import { useBrands } from "../brands/useBrands";
 import MediaPicker from "../media/MediaPicker";
 import type { MediaItem } from "../media/mediaApi";
 import type { Product, MediaRef } from "./productTypes";
+import type { Category } from "../categories/categoryApi";
+
+// Flattens the nested category tree into a single indented list — e.g.
+// "Desktop", "— Star PC", "— — Intel PC" — so any level (root, branch,
+// or leaf) can be picked as a product's category, matching the tree
+// structure shown in AdminCategoriesPage.
+const flattenCategories = (
+  cats: Category[],
+  depth = 0,
+): { cat: Category; depth: number }[] =>
+  cats.flatMap((cat) => [
+    { cat, depth },
+    ...flattenCategories(cat.subcategories ?? [], depth + 1),
+  ]);
 
 export interface ProductFormValues {
   title: string;
@@ -58,6 +72,7 @@ export default function ProductForm({
 }: Props) {
   const { data: categories } = useCategories();
   const { data: brands } = useBrands();
+  const flatCategories = categories ? flattenCategories(categories) : [];
 
   // Holds full media objects (so thumbnails can be shown) — only the
   // _ids are sent on submit
@@ -121,7 +136,9 @@ export default function ProductForm({
     }
   }, [initialProduct]);
 
-  const selectedCategory = categories?.find((c) => c.name === form.category);
+  const selectedCategory = flatCategories.find(
+    ({ cat }) => cat.name === form.category,
+  )?.cat;
   const showVehicleFields = selectedCategory?.hasVehicleAttributes ?? false;
 
   const handleChange =
@@ -215,18 +232,21 @@ export default function ProductForm({
               onChange={handleChange("category")}
             >
               {form.category &&
-                !categories?.some((cat) => cat.name === form.category) && (
+                !flatCategories.some(
+                  ({ cat }) => cat.name === form.category,
+                ) && (
                   <MenuItem value={form.category} disabled>
                     {form.category} (category no longer exists — please
                     reselect)
                   </MenuItem>
                 )}
-              {categories?.map((cat) => (
+              {flatCategories.map(({ cat, depth }) => (
                 <MenuItem key={cat._id} value={cat.name}>
+                  {"— ".repeat(depth)}
                   {cat.name}
                 </MenuItem>
               ))}
-              {(!categories || categories.length === 0) && (
+              {flatCategories.length === 0 && (
                 <MenuItem value="" disabled>
                   No categories available — create one first
                 </MenuItem>
