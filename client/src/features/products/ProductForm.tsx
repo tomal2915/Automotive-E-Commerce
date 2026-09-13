@@ -42,6 +42,7 @@ interface Props {
     mediaRefs: string[],
     specifications: Record<string, string>,
   ) => void;
+  onCancel?: () => void;
   isSubmitting: boolean;
   errorMessage?: string;
   submitLabel: string;
@@ -50,6 +51,7 @@ interface Props {
 export default function ProductForm({
   initialProduct,
   onSubmit,
+  onCancel,
   isSubmitting,
   errorMessage,
   submitLabel,
@@ -420,6 +422,16 @@ export default function ProductForm({
             >
               {isSubmitting ? "Saving..." : submitLabel}
             </Button>
+            {onCancel && (
+              <Button
+                size="large"
+                sx={{ ml: 1 }}
+                disabled={isSubmitting}
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            )}
           </Grid>
         </Grid>
       </Box>
