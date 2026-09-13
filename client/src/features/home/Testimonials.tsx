@@ -57,7 +57,7 @@ export default function Testimonials() {
                   >
                     <FormatQuoteIcon
                       sx={{
-                        color: "primary.main",
+                        color: "#FF6B35",
                         fontSize: 32,
                         opacity: 0.5,
                         mb: 1,
@@ -82,18 +82,14 @@ export default function Testimonials() {
                     <Box
                       sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
                     >
-                      <Avatar src={t.avatar} sx={{ bgcolor: "primary.main" }}>
+                      <Avatar src={t.avatar} sx={{ bgcolor: "#0B1D3A" }}>
                         {t.name.charAt(0)}
                       </Avatar>
                       <Box>
-                        <Typography
-                          sx={{ variant: "subtitle2", fontWeight: 700 }}
-                        >
+                        <Typography variant="subtitle2" fontWeight={700}>
                           {t.name}
                         </Typography>
-                        <Typography
-                          sx={{ variant: "caption", color: "text.secondary" }}
-                        >
+                        <Typography variant="caption" color="text.secondary">
                           {t.role}
                         </Typography>
                       </Box>
