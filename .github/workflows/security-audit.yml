@@ -1,0 +1,39 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Also run weekly on its own, since new vulnerabilities get disclosed
+    # in already-installed packages even without you touching the code
+    - cron: "0 6 * * 1"
+
+jobs:
+  audit-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: npm ci
+      # Fails the build on HIGH or CRITICAL vulnerabilities — moderate/low
+      # ones are reported but don't block, since those are common in
+      # transitive dependencies and often have no immediate fix available
+      - run: npm audit --audit-level=high
+
+  audit-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: npm ci
+      - run: npm audit --audit-level=high
