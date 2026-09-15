@@ -27,11 +27,20 @@ const recalculateProductRating = async (productId) => {
 // @route GET /api/v1/reviews/product/:productId
 export const getProductReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ product: req.params.productId })
-      .populate("user", "name avatar")
-      .sort({ createdAt: -1 });
+    const { page, limit, skip } = parsePagination(req.query, {
+      defaultLimit: 10,
+    });
 
-    res.json({ reviews });
+    const [reviews, total] = await Promise.all([
+      Review.find({ product: req.params.productId })
+        .populate("user", "name avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Review.countDocuments({ product: req.params.productId }),
+    ]);
+
+    res.json({ reviews, pagination: buildPaginationMeta(total, page, limit) });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

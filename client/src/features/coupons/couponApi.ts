@@ -13,10 +13,17 @@ export interface Coupon {
   isActive: boolean;
 }
 
-export const fetchCoupons = async (): Promise<Coupon[]> => {
-  const res = await api.get("/coupons");
-  return res.data.coupons;
-};
+export interface CouponsResponse {
+  coupons: Coupon[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export const fetchCoupons = async (
+  params: { page?: number; limit?: number } = {},
+): Promise<CouponsResponse> => {
+  const res = await api.get("/coupons", { params });
+  return res.data;
+ };
 
 export const createCouponRequest = async (
   data: Partial<Coupon>,

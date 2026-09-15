@@ -1,5 +1,15 @@
 import { api } from "../../lib/api";
 
+export interface TestimonialsResponse {
+  testimonials: Testimonial[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export interface Testimonial {
   _id: string;
   name: string;
@@ -16,9 +26,11 @@ export const fetchTestimonials = async (): Promise<Testimonial[]> => {
   return res.data.testimonials;
 };
 
-export const fetchAllTestimonialsAdmin = async (): Promise<Testimonial[]> => {
-  const res = await api.get("/testimonials/admin/all");
-  return res.data.testimonials;
+export const fetchAllTestimonialsAdmin = async (
+  params: { page?: number; limit?: number } = {},
+): Promise<TestimonialsResponse> => {
+  const res = await api.get("/testimonials/admin/all", { params });
+  return res.data;
 };
 
 export interface TestimonialInput {

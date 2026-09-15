@@ -17,11 +17,22 @@ export const getTestimonials = async (req, res) => {
 // @route GET /api/v1/testimonials/admin/all (admin only) — includes inactive ones
 export const getAllTestimonials = async (req, res) => {
   try {
-    const testimonials = await Testimonial.find().sort({
-      displayOrder: 1,
-      createdAt: -1,
+    const { page, limit, skip } = parsePagination(req.query, {
+      defaultLimit: 20,
     });
-    res.json({ testimonials });
+
+    const [testimonials, total] = await Promise.all([
+      Testimonial.find()
+        .sort({ displayOrder: 1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Testimonial.countDocuments(),
+    ]);
+
+    res.json({
+      testimonials,
+      pagination: buildPaginationMeta(total, page, limit),
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

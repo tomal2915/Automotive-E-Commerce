@@ -28,9 +28,15 @@ const mediaSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "MediaFolder",
       default: null,
+      index: true,
     },
   },
   { timestamps: true },
 );
+
+// Supports the common query pattern: filter by folder + type together
+// (e.g. "images inside folder X") — this compound index also serves
+// folder-only queries since folder is the index's leading field
+mediaSchema.index({ folder: 1, type: 1 });
 
 export default mongoose.model("Media", mediaSchema);

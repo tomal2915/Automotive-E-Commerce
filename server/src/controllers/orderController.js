@@ -9,8 +9,7 @@ import Coupon from "../models/Coupon.js";
 import { validateAndCalculateDiscount } from "../utils/couponHelper.js";
 import { createNotification } from "../services/notificationService.js";
 import { canCancelOrder, canRequestReturn } from "../utils/orderPolicy.js";
-import { sendOrderStatusEmail } from "../services/emailService.js"; // built in 33.6 below
-import { logger } from "../config/logger.js"; // adjust relative path
+import { parsePagination, buildPaginationMeta } from "../utils/paginate.js";
 
 // @route POST /api/v1/orders/checkout
 // Creates a pending order from the user's cart and starts an SSLCommerz session
@@ -286,10 +285,19 @@ export const getOrderByTransactionId = async (req, res) => {
 // Returns the logged-in user's own order history, most recent first
 export const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user.id }).sort({
-      createdAt: -1,
+    const { page, limit, skip } = parsePagination(req.query, {
+      defaultLimit: 10,
     });
-    res.json({ orders });
+
+    const [orders, total] = await Promise.all([
+      Order.find({ user: req.user.id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments({ user: req.user.id }),
+    ]);
+
+    res.json({ orders, pagination: buildPaginationMeta(total, page, limit) });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -607,11 +615,21 @@ export const reviewReturnRequest = async (req, res) => {
 // Lists all pending return requests for the admin to triage
 export const getPendingReturns = async (req, res) => {
   try {
-    const orders = await Order.find({ "returnRequest.status": "pending" })
-      .populate("user", "name email")
-      .sort({ "returnRequest.requestedAt": -1 });
+    const { page, limit, skip } = parsePagination(req.query, {
+      defaultLimit: 20,
+    });
 
-    res.json({ orders });
+    const filter = { "returnRequest.status": "pending" };
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate("user", "name email")
+        .sort({ "returnRequest.requestedAt": -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(filter),
+    ]);
+
+    res.json({ orders, pagination: buildPaginationMeta(total, page, limit) });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

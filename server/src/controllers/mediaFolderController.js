@@ -1,14 +1,22 @@
 import MediaFolder from "../models/MediaFolder.js";
 import Media from "../models/Media.js";
+import { parsePagination, buildPaginationMeta } from "../utils/paginate.js";
 
 // @route GET /api/v1/media/folders?parentId=<id> (omit parentId for root level)
 export const getFolders = async (req, res) => {
   try {
     const { parentId } = req.query;
-    const folders = await MediaFolder.find({
-      parentFolder: parentId || null,
-    }).sort({ name: 1 });
-    res.json({ folders });
+    const { page, limit, skip } = parsePagination(req.query, {
+      defaultLimit: 50,
+    });
+
+    const filter = { parentFolder: parentId || null };
+    const [folders, total] = await Promise.all([
+      MediaFolder.find(filter).sort({ name: 1 }).skip(skip).limit(limit),
+      MediaFolder.countDocuments(filter),
+    ]);
+
+    res.json({ folders, pagination: buildPaginationMeta(total, page, limit) });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

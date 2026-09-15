@@ -21,8 +21,16 @@ export const createCoupon = async (req, res) => {
 // @route GET /api/v1/coupons (admin only)
 export const getAllCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find().sort({ createdAt: -1 });
-    res.json({ coupons });
+    const { page, limit, skip } = parsePagination(req.query, {
+      defaultLimit: 20,
+    });
+
+    const [coupons, total] = await Promise.all([
+      Coupon.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Coupon.countDocuments(),
+    ]);
+
+    res.json({ coupons, pagination: buildPaginationMeta(total, page, limit) });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

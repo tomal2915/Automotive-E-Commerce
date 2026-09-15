@@ -1,9 +1,22 @@
 import { api } from "../../lib/api";
 import type { Review } from "./reviewTypes";
 
-export const fetchProductReviews = async (productId: string): Promise<Review[]> => {
-  const res = await api.get(`/reviews/product/${productId}`);
-  return res.data.reviews;
+export interface ReviewsResponse {
+  reviews: Review[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export const fetchProductReviews = async (
+  productId: string,
+  params: { page?: number; limit?: number } = {},
+): Promise<ReviewsResponse> => {
+  const res = await api.get(`/reviews/product/${productId}`, { params });
+  return res.data;
 };
 
 export const createReviewRequest = async (

@@ -1,6 +1,16 @@
 import { api } from "../../lib/api";
 import type { Order } from "./orderTypes";
 
+interface OrdersResponse {
+  orders: Order[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 interface ShippingAddress {
   name: string;
   phone: string;
@@ -18,9 +28,11 @@ export const initiateCheckoutRequest = async (data: {
   return res.data;
 };
 
-export const fetchMyOrders = async (): Promise<Order[]> => {
-  const res = await api.get("/orders/my/all");
-  return res.data.orders;
+export const fetchMyOrders = async (
+  params: { page?: number; limit?: number } = {},
+): Promise<OrdersResponse> => {
+  const res = await api.get("/orders/my/all", { params });
+  return res.data;
 };
 
 export const fetchAllOrders = async (params: {
@@ -49,9 +61,11 @@ export const requestReturnRequest = async (orderId: string, reason: string) => {
   return res.data;
 };
 
-export const fetchPendingReturns = async () => {
-  const res = await api.get("/orders/admin/returns");
-  return res.data.orders;
+export const fetchPendingReturns = async (
+  params: { page?: number; limit?: number } = {},
+): Promise<OrdersResponse> => {
+  const res = await api.get("/orders/admin/returns", { params });
+  return res.data;
 };
 
 export const reviewReturnRequestApi = async (

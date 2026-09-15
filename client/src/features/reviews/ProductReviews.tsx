@@ -11,10 +11,15 @@ import {
   Divider,
   IconButton,
   Alert,
+  Pagination,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchProductReviews, createReviewRequest, deleteReviewRequest } from "./reviewApi";
+import {
+  fetchProductReviews,
+  createReviewRequest,
+  deleteReviewRequest,
+} from "./reviewApi";
 import { useAuthStore } from "../../store/authStore";
 
 interface Props {
@@ -24,20 +29,24 @@ interface Props {
 export default function ProductReviews({ productId }: Props) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
+  const [page, setPage] = useState(1);
 
-  const { data: reviews, isLoading } = useQuery({
-    queryKey: ["reviews", productId],
-    queryFn: () => fetchProductReviews(productId),
+  const { data, isLoading } = useQuery({
+    queryKey: ["reviews", productId, page],
+    queryFn: () => fetchProductReviews(productId, { page }),
   });
+  const reviews = data?.reviews;
 
   const [rating, setRating] = useState<number | null>(0);
   const [comment, setComment] = useState("");
 
   const createReview = useMutation({
-    mutationFn: () => createReviewRequest(productId, { rating: rating || 0, comment }),
+    mutationFn: () =>
+      createReviewRequest(productId, { rating: rating || 0, comment }),
     onSuccess: () => {
       setRating(0);
       setComment("");
+      setPage(1);
       queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
       // Product's averageRating/reviewCount changed too — refresh product data
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -62,8 +71,8 @@ export default function ProductReviews({ productId }: Props) {
 
   return (
     <Box sx={{ mt: 4 }}>
-      <Typography sx={{ variant: "h5", mb: 2 }}>
-        Reviews {reviews && `(${reviews.length})`}
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        Reviews {data && `(${data.pagination.total})`}
       </Typography>
 
       {/* Review form — only shown to logged-in users who haven't reviewed yet */}
@@ -71,7 +80,8 @@ export default function ProductReviews({ productId }: Props) {
         <Box component="form" onSubmit={handleSubmit} sx={{ mb: 3 }}>
           {createReview.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {(createReview.error as any)?.response?.data?.message || "Failed to submit review"}
+              {(createReview.error as any)?.response?.data?.message ||
+                "Failed to submit review"}
             </Alert>
           )}
           <Typography component="legend" sx={{ variant: "body2" }}>
@@ -110,7 +120,9 @@ export default function ProductReviews({ productId }: Props) {
       {isLoading ? (
         <Typography color="text.secondary">Loading reviews...</Typography>
       ) : !reviews || reviews.length === 0 ? (
-        <Typography color="text.secondary">No reviews yet. Be the first to review!</Typography>
+        <Typography color="text.secondary">
+          No reviews yet. Be the first to review!
+        </Typography>
       ) : (
         <List>
           {reviews.map((review) => (
@@ -118,8 +130,12 @@ export default function ProductReviews({ productId }: Props) {
               <ListItem
                 alignItems="flex-start"
                 secondaryAction={
-                  (currentUser?.id === review.user._id || currentUser?.role === "admin") && (
-                    <IconButton edge="end" onClick={() => deleteReview.mutate(review._id)}>
+                  (currentUser?.id === review.user._id ||
+                    currentUser?.role === "admin") && (
+                    <IconButton
+                      edge="end"
+                      onClick={() => deleteReview.mutate(review._id)}
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   )
@@ -129,12 +145,16 @@ export default function ProductReviews({ productId }: Props) {
                   {review.user.name.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ variant: "subtitle2" }}>{review.user.name}</Typography>
+                  <Typography sx={{ variant: "subtitle2" }}>
+                    {review.user.name}
+                  </Typography>
                   <Rating value={review.rating} readOnly size="small" />
                   <Typography sx={{ variant: "body2", mt: 0.5 }}>
                     {review.comment}
                   </Typography>
-                  <Typography sx={{ variant: "caption", color: "text.secondary" }}>
+                  <Typography
+                    sx={{ variant: "caption", color: "text.secondary" }}
+                  >
                     {new Date(review.createdAt).toLocaleDateString()}
                   </Typography>
                 </Box>
@@ -143,6 +163,16 @@ export default function ProductReviews({ productId }: Props) {
             </Box>
           ))}
         </List>
+      )}
+
+      {data && data.pagination.totalPages > 1 && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Pagination
+            count={data.pagination.totalPages}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+          />
+        </Box>
       )}
     </Box>
   );

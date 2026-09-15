@@ -6,6 +6,16 @@ export interface MediaFolder {
   parentFolder: string | null;
 }
 
+export interface FoldersResponse {
+  folders: MediaFolder[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export interface BreadcrumbItem {
   _id: string;
   name: string;
@@ -13,11 +23,12 @@ export interface BreadcrumbItem {
 
 export const fetchFolders = async (
   parentId?: string,
-): Promise<MediaFolder[]> => {
+  params: { page?: number; limit?: number } = {},
+): Promise<FoldersResponse> => {
   const res = await api.get("/media/folders", {
-    params: parentId ? { parentId } : {},
+    params: { ...(parentId ? { parentId } : {}), ...params },
   });
-  return res.data.folders;
+  return res.data;
 };
 
 export const fetchFolderBreadcrumb = async (

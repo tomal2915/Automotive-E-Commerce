@@ -55,21 +55,36 @@ export const createPermissionGroup = async (req, res) => {
 // Returns permissions grouped by module, for the grid UI
 export const getPermissions = async (req, res) => {
   try {
-    const { search, page = 1, limit = 50 } = req.query;
+    const { search } = req.query;
+    const { page, limit, skip } = parsePagination(req.query, {
+      defaultLimit: 50,
+      maxLimit: 200,
+    });
     const filter = search ? { name: new RegExp(search, "i") } : {};
 
-    const permissions = await Permission.find(filter).sort({
-      module: 1,
-      action: 1,
-    });
+    const [permissions, total] = await Promise.all([
+      Permission.find(filter)
+        .sort({ module: 1, action: 1 })
+        .skip(skip)
+        .limit(limit),
+      Permission.countDocuments(filter),
+    ]);
 
+    // Grouping still happens on the current page's slice — for the
+    // permission-grid UI (which needs "all permissions at once" to
+    // render the module×action matrix), call this with a high limit;
+    // for a searchable flat list, normal pagination applies.
     const grouped = permissions.reduce((acc, p) => {
       if (!acc[p.module]) acc[p.module] = [];
       acc[p.module].push(p);
       return acc;
     }, {});
 
-    res.json({ grouped, flat: permissions });
+    res.json({
+      grouped,
+      flat: permissions,
+      pagination: buildPaginationMeta(total, page, limit),
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

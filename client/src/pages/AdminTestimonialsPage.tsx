@@ -13,6 +13,7 @@ import {
   CardContent,
   IconButton,
   Avatar,
+  Pagination,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -35,10 +36,12 @@ const emptyForm = {
 
 export default function AdminTestimonialsPage() {
   const queryClient = useQueryClient();
-  const { data: testimonials } = useQuery({
-    queryKey: ["admin-testimonials"],
-    queryFn: fetchAllTestimonialsAdmin,
+  const [page, setPage] = useState(1);
+  const { data } = useQuery({
+    queryKey: ["admin-testimonials", page],
+    queryFn: () => fetchAllTestimonialsAdmin({ page }),
   });
+  const testimonials = data?.testimonials;
 
   const [form, setForm] = useState(emptyForm);
   const [avatar, setAvatar] = useState<File | undefined>();
@@ -49,6 +52,7 @@ export default function AdminTestimonialsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-testimonials"] });
       queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+      setPage(1);
       setForm(emptyForm);
       setAvatar(undefined);
     },
@@ -104,10 +108,12 @@ export default function AdminTestimonialsPage() {
 
   return (
     <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
-      <Typography sx={{ variant: "h4", mb: 3 }}>Manage Testimonials</Typography>
+      <Typography variant="h4" sx={{ mb: 3 }}>
+        Manage Testimonials
+      </Typography>
 
       <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography sx={{ variant: "h6", mb: 2 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
           {editingId ? "Edit Testimonial" : "Add Testimonial"}
         </Typography>
         <Box component="form" onSubmit={handleSubmit}>
@@ -210,9 +216,7 @@ export default function AdminTestimonialsPage() {
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Avatar src={t.avatar}>{t.name.charAt(0)}</Avatar>
                     <Box>
-                      <Typography sx={{ variant: "subtitle2" }}>
-                        {t.name}
-                      </Typography>
+                      <Typography variant="subtitle2">{t.name}</Typography>
                       <Rating value={t.rating} readOnly size="small" />
                     </Box>
                   </Box>
@@ -229,7 +233,9 @@ export default function AdminTestimonialsPage() {
                   </Box>
                 </Box>
                 <Typography
-                  sx={{ variant: "body2", color: "text.secondary", mb: 1 }}
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
                 >
                   "{t.quote}"
                 </Typography>
@@ -239,7 +245,7 @@ export default function AdminTestimonialsPage() {
                     checked={t.isActive}
                     onChange={() => toggleActive.mutate(t)}
                   />
-                  <Typography sx={{ variant: "caption" }}>
+                  <Typography variant="caption">
                     {t.isActive ? "Visible on site" : "Hidden"}
                   </Typography>
                 </Box>
@@ -248,6 +254,16 @@ export default function AdminTestimonialsPage() {
           </Grid>
         ))}
       </Grid>
+
+      {data && data.pagination.totalPages > 1 && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+          <Pagination
+            count={data.pagination.totalPages}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+          />
+        </Box>
+      )}
     </Container>
   );
 }

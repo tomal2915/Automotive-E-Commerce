@@ -16,6 +16,7 @@ import {
   Box,
   Chip,
   IconButton,
+  Pagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -45,10 +46,12 @@ const emptyForm = {
 export default function AdminCouponsPage() {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
-  const { data: coupons } = useQuery({
-    queryKey: ["coupons"],
-    queryFn: fetchCoupons,
+  const [page, setPage] = useState(1);
+  const { data } = useQuery({
+    queryKey: ["coupons", page],
+    queryFn: () => fetchCoupons({ page }),
   });
+  const coupons = data?.coupons;
 
   const [form, setForm] = useState(emptyForm);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
@@ -58,6 +61,7 @@ export default function AdminCouponsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["coupons"] });
       enqueueSnackbar("Coupon created successfully", { variant: "success" });
+      setPage(1);
       setForm(emptyForm);
     },
     onError: (err: any) =>
@@ -101,6 +105,7 @@ export default function AdminCouponsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["coupons"] });
       enqueueSnackbar("Coupon deleted successfully", { variant: "success" });
+      if (coupons && coupons.length === 1 && page > 1) setPage((p) => p - 1);
     },
     onError: (err: any) =>
       enqueueSnackbar(
@@ -345,6 +350,16 @@ export default function AdminCouponsPage() {
             </TableBody>
           </Table>
         </Paper>
+
+        {data && data.pagination.totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={data.pagination.totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+            />
+          </Box>
+        )}
       </Container>
     </PageTransition>
   );

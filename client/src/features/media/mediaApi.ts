@@ -12,15 +12,20 @@ export interface MediaItem {
   folder: string | null;
 }
 
+export interface MediaLibraryResponse {
+  media: MediaItem[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+}
+
 export const fetchMediaLibrary = async (params: {
   page?: number;
   limit?: number;
   type?: string;
   search?: string;
   folderId?: string; // "root" = top-level only; omit = no folder filter
-}) => {
+}): Promise<MediaLibraryResponse> => {
   const res = await api.get("/media", { params });
-  return res.data as { media: MediaItem[]; pagination: any };
+  return res.data;
 };
 
 export const uploadMediaRequest = async (

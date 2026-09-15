@@ -19,6 +19,7 @@ import {
   Link,
   Menu,
   MenuItem,
+  Pagination,
 } from "@mui/material";
 import FolderIcon from "@mui/icons-material/Folder";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -60,10 +61,12 @@ function MoveMediaDialog({
   isMoving: boolean;
 }) {
   const [browseFolderId, setBrowseFolderId] = useState<string | null>(null);
+  const [browseFolderPage, setBrowseFolderPage] = useState(1);
 
   const { data: folders } = useQuery({
-    queryKey: ["move-dialog-folders", browseFolderId],
-    queryFn: () => fetchFolders(browseFolderId ?? undefined),
+    queryKey: ["move-dialog-folders", browseFolderId, browseFolderPage],
+    queryFn: () =>
+      fetchFolders(browseFolderId ?? undefined, { page: browseFolderPage }),
     enabled: !!item,
   });
 
@@ -80,14 +83,23 @@ function MoveMediaDialog({
       <DialogTitle>Move "{item.fileName}"</DialogTitle>
       <DialogContent>
         <Breadcrumbs sx={{ mb: 2 }}>
-          <Link component="button" onClick={() => setBrowseFolderId(null)}>
+          <Link
+            component="button"
+            onClick={() => {
+              setBrowseFolderId(null);
+              setBrowseFolderPage(1);
+            }}
+          >
             Library
           </Link>
           {breadcrumb?.map((c) => (
             <Link
               key={c._id}
               component="button"
-              onClick={() => setBrowseFolderId(c._id)}
+              onClick={() => {
+                setBrowseFolderId(c._id);
+                setBrowseFolderPage(1);
+              }}
             >
               {c.name}
             </Link>
@@ -95,11 +107,14 @@ function MoveMediaDialog({
         </Breadcrumbs>
 
         <Grid container spacing={1} sx={{ mb: 2 }}>
-          {folders?.map((f) => (
+          {folders?.folders.map((f) => (
             <Grid key={f._id} size={6}>
               <Card>
                 <CardActionArea
-                  onClick={() => setBrowseFolderId(f._id)}
+                  onClick={() => {
+                    setBrowseFolderId(f._id);
+                    setBrowseFolderPage(1);
+                  }}
                   sx={{ display: "flex", alignItems: "center", gap: 1, p: 1 }}
                 >
                   <FolderIcon fontSize="small" color="primary" />
@@ -112,10 +127,21 @@ function MoveMediaDialog({
           ))}
         </Grid>
 
-        {folders?.length === 0 && (
+        {folders?.folders.length === 0 && (
           <Typography variant="caption" color="text.secondary">
             No subfolders here.
           </Typography>
+        )}
+
+        {folders && folders.pagination.totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <Pagination
+              count={folders.pagination.totalPages}
+              page={browseFolderPage}
+              size="small"
+              onChange={(_, value) => setBrowseFolderPage(value)}
+            />
+          </Box>
         )}
 
         <Box
@@ -140,6 +166,8 @@ export default function AdminMediaLibraryPage() {
   const { enqueueSnackbar } = useSnackbar();
 
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [folderPage, setFolderPage] = useState(1);
   const [editingItem, setEditingItem] = useState<MediaItem | null>(null);
   const [movingItem, setMovingItem] = useState<MediaItem | null>(null);
 
@@ -158,8 +186,9 @@ export default function AdminMediaLibraryPage() {
   );
 
   const { data: folders } = useQuery({
-    queryKey: ["media-folders", currentFolderId],
-    queryFn: () => fetchFolders(currentFolderId ?? undefined),
+    queryKey: ["media-folders", currentFolderId, folderPage],
+    queryFn: () =>
+      fetchFolders(currentFolderId ?? undefined, { page: folderPage }),
   });
 
   const { data: breadcrumb } = useQuery({
@@ -169,9 +198,9 @@ export default function AdminMediaLibraryPage() {
   });
 
   const { data } = useQuery({
-    queryKey: ["media-library", currentFolderId],
+    queryKey: ["media-library", currentFolderId, page],
     queryFn: () =>
-      fetchMediaLibrary({ page: 1, folderId: currentFolderId ?? "root" }),
+      fetchMediaLibrary({ page, folderId: currentFolderId ?? "root" }),
   });
 
   const upload = useMutation({
@@ -208,6 +237,7 @@ export default function AdminMediaLibraryPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["media-library"] });
       enqueueSnackbar("File deleted", { variant: "success" });
+      if (data && data.media.length === 1 && page > 1) setPage((p) => p - 1);
     },
     onError: (err: any) =>
       enqueueSnackbar(err?.response?.data?.message || "Delete failed", {
@@ -229,6 +259,12 @@ export default function AdminMediaLibraryPage() {
       }),
   });
 
+  const navigateToFolder = (folderId: string | null) => {
+    setCurrentFolderId(folderId);
+    setPage(1);
+    setFolderPage(1);
+  };
+
   const createFolder = useMutation({
     mutationFn: (name: string) =>
       createFolderRequest({ name, parentFolder: currentFolderId }),
@@ -236,7 +272,7 @@ export default function AdminMediaLibraryPage() {
       queryClient.invalidateQueries({ queryKey: ["media-folders"] });
       enqueueSnackbar("Folder created", { variant: "success" });
       closeFolderDialog();
-      setCurrentFolderId(newFolder._id); // navigate straight into the new folder
+      navigateToFolder(newFolder._id); // navigate straight into the new folder
     },
     onError: (err: any) =>
       enqueueSnackbar(
@@ -362,7 +398,7 @@ export default function AdminMediaLibraryPage() {
           <Link
             component="button"
             underline={currentFolderId ? "hover" : "none"}
-            onClick={() => setCurrentFolderId(null)}
+            onClick={() => navigateToFolder(null)}
           >
             Library
           </Link>
@@ -371,7 +407,7 @@ export default function AdminMediaLibraryPage() {
               key={crumb._id}
               component="button"
               underline={crumb._id === currentFolderId ? "none" : "hover"}
-              onClick={() => setCurrentFolderId(crumb._id)}
+              onClick={() => navigateToFolder(crumb._id)}
             >
               {crumb.name}
             </Link>
@@ -379,12 +415,12 @@ export default function AdminMediaLibraryPage() {
         </Breadcrumbs>
 
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          {folders?.map((folder) => (
+          {folders?.folders.map((folder) => (
             <Grid key={folder._id} size={{ xs: 6, sm: 4, md: 2 }}>
               <Card>
                 <Box sx={{ display: "flex", alignItems: "center", pr: 0.5 }}>
                   <CardActionArea
-                    onClick={() => setCurrentFolderId(folder._id)}
+                    onClick={() => navigateToFolder(folder._id)}
                     sx={{
                       display: "flex",
                       alignItems: "center",
@@ -413,6 +449,17 @@ export default function AdminMediaLibraryPage() {
             </Grid>
           ))}
         </Grid>
+
+        {folders && folders.pagination.totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <Pagination
+              count={folders.pagination.totalPages}
+              page={folderPage}
+              size="small"
+              onChange={(_, value) => setFolderPage(value)}
+            />
+          </Box>
+        )}
 
         <Menu
           anchorEl={folderMenuAnchor}
@@ -477,7 +524,17 @@ export default function AdminMediaLibraryPage() {
           ))}
         </Grid>
 
-        {folders?.length === 0 && data?.media.length === 0 && (
+        {data && data.pagination.totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <Pagination
+              count={data.pagination.totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+            />
+          </Box>
+        )}
+
+        {folders?.folders.length === 0 && data?.media.length === 0 && (
           <Box sx={{ textAlign: "center", py: 6, color: "text.secondary" }}>
             This folder is empty. Upload files or create a subfolder.
           </Box>

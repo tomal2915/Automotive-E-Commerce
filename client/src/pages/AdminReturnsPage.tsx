@@ -7,6 +7,7 @@ import {
   Button,
   Chip,
   TextField,
+  Pagination,
 } from "@mui/material";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,10 +19,12 @@ import PageTransition from "../components/PageTransition";
 
 export default function AdminReturnsPage() {
   const queryClient = useQueryClient();
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ["pending-returns"],
-    queryFn: fetchPendingReturns,
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useQuery({
+    queryKey: ["pending-returns", page],
+    queryFn: () => fetchPendingReturns({ page }),
   });
+  const orders = data?.orders;
   const [notes, setNotes] = useState<Record<string, string>>({});
 
   const review = useMutation({
@@ -32,16 +35,23 @@ export default function AdminReturnsPage() {
       orderId: string;
       decision: "approved" | "rejected";
     }) => reviewReturnRequestApi(orderId, decision, notes[orderId]),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["pending-returns"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-returns"] });
+      // reviewed items disappear from this list — if the current page
+      // becomes empty, step back one page rather than showing a blank state
+      if (orders && orders.length === 1 && page > 1) setPage((p) => p - 1);
+    },
   });
 
-  if (isLoading) return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading...</Container>;
+  if (isLoading)
+    return (
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading...</Container>
+    );
 
   return (
     <PageTransition>
       <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
-        <Typography sx={{ variant: "h4", mb: 3 }}>
+        <Typography variant="h4" sx={{ mb: 3 }}>
           Pending Return Requests
         </Typography>
 
@@ -61,18 +71,20 @@ export default function AdminReturnsPage() {
                     mb: 1,
                   }}
                 >
-                  <Typography sx={{ variant: "subtitle1" }}>
+                  <Typography variant="subtitle1">
                     {order.user?.name} ({order.user?.email})
                   </Typography>
                   <Chip label={order.transactionId} size="small" />
                 </Box>
                 <Typography
-                  sx={{ variant: "body2", color: "text.secondary", mb: 1 }}
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
                 >
                   Items: {order.items.map((i: any) => i.title).join(", ")} —
                   Total: ${order.totalAmount.toFixed(2)}
                 </Typography>
-                <Typography sx={{ variant: "body2", mb: 2 }}>
+                <Typography variant="body2" sx={{ mb: 2 }}>
                   <strong>Reason:</strong> {order.returnRequest.reason}
                 </Typography>
 
@@ -118,6 +130,16 @@ export default function AdminReturnsPage() {
               </CardContent>
             </Card>
           ))
+        )}
+
+        {data && data.pagination.totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <Pagination
+              count={data.pagination.totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+            />
+          </Box>
         )}
       </Container>
     </PageTransition>

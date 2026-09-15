@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Pagination,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,14 +30,16 @@ import { formatCurrency } from "../utils/formatCurrency";
 import PageTransition from "../components/PageTransition";
 
 export default function MyOrdersPage() {
+  const [page, setPage] = useState(1);
+
   const {
     data: orders,
     isLoading,
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ["my-orders"],
-    queryFn: fetchMyOrders,
+    queryKey: ["my-orders", page],
+    queryFn: () => fetchMyOrders({ page }),
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
@@ -71,7 +74,12 @@ export default function MyOrdersPage() {
     else requestReturn.mutate();
   };
 
-  if (isLoading) return <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>Loading orders...</Container>;
+  if (isLoading)
+    return (
+      <Container sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
+        Loading orders...
+      </Container>
+    );
 
   return (
     <PageTransition>
@@ -84,7 +92,7 @@ export default function MyOrdersPage() {
             mb: 3,
           }}
         >
-          <Typography sx={{ variant: "h4" }}>My Orders</Typography>
+          <Typography variant="h4">My Orders</Typography>
           <Button
             startIcon={<RefreshIcon />}
             onClick={() => refetch()}
@@ -94,7 +102,7 @@ export default function MyOrdersPage() {
           </Button>
         </Box>
 
-        {!orders || orders.length === 0 ? (
+        {!orders || orders.orders.length === 0 ? (
           <Typography color="text.secondary">
             You haven't placed any orders yet.
           </Typography>
@@ -111,7 +119,7 @@ export default function MyOrdersPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {orders.map((order) => (
+                {orders.orders.map((order) => (
                   <TableRow key={order._id}>
                     <TableCell>
                       {new Date(order.createdAt).toLocaleDateString()}
@@ -164,6 +172,16 @@ export default function MyOrdersPage() {
           </TableContainer>
         )}
 
+        {orders && orders.pagination.totalPages > 1 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={orders.pagination.totalPages}
+              page={page}
+              onChange={(_, value) => setPage(value)}
+            />
+          </Box>
+        )}
+
         <Dialog open={!!actionDialog} onClose={() => setActionDialog(null)}>
           <DialogTitle>
             {actionDialog?.type === "cancel"
@@ -182,7 +200,7 @@ export default function MyOrdersPage() {
               sx={{ mt: 1 }}
             />
             {(cancelOrder.isError || requestReturn.isError) && (
-              <Typography sx={{ color: "error", variant: "body2", mt: 1 }}>
+              <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                 {((cancelOrder.error || requestReturn.error) as any)?.response
                   ?.data?.message || "Action failed"}
               </Typography>
