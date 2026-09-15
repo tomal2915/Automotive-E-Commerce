@@ -1,6 +1,7 @@
 import Media from "../models/Media.js";
 import Product from "../models/Product.js";
 import MediaFolder from "../models/MediaFolder.js";
+import { scanFileForMalware } from "../utils/malwareScan.js";
 
 const inferType = (mimeType) => {
   if (mimeType.startsWith("image/")) return "image";
@@ -15,6 +16,20 @@ export const uploadMedia = async (req, res) => {
     const files = req.files || [];
     if (files.length === 0) {
       return res.status(400).json({ message: "No files were uploaded" });
+    }
+
+    // Scan every file before it's persisted anywhere — if ClamAV isn't
+    // configured, scanFileForMalware short-circuits to "clean" (see
+    // malwareScan.js), so this is a no-op safety layer in dev.
+    for (const file of files) {
+      const { isClean, viruses } = await scanFileForMalware(file.buffer);
+      if (!isClean) {
+        return res
+          .status(400)
+          .json({
+            message: `File rejected: potential threat detected (${viruses?.join(", ") || "scan failure"})`,
+          });
+      }
     }
 
     const { folderId } = req.body;
