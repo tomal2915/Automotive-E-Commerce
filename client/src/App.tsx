@@ -6,8 +6,10 @@ import { useSessionRestore } from "./features/auth/useSessionRestore";
 import { CircularProgress, Box } from "@mui/material";
 import { AppErrorBoundary } from "./components/ErrorBoundary";
 import Footer from "./components/Footer";
+import { useSocket } from "./hooks/useSocket";
 
 function App() {
+  useSocket(); // connects/disconnects automatically as auth state changes
   const { isRestoring } = useSessionRestore();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");

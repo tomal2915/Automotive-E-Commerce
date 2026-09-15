@@ -1,5 +1,5 @@
 import Notification from "../models/Notification.js";
-import { logger } from "../config/logger.js"; // adjust relative path
+import { emitToUser } from "../config/socket.js";
 
 // Central place to create a notification — never throws, since a failed
 // notification should never break the order/return flow that triggered it
@@ -12,8 +12,18 @@ export const createNotification = async ({
   link = null,
 }) => {
   try {
-    await Notification.create({ user: userId, type, title, message, link });
+    const notification = await Notification.create({
+      user: userId,
+      type,
+      title,
+      message,
+      link,
+    });
+
+    // Push it live to the user if they're currently connected — the
+    // frontend no longer needs to wait for its next poll to see this
+    emitToUser(userId.toString(), "notification:new", notification);
   } catch (error) {
-    req.log.error("Failed to create notification:", error.message);
+    logger.error({ error: error.message }, "Failed to create notification");
   }
 };

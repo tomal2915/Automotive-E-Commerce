@@ -9,7 +9,7 @@ export const useNotifications = () => {
     queryKey: ["notifications"],
     queryFn: fetchNotifications,
     enabled: isAuthenticated,
-    refetchInterval: 30_000, // poll every 30 seconds for new notifications
+    refetchInterval: 2 * 60 * 1000, // fallback safety net — WebSocket handles real-time now, this just re-syncs if a socket event was ever missed (e.g. brief disconnect)
     refetchIntervalInBackground: false, // don't poll when the tab isn't focused — saves resources
   });
 };

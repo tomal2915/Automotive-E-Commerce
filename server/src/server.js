@@ -1,4 +1,6 @@
 import "dotenv/config";
+import http from "node:http";
+import { initSocket } from "./config/socket.js";
 import { validateEnv } from "./config/envSchema.js";
 import { fatalExit } from "./utils/fatalExit.js";
 
@@ -16,6 +18,9 @@ try {
 }
 
 const PORT = process.env.PORT || 5000;
+const httpServer = http.createServer(app); // wraps the Express app in a plain HTTP server, which Socket.io then attaches to
+initSocket(httpServer);
+
 const server = app.listen(PORT, () => {
   logger.info(
     `Server running on port ${PORT} in ${process.env.NODE_ENV || "development"} mode`,
