@@ -23,18 +23,20 @@ const parseBoolean = (value) => value === true || value === "true";
 // Returns top-level categories, each with its subcategories nested in
 export const getCategories = async (req, res) => {
   try {
-    const allCategories = await Category.find({
-      isActive: true,
-      // Guard against any un-migrated legacy string image values —
-      // populate() throws a CastError on those, which would otherwise
-      // 500 the entire endpoint for every category, not just the bad one
-      $or: [{ image: null }, { image: { $type: "objectId" } }],
-    })
-      .sort({ name: 1 })
-      .populate("image")
-      .lean();
+    const result = await getOrSetCache("categories:all", 300, async () => {
+      const allCategories = await Category.find({ isActive: true })
+        .sort({ name: 1 })
+        .lean();
+      const topLevel = allCategories.filter((c) => !c.parentCategory);
+      return topLevel.map((parent) => ({
+        ...parent,
+        subcategories: allCategories.filter(
+          (c) => c.parentCategory?.toString() === parent._id.toString(),
+        ),
+      }));
+    });
 
-    res.json({ categories: buildCategoryTree(allCategories) });
+    res.json({ categories: result });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

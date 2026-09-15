@@ -153,19 +153,21 @@ export const getLowStockProducts = async (req, res) => {
 // loading state and separate React re-render when it lands).
 export const getDashboardBundle = async (req, res) => {
   try {
-    const [
-      summary,
-      revenueTrend,
-      topProducts,
-      orderStatusBreakdown,
-      lowStockProducts,
-    ] = await Promise.all([
-      getSummaryData(),
-      getRevenueTrendData(30),
-      getTopProductsData(10),
-      getOrderStatusBreakdownData(),
-      getLowStockProductsData(5),
-    ]);
+    const result = await getOrSetCache("categories:all", 300, async () => {
+      const [
+        summary,
+        revenueTrend,
+        topProducts,
+        orderStatusBreakdown,
+        lowStockProducts,
+      ] = await Promise.all([
+        getSummaryData(),
+        getRevenueTrendData(30),
+        getTopProductsData(10),
+        getOrderStatusBreakdownData(),
+        getLowStockProductsData(5),
+      ]);
+    });
 
     res.json({
       summary,

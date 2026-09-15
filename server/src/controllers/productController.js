@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import { generateVariantCombinations } from "../utils/variantGenerator.js";
+import { getOrSetCache, invalidateCachePattern } from "../utils/cache.js";
 
 export const getProducts = async (req, res) => {
   try {
@@ -17,54 +18,48 @@ export const getProducts = async (req, res) => {
       limit = 20,
     } = req.query;
 
-    const filter = {};
+    // Cache key encodes every filter — different filter combos are
+    // different cache entries, never mixed up with each other
+    const cacheKey = `products:${JSON.stringify(req.query)}`;
 
-    if (make) filter.make = make;
-    if (model) filter.model = model;
-    if (category) filter.category = category;
+    const result = await getOrSetCache(cacheKey, 60, async () => {
+      const filter = {};
+      if (make) filter.make = make;
+      if (model) filter.model = model;
+      if (category) filter.category = category;
+      if (year) {
+        filter["yearRange.start"] = { $lte: Number(year) };
+        filter["yearRange.end"] = { $gte: Number(year) };
+      }
+      if (minPrice || maxPrice) {
+        filter.price = {};
+        if (minPrice) filter.price.$gte = Number(minPrice);
+        if (maxPrice) filter.price.$lte = Number(maxPrice);
+      }
+      if (inStock === "true") filter.stock = { $gt: 0 };
+      if (search) filter.$text = { $search: search };
 
-    // A product matches a year if the year falls within its yearRange
-    if (year) {
-      filter["yearRange.start"] = { $lte: Number(year) };
-      filter["yearRange.end"] = { $gte: Number(year) };
-    }
+      const pageNum = Math.max(Number(page), 1);
+      const limitNum = Math.min(Number(limit), 100);
+      const skip = (pageNum - 1) * limitNum;
 
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = Number(minPrice);
-      if (maxPrice) filter.price.$lte = Number(maxPrice);
-    }
+      const [products, total] = await Promise.all([
+        Product.find(filter).skip(skip).limit(limitNum).sort({ createdAt: -1 }),
+        Product.countDocuments(filter),
+      ]);
 
-    if (inStock === "true") {
-      filter.stock = { $gt: 0 };
-    }
-
-    if (search) {
-      filter.$text = { $search: search };
-    }
-
-    const pageNum = Math.max(Number(page), 1);
-    const limitNum = Math.min(Number(limit), 100);
-    const skip = (pageNum - 1) * limitNum;
-
-    const [products, total] = await Promise.all([
-      Product.find(filter)
-        .populate("mediaRefs.media")
-        .skip(skip)
-        .limit(limitNum)
-        .sort({ createdAt: -1 }),
-      Product.countDocuments(filter),
-    ]);
-
-    res.json({
-      products,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
-      },
+      return {
+        products,
+        pagination: {
+          total,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(total / limitNum),
+        },
+      };
     });
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
