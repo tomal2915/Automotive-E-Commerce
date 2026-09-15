@@ -5,6 +5,7 @@ import Cart from "../models/Cart.js";
 import Wishlist from "../models/Wishlist.js";
 import Address from "../models/Address.js";
 import Role from "../models/Role.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 // @route GET /api/v1/users/profile
 // Returns the full profile of the logged-in user
@@ -190,6 +191,10 @@ export const deleteUser = async (req, res) => {
 
     await user.deleteOne();
 
+    // ... after successful deletion ...
+    await recordAuditLog(req, "user:delete", "User", user._id, {
+      deletedEmail: user.email,
+    });
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -231,6 +236,8 @@ export const updateUserRole = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    await recordAuditLog(req, "user:role-change", "User", user._id, { newRole: role });
 
     res.json({
       user,

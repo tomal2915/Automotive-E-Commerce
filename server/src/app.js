@@ -45,7 +45,29 @@ const app = express();
 
 app.use(traceIdMiddleware); // must be first — every later middleware/controller relies on req.log existing
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"], // no inline scripts, no third-party JS unless explicitly added
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // 'unsafe-inline' needed for MUI's runtime-injected Emotion styles
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://res.cloudinary.com"], // Cloudinary-hosted images
+        connectSrc: [
+          "'self'",
+          process.env.CLIENT_URL,
+          "wss:",
+          "https://res.cloudinary.com",
+        ], // wss: for the Socket.io websocket connection
+        objectSrc: ["'none'"], // blocks <object>/<embed> — a common XSS/plugin vector
+        frameAncestors: ["'none'"], // equivalent of X-Frame-Options: DENY — this site can't be iframed by anyone
+      },
+    },
+  }),
+);
+
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",

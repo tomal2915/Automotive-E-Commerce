@@ -8,6 +8,7 @@ import {
 } from "../controllers/roleController.js";
 import { verifyAccessToken } from "../middlewares/verifyAccessToken.js";
 import { requirePermission } from "../middlewares/requirePermission.js";
+import { getAuditLogs } from "../controllers/auditLogController.js"
 
 const router = express.Router();
 router.use(verifyAccessToken);
@@ -19,5 +20,6 @@ router.get("/", requirePermission("role:watch"), getRoles);
 router.post("/", requirePermission("role:create"), createRole);
 router.put("/:id", requirePermission("role:update"), updateRole);
 router.delete("/:id", requirePermission("role:delete"), deleteRole);
+router.get("/", verifyAccessToken, requirePermission("audit:watch"), getAuditLogs);
 
 export default router;
