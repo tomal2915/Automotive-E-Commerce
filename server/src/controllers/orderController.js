@@ -10,6 +10,8 @@ import { validateAndCalculateDiscount } from "../utils/couponHelper.js";
 import { createNotification } from "../services/notificationService.js";
 import { canCancelOrder, canRequestReturn } from "../utils/orderPolicy.js";
 import { parsePagination, buildPaginationMeta } from "../utils/paginate.js";
+import { emailQueue } from "../queues/emailQueue.js";
+import { notificationQueue } from "../queues/notificationQueue.js";
 
 // @route POST /api/v1/orders/checkout
 // Creates a pending order from the user's cart and starts an SSLCommerz session
@@ -209,23 +211,15 @@ export const handleIPN = async (req, res) => {
       await session.endSession();
     }
 
-    // Send confirmation email AFTER the transaction fully commits — this is
-    // intentionally outside the transaction and its own try/catch (handled
-    // inside sendOrderConfirmationEmail itself) so an email failure can never
-    // undo an already-successful, already-paid order.
-    const populatedOrder = await Order.findById(order._id).populate(
-      "user",
-      "email",
-    );
-    // after: const populatedOrder = await Order.findById(order._id).populate("user", "email");
-    if (populatedOrder?.user?.email) {
-      await sendOrderConfirmationEmail(
-        populatedOrder,
-        populatedOrder.user.email,
-      );
-    }
-
-    await createNotification({
+    // Instead of calling sendOrderConfirmationEmail directly (which runs
+    // inline, inside this request), enqueue it — the API responds to
+    // SSLCommerz immediately, and the actual email send happens
+    // asynchronously in the worker process.
+    await emailQueue.add("order-confirmation", {
+      order: populatedOrder,
+      email: populatedOrder.user.email,
+    });
+    await notificationQueue.add("notification", {
       userId: order.user,
       type: "order_placed",
       title: "Order Confirmed",
@@ -382,7 +376,7 @@ export const updateOrderStatus = async (req, res) => {
     };
 
     if (notificationMap[status]) {
-      await createNotification({
+      await notificationQueue.add("notification", {
         userId: order.user,
         ...notificationMap[status],
         link: "/my-orders",
@@ -469,7 +463,7 @@ export const cancelOrder = async (req, res) => {
       }
     }
 
-    await createNotification({
+    await notificationQueue.add("notification", {
       userId: order.user,
       type: "order_cancelled",
       title: "Order Cancelled",
@@ -594,7 +588,7 @@ export const reviewReturnRequest = async (req, res) => {
 
     await order.save();
 
-    await createNotification({
+    await notificationQueue.add("notification", {
       userId: order.user,
       type: decision === "approved" ? "return_approved" : "return_rejected",
       title: decision === "approved" ? "Return Approved" : "Return Rejected",

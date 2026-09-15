@@ -1,5 +1,5 @@
 import { transporter } from "../config/mailer.js";
-import { logger } from "../config/logger.js"; // adjust relative path
+import { logger } from "../config/logger.js";
 
 // Builds the HTML body for an order confirmation email.
 // Kept as plain string templating (no external template engine) to keep
@@ -58,9 +58,9 @@ const buildOrderConfirmationHtml = (order) => {
   `;
 };
 
-// Sends an order confirmation email. Never throws — a failed email should
-// never roll back or block the order itself, since the payment has already
-// been captured and the order is already valid regardless of email delivery.
+// Sends an order confirmation email. Called by the email queue's worker
+// process, never directly from a request handler — see orderController.js,
+// which enqueues via emailQueue.add() instead of calling this inline.
 export const sendOrderConfirmationEmail = async (order, userEmail) => {
   try {
     await transporter.sendMail({
@@ -69,10 +69,11 @@ export const sendOrderConfirmationEmail = async (order, userEmail) => {
       subject: `Order Confirmed — ${order.transactionId}`,
       html: buildOrderConfirmationHtml(order),
     });
-    req.log.info(`Order confirmation email sent to ${userEmail}`);
+    logger.info(`Order confirmation email sent to ${userEmail}`);
   } catch (error) {
     // Log it for debugging/monitoring, but swallow the error — see comment above
-    req.log.error("Failed to send order confirmation email:", error.message);
+    logger.error("Failed to send order confirmation email:", error.message);
+    throw error; // let the queue's retry mechanism handle transient failures (e.g. SMTP hiccup)
   }
 };
 
@@ -91,6 +92,7 @@ export const sendOrderStatusEmail = async (order, userEmail, statusMessage) => {
       `,
     });
   } catch (error) {
-    req.log.error("Failed to send order status email:", error.message);
+    logger.error("Failed to send order status email:", error.message);
+    throw error;
   }
 };

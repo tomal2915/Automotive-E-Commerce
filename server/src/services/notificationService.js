@@ -1,9 +1,12 @@
 import Notification from "../models/Notification.js";
 import { emitToUser } from "../config/socket.js";
+import { logger } from "../config/logger.js";
 
-// Central place to create a notification — never throws, since a failed
-// notification should never break the order/return flow that triggered it
-// (same non-blocking principle as email sending in Step 22)
+// Central place to actually create a notification in the DB — called by
+// the notification queue's worker process, never directly from a request
+// handler. Controllers should enqueue via notificationQueue.add() instead
+// (see orderController.js) so a slow DB write or socket emit never blocks
+// the API response.
 export const createNotification = async ({
   userId,
   type,
@@ -25,5 +28,6 @@ export const createNotification = async ({
     emitToUser(userId.toString(), "notification:new", notification);
   } catch (error) {
     logger.error({ error: error.message }, "Failed to create notification");
+    throw error; // let the queue's retry mechanism handle transient failures
   }
 };
