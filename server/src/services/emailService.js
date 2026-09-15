@@ -69,10 +69,10 @@ export const sendOrderConfirmationEmail = async (order, userEmail) => {
       subject: `Order Confirmed — ${order.transactionId}`,
       html: buildOrderConfirmationHtml(order),
     });
-    logger.info(`Order confirmation email sent to ${userEmail}`);
+    req.log.info(`Order confirmation email sent to ${userEmail}`);
   } catch (error) {
     // Log it for debugging/monitoring, but swallow the error — see comment above
-    logger.error("Failed to send order confirmation email:", error.message);
+    req.log.error("Failed to send order confirmation email:", error.message);
   }
 };
 
@@ -91,6 +91,6 @@ export const sendOrderStatusEmail = async (order, userEmail, statusMessage) => {
       `,
     });
   } catch (error) {
-    logger.error("Failed to send order status email:", error.message);
+    req.log.error("Failed to send order status email:", error.message);
   }
 };

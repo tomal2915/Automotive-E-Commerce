@@ -1,23 +1,16 @@
 import { logger } from "../config/logger.js";
 import { Sentry } from "../config/sentry.js";
 
-// Express recognizes this as an error-handling middleware specifically
-// because it has 4 parameters (err, req, res, next) — must be registered
-// LAST, after all routes, so it catches anything that reaches it
 export const errorHandler = (err, req, res, next) => {
-  logger.error(err.message, {
-    stack: err.stack,
-    path: req.path,
-    method: req.method,
-    userId: req.user?.id || "anonymous",
-  });
+  const log = req.log || logger; // fallback if traceIdMiddleware somehow didn't run
+  log.error({ err, stack: err.stack, userId: req.user?.id }, err.message);
 
   Sentry.captureException(err);
 
   const isDev = process.env.NODE_ENV !== "production";
-
   res.status(err.statusCode || 500).json({
     message: err.message || "Something went wrong. Please try again.",
+    traceId: res.getHeader("x-trace-id"), // lets the user report a specific error, and you grep for exactly that traceId in logs
     ...(isDev && { stack: err.stack }),
   });
 };

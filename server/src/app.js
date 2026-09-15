@@ -39,7 +39,11 @@ import attributeRoutes from "./routes/attributeRoutes.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 
+import { traceIdMiddleware } from "./middlewares/requestContext.js";
+
 const app = express();
+
+app.use(traceIdMiddleware); // must be first — every later middleware/controller relies on req.log existing
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(

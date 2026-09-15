@@ -14,6 +14,6 @@ export const createNotification = async ({
   try {
     await Notification.create({ user: userId, type, title, message, link });
   } catch (error) {
-    logger.error("Failed to create notification:", error.message);
+    req.log.error("Failed to create notification:", error.message);
   }
 };

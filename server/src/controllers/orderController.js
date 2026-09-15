@@ -236,7 +236,7 @@ export const handleIPN = async (req, res) => {
 
     res.status(200).send();
   } catch (error) {
-    logger.error("IPN handling error", {
+    req.log.error("IPN handling error", {
       error: error.message,
       stack: error.stack,
     });
@@ -452,7 +452,7 @@ export const cancelOrder = async (req, res) => {
           refundResponse?.status === "success" ? "completed" : "pending";
         await order.save();
       } catch (refundError) {
-        logger.error("Refund initiation failed", {
+        req.log.error("Refund initiation failed", {
           orderId: order._id,
           error: refundError.message,
           stack: refundError.stack,
@@ -576,7 +576,7 @@ export const reviewReturnRequest = async (req, res) => {
           order.refundStatus =
             refundResponse?.status === "success" ? "completed" : "pending";
         } catch (refundError) {
-          logger.error("Refund initiation failed:", refundError.message);
+          req.log.error("Refund initiation failed:", refundError.message);
         }
       }
     } else {

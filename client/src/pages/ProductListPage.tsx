@@ -17,7 +17,7 @@ import ProductRow from "../features/products/ProductRow";
 import { useRecentlyViewed } from "../features/products/useRecentlyViewed";
 import SEO from "../components/SEO";
 import { useSearchParams } from "react-router-dom";
-import CategoryGrid from "../features/categories/CategoryGrid";
+// import CategoryGrid from "../features/categories/CategoryGrid";
 import PageTransition from "../components/PageTransition";
 
 export default function ProductListPage() {
@@ -39,9 +39,9 @@ export default function ProductListPage() {
           description="Browse thousands of quality products by make, model, and category. Fast delivery across Bangladesh."
         />
 
-        <Typography sx={{ variant: "h4", mb: 3 }}>ShopBD Catalog</Typography>
+        {/* <Typography sx={{ variant: "h4", mb: 3 }}>ShopBD Catalog</Typography>
 
-        <CategoryGrid />
+        <CategoryGrid /> */}
         <CategoryFilterBar filters={filters} onChange={setFilters} />
 
         {isError && (
