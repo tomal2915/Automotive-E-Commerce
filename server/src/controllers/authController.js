@@ -12,6 +12,7 @@ import {
   isPlausibleEmail,
 } from "../utils/emailValidator.js";
 import { getRefreshCookieOptions } from "../utils/cookieOptions.js";
+import { toUserDTO, toAuthSessionDTO } from "../utils/dto.js";
 
 // @route POST /api/v1/auth/register
 export const registerUser = async (req, res) => {
@@ -95,7 +96,7 @@ export const registerUser = async (req, res) => {
     res.status(201).json({
       message:
         "Registration successful! Please check your email to verify your account.",
-      user: { id: user._id, name: user.name, email: user.email },
+      user: toUserDTO(user),
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -186,13 +187,7 @@ export const loginUser = async (req, res) => {
 
     res.json({
       accessToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-      },
+      ...toAuthSessionDTO(user, permissionNames, user.role.name),
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -327,21 +322,13 @@ export const logoutUser = async (req, res) => {
 // @route GET /api/v1/auth/me
 export const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).populate("role");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar, // ADDED
-      },
-    });
+    res.json({ user: toUserDTO(user) });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -535,15 +522,10 @@ export const getSession = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    const permissionNames = user.role.permissions.map((p) => p.name);
     res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-      },
+      ...toAuthSessionDTO(user, permissionNames, user.role.name),
       role: { id: user.role._id, name: user.role.name },
-      permissions: user.role.permissions.map((p) => p.name),
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

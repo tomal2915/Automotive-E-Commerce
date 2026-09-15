@@ -1,7 +1,6 @@
-import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import { validatePasswordStrength } from "../utils/passwordValidator.js";
-
+import { toUserDTO } from "../utils/dto.js";
 import Cart from "../models/Cart.js";
 import Wishlist from "../models/Wishlist.js";
 import Address from "../models/Address.js";
@@ -57,17 +56,7 @@ export const updateProfile = async (req, res) => {
       runValidators: true,
     });
 
-    res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-        address: user.address,
-        avatar: user.avatar,
-      },
-    });
+    res.json({ user: toUserDTO(user) });
   } catch (error) {
     res
       .status(400)
