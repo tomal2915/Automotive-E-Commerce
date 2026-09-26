@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { initSentry, Sentry } from "./config/sentry.js";
+import { initSentry } from "./config/sentry.js";
 
 initSentry();
 
@@ -8,6 +8,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import hpp from "hpp";
+import mongoose from "mongoose";
+import { redisClient } from "./config/redisClient.js";
 import { sanitizeInput } from "./middlewares/sanitizeInput.js";
 import { ensureDeviceId } from "./middlewares/deviceFingerprint.js";
 import { generalApiLimiter } from "./middlewares/rateLimiters.js";
@@ -117,6 +119,43 @@ app.use("/api/v1/attributes", attributeRoutes);
 app.use("/api/v1/permissions", permissionRoutes);
 app.use("/api/v1/roles", roleRoutes);
 app.use("/api/v1/audit-logs", auditLogRoutes);
+
+app.get("/api/v1/health", async (req, res) => {
+  const checks = {
+    server: "ok",
+    database: "unknown",
+    redis: "unknown",
+  };
+
+  // Mongoose connection readyState: 1 = connected
+  checks.database = mongoose.connection.readyState === 1 ? "ok" : "down";
+
+  // Redis is optional (feature-flagged) — "not_configured" is a
+  // distinct, honest state from "down" (a real failure)
+  if (!redisClient) {
+    checks.redis = "not_configured";
+  } else {
+    try {
+      await redisClient.ping();
+      checks.redis = "ok";
+    } catch {
+      checks.redis = "down";
+    }
+  }
+
+  // Overall health is only "ok" if every REQUIRED dependency (database)
+  // is healthy — Redis being down degrades performance but shouldn't
+  // mark the whole service unhealthy, since caching/rate-limiting
+  // gracefully fall back to in-memory
+  const isHealthy = checks.database === "ok";
+
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? "ok" : "degraded",
+    checks,
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // These two MUST be last — Express runs middleware top-to-bottom, so
 // anything registered after notFoundHandler/errorHandler would never
