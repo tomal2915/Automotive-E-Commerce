@@ -9,6 +9,7 @@ import {
   generateRefreshToken,
 } from "../utils/generateTokens.js";
 import { getRefreshCookieOptions } from "../utils/cookieOptions.js";
+import { toAuthSessionDTO } from "../utils/dto.js";
 
 // Hashes a backup code the same way we hash passwords — so even if the DB
 // leaks, the raw one-time-use recovery codes aren't exposed
@@ -199,7 +200,12 @@ export const verifyTwoFactorLogin = async (req, res) => {
     }
 
     // Code confirmed — now issue the actual session, same as a normal login
-    const accessToken = generateAccessToken(user);
+    const userWithRole = await User.findById(user._id).populate({
+      path: "role",
+      populate: { path: "permissions", select: "name" },
+    });
+    const permissionNames = userWithRole.role.permissions.map((p) => p.name);
+    const accessToken = generateAccessToken(user, permissionNames);
     const refreshToken = generateRefreshToken(user);
 
     user.refreshTokens.push({ token: refreshToken });
@@ -209,13 +215,11 @@ export const verifyTwoFactorLogin = async (req, res) => {
 
     res.json({
       accessToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-      },
+      ...toAuthSessionDTO(
+        userWithRole,
+        permissionNames,
+        userWithRole.role.name,
+      ),
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

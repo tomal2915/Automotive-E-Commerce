@@ -6,18 +6,20 @@ import Wishlist from "../models/Wishlist.js";
 import Address from "../models/Address.js";
 import Role from "../models/Role.js";
 import { recordAuditLog } from "../utils/auditLog.js";
+import { toAdminUserListDTO } from "../utils/dto.js";
+import { parsePagination, buildPaginationMeta } from "../utils/paginate.js";
 
 // @route GET /api/v1/users/profile
 // Returns the full profile of the logged-in user
 export const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).populate("role", "name");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ user });
+    res.json({ user: toUserDTO(user) });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -55,7 +57,7 @@ export const updateProfile = async (req, res) => {
     const user = await User.findByIdAndUpdate(req.user.id, updateData, {
       returnDocument: "after",
       runValidators: true,
-    });
+    }).populate("role", "name");
 
     res.json({ user: toUserDTO(user) });
   } catch (error) {
@@ -124,7 +126,10 @@ export const changePassword = async (req, res) => {
 // @route GET /api/v1/users/admin/all (admin only)
 export const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search } = req.query;
+    const { search } = req.query;
+    const { page, limit, skip } = parsePagination(req.query, {
+      defaultLimit: 20,
+    });
 
     const filter = {};
     if (search) {
@@ -134,28 +139,19 @@ export const getAllUsers = async (req, res) => {
       ];
     }
 
-    const pageNum = Math.max(Number(page), 1);
-    const limitNum = Math.min(Number(limit), 100);
-    const skip = (pageNum - 1) * limitNum;
-
     const [users, total] = await Promise.all([
       User.find(filter)
         .select("name email role isEmailVerified createdAt")
         .populate("role", "name")
         .skip(skip)
-        .limit(limitNum)
+        .limit(limit)
         .sort({ createdAt: -1 }),
       User.countDocuments(filter),
     ]);
 
     res.json({
-      users,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
-      },
+      users: users.map(toAdminUserListDTO),
+      pagination: buildPaginationMeta(total, page, limit),
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -228,7 +224,7 @@ export const updateUserRole = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { role: role._id },
-      { new: true },
+      { returnDocument: "after" },
     )
       .select("name email role")
       .populate("role", "name");
@@ -237,7 +233,9 @@ export const updateUserRole = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    await recordAuditLog(req, "user:role-change", "User", user._id, { newRole: role });
+    await recordAuditLog(req, "user:role-change", "User", user._id, {
+      newRole: role,
+    });
 
     res.json({
       user,

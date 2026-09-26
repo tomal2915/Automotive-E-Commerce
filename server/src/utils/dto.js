@@ -7,10 +7,7 @@ export const toUserDTO = (user) => ({
   id: user._id,
   name: user.name,
   email: user.email,
-  role:
-    typeof user.role === "object"
-      ? { id: user.role._id, name: user.role.name }
-      : user.role,
+  role: user.role?.name ?? undefined, // only meaningful if role was populated — omit rather than leak a raw ObjectId
   avatar: user.avatar || "",
   phone: user.phone || "",
   address: user.address || null,
