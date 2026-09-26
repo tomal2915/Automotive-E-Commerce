@@ -35,7 +35,7 @@ export default function ProductReviews({ productId }: Props) {
     queryKey: ["reviews", productId, page],
     queryFn: () => fetchProductReviews(productId, { page }),
   });
-  const reviews = data?.reviews;
+  const reviews = data?.reviews ?? [];
 
   const [rating, setRating] = useState<number | null>(0);
   const [comment, setComment] = useState("");
@@ -171,6 +171,7 @@ export default function ProductReviews({ productId }: Props) {
             count={data.pagination.totalPages}
             page={page}
             onChange={(_, value) => setPage(value)}
+            color="primary"
           />
         </Box>
       )}

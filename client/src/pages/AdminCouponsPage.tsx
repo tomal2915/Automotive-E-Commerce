@@ -357,6 +357,7 @@ export default function AdminCouponsPage() {
               count={data.pagination.totalPages}
               page={page}
               onChange={(_, value) => setPage(value)}
+              color="primary"
             />
           </Box>
         )}
