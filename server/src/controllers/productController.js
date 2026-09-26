@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import { generateVariantCombinations } from "../utils/variantGenerator.js";
-import { getOrSetCache, invalidateCachePattern } from "../utils/cache.js";
+import { getOrSetCache } from "../utils/cache.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 export const getProducts = async (req, res) => {
   try {
@@ -315,11 +316,12 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
+    await recordAuditLog(req, "product:delete", "Product", product._id, {
+      title: product.title,
+      sku: product.sku,
+    });
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

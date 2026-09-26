@@ -35,6 +35,7 @@ import brandRoutes from "./routes/brandRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
 import permissionRoutes from "./routes/permissionRoutes.js";
 import attributeRoutes from "./routes/attributeRoutes.js";
+import auditLogRoutes from "./routes/auditLogRoutes.js";
 
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
@@ -115,6 +116,7 @@ app.use("/api/v1/brands", brandRoutes);
 app.use("/api/v1/attributes", attributeRoutes);
 app.use("/api/v1/permissions", permissionRoutes);
 app.use("/api/v1/roles", roleRoutes);
+app.use("/api/v1/audit-logs", auditLogRoutes);
 
 // These two MUST be last — Express runs middleware top-to-bottom, so
 // anything registered after notFoundHandler/errorHandler would never

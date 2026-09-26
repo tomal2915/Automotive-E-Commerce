@@ -1,6 +1,7 @@
 import Role from "../models/Role.js";
 import User from "../models/User.js";
 import Permission from "../models/Permission.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 // @route GET /api/v1/roles (permission: role:watch)
 export const getRoles = async (req, res) => {
@@ -108,6 +109,10 @@ export const updateRole = async (req, res) => {
     }).populate("permissions", "name");
     if (!role) return res.status(404).json({ message: "Role not found" });
 
+    await recordAuditLog(req, "role:update", "Role", role._id, {
+      name: role.name,
+      permissionCount: role.permissions.length,
+    });
     res.json({ role });
   } catch (error) {
     res
@@ -128,6 +133,10 @@ export const deleteRole = async (req, res) => {
 
     const role = await Role.findByIdAndDelete(req.params.id);
     if (!role) return res.status(404).json({ message: "Role not found" });
+
+    await recordAuditLog(req, "role:delete", "Role", role._id, {
+      name: role.name,
+    });
     res.json({ message: "Role deleted" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

@@ -18,6 +18,7 @@ const MODULES = {
   order: ["watch", "read", "update"],
   coupon: ["watch", "create", "read", "update", "delete"],
   testimonial: ["watch", "create", "update", "delete"],
+  audit: ["watch"],
 };
 
 const seed = async () => {

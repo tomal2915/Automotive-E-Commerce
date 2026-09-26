@@ -1,5 +1,6 @@
 import Coupon from "../models/Coupon.js";
 import { validateAndCalculateDiscount } from "../utils/couponHelper.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 // @route POST /api/v1/coupons (admin only)
 export const createCoupon = async (req, res) => {
@@ -111,6 +112,10 @@ export const deleteCoupon = async (req, res) => {
   try {
     const coupon = await Coupon.findByIdAndDelete(req.params.id);
     if (!coupon) return res.status(404).json({ message: "Coupon not found" });
+
+    await recordAuditLog(req, "coupon:delete", "Coupon", coupon._id, {
+      code: coupon.code,
+    });
     res.json({ message: "Coupon deleted" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

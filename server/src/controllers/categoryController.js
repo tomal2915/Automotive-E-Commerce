@@ -1,4 +1,5 @@
 import Category from "../models/Category.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 // Recursively nests categories under their parent, to unlimited depth —
 // e.g. Electronics -> Phone -> Touch / Non-Touch, Electronics -> Headphones
@@ -159,9 +160,6 @@ export const updateCategory = async (req, res) => {
 // @route DELETE /api/v1/categories/:id (admin only)
 export const deleteCategory = async (req, res) => {
   try {
-    // Soft-delete (deactivate) instead of hard delete — existing products
-    // still reference this category name by string, so removing it
-    // outright would orphan them with a "ghost" category
     const category = await Category.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
@@ -170,6 +168,10 @@ export const deleteCategory = async (req, res) => {
     if (!category)
       return res.status(404).json({ message: "Category not found" });
 
+    await recordAuditLog(req, "category:delete", "Category", category._id, {
+      name: category.name,
+    });
+    await invalidateCachePattern("categories:*"); // if cache invalidation from Step 68 isn't here yet, add it now too
     res.json({ message: "Category deactivated" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

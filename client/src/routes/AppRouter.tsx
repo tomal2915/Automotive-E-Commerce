@@ -37,6 +37,7 @@ import AdminRolesPage from "../pages/AdminRolesPage";
 import AdminPermissionsPage from "../pages/AdminPermissionsPage";
 import AdminAttributesPage from "../pages/AdminAttributesPage";
 import AdminMediaLibraryPage from "../pages/AdminMediaLibraryPage";
+import AdminAuditLogPage from "../pages/AdminAuditLogPage";
 
 export default function AppRouter() {
   return (
@@ -100,6 +101,9 @@ export default function AppRouter() {
             path="/admin/testimonials"
             element={<AdminTestimonialsPage />}
           />
+          <Route element={<RequirePermission permission="audit:watch" />}>
+            <Route path="/admin/audit-logs" element={<AdminAuditLogPage />} />
+          </Route>
         </Route>
       </Route>
     </Routes>
