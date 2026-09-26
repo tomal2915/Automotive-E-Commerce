@@ -4,7 +4,7 @@
 // this function, instead of hand-picking fields ad hoc (which is how
 // a password hash or refreshTokens array eventually leaks by accident).
 export const toUserDTO = (user) => ({
-  id: user._id,
+  _id: user._id,
   name: user.name,
   email: user.email,
   role: user.role?.name ?? undefined, // only meaningful if role was populated — omit rather than leak a raw ObjectId
@@ -19,7 +19,7 @@ export const toUserDTO = (user) => ({
 // A lighter DTO for admin list views — omits address/phone (not needed
 // in a table row), includes fields an admin specifically needs
 export const toAdminUserListDTO = (user) => ({
-  id: user._id,
+  _id: user._id,
   name: user.name,
   email: user.email,
   role: user.role?.name || user.role,
@@ -31,7 +31,7 @@ export const toAdminUserListDTO = (user) => ({
 // needed by the frontend, nothing more
 export const toAuthSessionDTO = (user, permissions, roleName) => ({
   user: {
-    id: user._id,
+    _id: user._id,
     name: user.name,
     email: user.email,
     avatar: user.avatar || "",

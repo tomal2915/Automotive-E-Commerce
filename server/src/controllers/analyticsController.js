@@ -153,29 +153,35 @@ export const getLowStockProducts = async (req, res) => {
 // loading state and separate React re-render when it lands).
 export const getDashboardBundle = async (req, res) => {
   try {
-    const result = await getOrSetCache("categories:all", 300, async () => {
-      const [
-        summary,
-        revenueTrend,
-        topProducts,
-        orderStatusBreakdown,
-        lowStockProducts,
-      ] = await Promise.all([
-        getSummaryData(),
-        getRevenueTrendData(30),
-        getTopProductsData(10),
-        getOrderStatusBreakdownData(),
-        getLowStockProductsData(5),
-      ]);
-    });
+    const result = await getOrSetCache(
+      "analytics:dashboard-bundle",
+      300,
+      async () => {
+        const [
+          summary,
+          revenueTrend,
+          topProducts,
+          orderStatusBreakdown,
+          lowStockProducts,
+        ] = await Promise.all([
+          getSummaryData(),
+          getRevenueTrendData(30),
+          getTopProductsData(10),
+          getOrderStatusBreakdownData(),
+          getLowStockProductsData(5),
+        ]);
 
-    res.json({
-      summary,
-      revenueTrend,
-      topProducts,
-      orderStatusBreakdown,
-      lowStockProducts,
-    });
+        return {
+          summary,
+          revenueTrend,
+          topProducts,
+          orderStatusBreakdown,
+          lowStockProducts,
+        };
+      },
+    );
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
