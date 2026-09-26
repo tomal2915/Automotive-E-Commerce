@@ -4,10 +4,8 @@ import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import { sslcz } from "../config/sslcommerz.js";
-import { sendOrderConfirmationEmail } from "../services/emailService.js";
 import Coupon from "../models/Coupon.js";
 import { validateAndCalculateDiscount } from "../utils/couponHelper.js";
-import { createNotification } from "../services/notificationService.js";
 import { canCancelOrder, canRequestReturn } from "../utils/orderPolicy.js";
 import { parsePagination, buildPaginationMeta } from "../utils/paginate.js";
 import { emailQueue } from "../queues/emailQueue.js";
@@ -27,7 +25,6 @@ export const initiateCheckout = async (req, res) => {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // Verify stock is still available for every item before charging
     for (const item of cart.items) {
       if (item.product.stock < item.quantity) {
         return res
@@ -44,9 +41,6 @@ export const initiateCheckout = async (req, res) => {
     let discountAmount = 0;
     let appliedCoupon = null;
 
-    // Re-validate the coupon server-side even though the user already saw
-    // a preview via /coupons/validate — never trust a discount value sent
-    // directly from the client, since that could be tampered with
     if (couponCode) {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
       if (!coupon) {
@@ -81,8 +75,6 @@ export const initiateCheckout = async (req, res) => {
       shippingAddress,
     });
 
-    // Reserve the usage slot now (at order creation), not after payment —
-    // prevents two simultaneous checkouts both grabbing the last usage slot
     if (appliedCoupon) {
       await Coupon.updateOne(
         { _id: appliedCoupon._id },
@@ -91,7 +83,7 @@ export const initiateCheckout = async (req, res) => {
     }
 
     const sslData = {
-      total_amount: totalAmount, // charge the DISCOUNTED amount, not the subtotal
+      total_amount: totalAmount,
       currency: "BDT",
       tran_id: transactionId,
       success_url: `${process.env.SERVER_URL}/api/v1/orders/payment/success`,
@@ -105,7 +97,6 @@ export const initiateCheckout = async (req, res) => {
       product_category: "Automotive",
       product_profile: "physical-goods",
 
-      // Customer info — all required by SSLCommerz
       cus_name: shippingAddress?.name || req.user.email,
       cus_email: req.user.email,
       cus_add1: shippingAddress?.address || "N/A",
@@ -117,7 +108,6 @@ export const initiateCheckout = async (req, res) => {
       cus_phone: shippingAddress?.phone || "01700000000",
       cus_fax: "01700000000",
 
-      // Shipping info — all required by SSLCommerz, even for physical-goods profile
       ship_name: shippingAddress?.name || req.user.email,
       ship_add1: shippingAddress?.address || "N/A",
       ship_add2: "N/A",
@@ -127,11 +117,10 @@ export const initiateCheckout = async (req, res) => {
       ship_country: "Bangladesh",
     };
 
-    const apiResponse = await sslcz.init(sslData); // TEMP DEBUG — remove after fixing
+    const apiResponse = await sslcz.init(sslData);
 
     if (!apiResponse?.GatewayPageURL) {
       await Order.findByIdAndDelete(order._id);
-      // Roll back the usage count too, since this order never actually happened
       if (appliedCoupon) {
         await Coupon.updateOne(
           { _id: appliedCoupon._id },
@@ -157,13 +146,10 @@ export const handleIPN = async (req, res) => {
 
   try {
     if (status !== "VALID" && status !== "VALIDATED") {
-      // Payment wasn't successful on SSLCommerz's side
       await Order.updateOne({ transactionId: tran_id }, { status: "failed" });
-      return res.status(200).send(); // always 200 so SSLCommerz doesn't retry endlessly
+      return res.status(200).send();
     }
 
-    // Re-verify with SSLCommerz's Validation API — never trust the callback body alone,
-    // since it's technically possible to forge a POST to this endpoint
     const validation = await sslcz.validate({ val_id });
 
     if (validation.status !== "VALID" && validation.status !== "VALIDATED") {
@@ -183,8 +169,6 @@ export const handleIPN = async (req, res) => {
       return res.status(200).send();
     }
 
-    // Use a Mongoose transaction so the order status update and the stock
-    // decrement either both succeed or both roll back — no partial state
     const session = await mongoose.startSession();
     try {
       await session.withTransaction(async () => {
@@ -204,21 +188,27 @@ export const handleIPN = async (req, res) => {
         };
         await order.save({ session });
 
-        // Clear the user's cart now that checkout is complete
         await Cart.updateOne({ user: order.user }, { items: [] }, { session });
       });
     } finally {
       await session.endSession();
     }
 
-    // Instead of calling sendOrderConfirmationEmail directly (which runs
-    // inline, inside this request), enqueue it — the API responds to
-    // SSLCommerz immediately, and the actual email send happens
-    // asynchronously in the worker process.
-    await emailQueue.add("order-confirmation", {
-      order: populatedOrder,
-      email: populatedOrder.user.email,
-    });
+    // Fetch the order WITH the populated user email, needed by the queued
+    // email job — this was previously missing, which made the reference
+    // to populatedOrder below throw a ReferenceError every single time.
+    const populatedOrder = await Order.findById(order._id).populate(
+      "user",
+      "email",
+    );
+
+    if (populatedOrder?.user?.email) {
+      await emailQueue.add("order-confirmation", {
+        order: populatedOrder,
+        email: populatedOrder.user.email,
+      });
+    }
+
     await notificationQueue.add("notification", {
       userId: order.user,
       type: "order_placed",
@@ -229,10 +219,14 @@ export const handleIPN = async (req, res) => {
 
     res.status(200).send();
   } catch (error) {
-    req.log.error("IPN handling error", {
-      error: error.message,
-      stack: error.stack,
-    });
+    // Pino signature: (mergingObject, message) — NOT (message, mergingObject).
+    // The previous call had these swapped, so error/stack were silently
+    // dropped from every "IPN handling error" log line instead of being
+    // recorded as structured fields.
+    req.log.error(
+      { error: error.message, stack: error.stack },
+      "IPN handling error",
+    );
 
     res.status(200).send(); // still 200 — SSLCommerz just needs acknowledgment
   }
@@ -361,7 +355,6 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Notify the customer for the statuses they'd actually care about
     const notificationMap = {
       shipped: {
         type: "order_shipped",
@@ -409,16 +402,13 @@ export const cancelOrder = async (req, res) => {
 
     const wasAlreadyPaid = order.status === "paid";
 
-    // Use a transaction — restoring stock and updating the order status
-    // must succeed or fail together (same reasoning as the IPN handler
-    // in Step 14: never leave stock and order status out of sync)
     const session = await mongoose.startSession();
     try {
       await session.withTransaction(async () => {
         for (const item of order.items) {
           await Product.updateOne(
             { _id: item.product },
-            { $inc: { stock: item.quantity } }, // restore stock
+            { $inc: { stock: item.quantity } },
             { session },
           );
         }
@@ -437,10 +427,6 @@ export const cancelOrder = async (req, res) => {
       await session.endSession();
     }
 
-    // If payment was already captured, attempt an SSLCommerz refund.
-    // This is intentionally outside the transaction and non-blocking —
-    // same reasoning as order confirmation emails: a refund API hiccup
-    // should never undo an already-valid cancellation
     if (wasAlreadyPaid && order.paymentDetails?.val_id) {
       try {
         const refundResponse = await sslcz.initiateRefund({
@@ -454,12 +440,14 @@ export const cancelOrder = async (req, res) => {
           refundResponse?.status === "success" ? "completed" : "pending";
         await order.save();
       } catch (refundError) {
-        req.log.error("Refund initiation failed", {
-          orderId: order._id,
-          error: refundError.message,
-          stack: refundError.stack,
-        });
-        // refundStatus stays "pending" — needs manual follow-up by admin
+        req.log.error(
+          {
+            orderId: order._id,
+            error: refundError.message,
+            stack: refundError.stack,
+          },
+          "Refund initiation failed",
+        );
       }
     }
 
@@ -523,7 +511,7 @@ export const requestReturn = async (req, res) => {
 // @route PUT /api/v1/orders/admin/:id/return-review (admin only)
 export const reviewReturnRequest = async (req, res) => {
   try {
-    const { decision, adminNote } = req.body; // decision: "approved" | "rejected"
+    const { decision, adminNote } = req.body;
 
     if (!["approved", "rejected"].includes(decision)) {
       return res
@@ -566,7 +554,6 @@ export const reviewReturnRequest = async (req, res) => {
         await session.endSession();
       }
 
-      // Attempt refund, same non-blocking pattern as cancellation
       if (order.paymentDetails?.val_id) {
         try {
           const refundResponse = await sslcz.initiateRefund({
@@ -578,11 +565,13 @@ export const reviewReturnRequest = async (req, res) => {
           order.refundStatus =
             refundResponse?.status === "success" ? "completed" : "pending";
         } catch (refundError) {
-          req.log.error("Refund initiation failed:", refundError.message);
+          req.log.error(
+            { error: refundError.message, stack: refundError.stack },
+            "Refund initiation failed",
+          );
         }
       }
     } else {
-      // Rejected — order goes back to "delivered" since the return didn't happen
       order.status = "delivered";
     }
 

@@ -1,12 +1,18 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 import mongoose from "mongoose";
 
 let mongoServer;
 
 // Runs once before all test files: spins up a temporary, in-memory
-// MongoDB instance so tests never touch the real Atlas database
+// MongoDB replica set (a single-node one) so tests never touch the real
+// Atlas database. A replica set — not a plain standalone server — is
+// required here because several controllers use mongoose transactions
+// (session.withTransaction), and transactions only work on a replica
+// set or mongos, never on a standalone MongoDB instance.
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: { count: 1 },
+  });
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
 });

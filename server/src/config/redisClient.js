@@ -3,28 +3,31 @@ import { logger } from "./logger.js";
 
 let isRedisReady = false;
 
-export const redisClient = process.env.REDIS_URL
-  ? new Redis(process.env.REDIS_URL, {
-      maxRetriesPerRequest: 3, // a single command retries at most 3 times before failing — prevents a request hanging forever on a dead connection
-      retryStrategy: (times) => {
-        // Exponential backoff, capped at 10s — avoids hammering Redis
-        // with reconnect attempts during an extended outage, while
-        // still recovering quickly from a brief blip
-        const delay = Math.min(times * 500, 10000);
-        logger.warn(`Redis reconnect attempt ${times}, retrying in ${delay}ms`);
-        return delay;
-      },
-      // Queue commands issued while disconnected, up to this many —
-      // rather than either (a) rejecting instantly, or (b) queuing
-      // unboundedly and risking a memory blowup during a long outage
-      enableOfflineQueue: true,
-      reconnectOnError: (err) => {
-        // READONLY errors happen during a Redis failover (replica
-        // promoted to primary) — worth a fresh reconnect attempt
-        return err.message.includes("READONLY");
-      },
-    })
-  : null;
+export const redisClient =
+  process.env.REDIS_URL && process.env.NODE_ENV !== "test"
+    ? new Redis(process.env.REDIS_URL, {
+        maxRetriesPerRequest: 3, // a single command retries at most 3 times before failing — prevents a request hanging forever on a dead connection
+        retryStrategy: (times) => {
+          // Exponential backoff, capped at 10s — avoids hammering Redis
+          // with reconnect attempts during an extended outage, while
+          // still recovering quickly from a brief blip
+          const delay = Math.min(times * 500, 10000);
+          logger.warn(
+            `Redis reconnect attempt ${times}, retrying in ${delay}ms`,
+          );
+          return delay;
+        },
+        // Queue commands issued while disconnected, up to this many —
+        // rather than either (a) rejecting instantly, or (b) queuing
+        // unboundedly and risking a memory blowup during a long outage
+        enableOfflineQueue: true,
+        reconnectOnError: (err) => {
+          // READONLY errors happen during a Redis failover (replica
+          // promoted to primary) — worth a fresh reconnect attempt
+          return err.message.includes("READONLY");
+        },
+      })
+    : null;
 
 if (redisClient) {
   redisClient.on("connect", () => {

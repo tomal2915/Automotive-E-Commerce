@@ -42,31 +42,14 @@ describe("Checkout -> IPN -> Order Confirmation (full integration flow)", () => 
   let productId;
 
   beforeEach(async () => {
-    // Build a minimal role so registration/login can succeed (role is
-    // required on User per the RBAC schema)
-    const permission = await Permission.create({
-      name: "dashboard:watch",
-      module: "dashboard",
-      action: "watch",
-    });
-    const role = await Role.create({
-      name: "Test Customer",
-      permissions: [permission._id],
-    });
-
     const registerRes = await request(app).post("/api/v1/auth/register").send({
       name: "Test Buyer",
       email: "buyer@gmail.com",
       password: "Zx9#mK2vQ!",
     });
 
-    // Manually mark verified + assign role, bypassing the email-verification
-    // flow — this test is about checkout, not registration
     userId = registerRes.body.user.id;
-    await User.findByIdAndUpdate(userId, {
-      isEmailVerified: true,
-      role: role._id,
-    });
+    await User.findByIdAndUpdate(userId, { isEmailVerified: true });
 
     const loginRes = await request(app).post("/api/v1/auth/login").send({
       email: "buyer@gmail.com",

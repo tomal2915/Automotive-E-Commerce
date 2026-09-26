@@ -13,6 +13,7 @@ import {
 } from "../utils/emailValidator.js";
 import { getRefreshCookieOptions } from "../utils/cookieOptions.js";
 import { toUserDTO, toAuthSessionDTO } from "../utils/dto.js";
+import { getOrCreateCustomerRole } from "../utils/defaultRole.js";
 
 // @route POST /api/v1/auth/register
 export const registerUser = async (req, res) => {
@@ -68,10 +69,13 @@ export const registerUser = async (req, res) => {
       .update(rawToken)
       .digest("hex");
 
+    const customerRole = await getOrCreateCustomerRole(); // <-- THIS LINE WAS MISSING
+
     const user = await User.create({
       name,
       email,
       password,
+      role: customerRole._id, // NEW — required field, was missing entirely
       registrationDeviceId: req.deviceId,
       emailVerificationToken: hashedToken,
       emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000,
