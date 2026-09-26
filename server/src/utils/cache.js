@@ -1,4 +1,4 @@
-import { redisClient } from "../config/redisClient.js";
+import { redisClient, isRedisConnected } from "../config/redisClient.js";
 import { logger } from "../config/logger.js";
 
 // Cache-aside pattern: try Redis first; on a miss, run the real fetcher,
@@ -7,7 +7,11 @@ import { logger } from "../config/logger.js";
 // calling the fetcher directly — a cache outage should degrade
 // performance, never break the app.
 export const getOrSetCache = async (key, ttlSeconds, fetcher) => {
-  if (!redisClient) return fetcher();
+  // Skip Redis entirely if it's known to be disconnected — avoids
+  // waiting out ioredis's internal retry/timeout logic on every single
+  // cache read during an outage, which would otherwise slow down EVERY
+  // request while Redis is down instead of just degrading gracefully
+  if (!redisClient || !isRedisConnected()) return fetcher();
 
   try {
     const cached = await redisClient.get(key);
@@ -22,7 +26,9 @@ export const getOrSetCache = async (key, ttlSeconds, fetcher) => {
   const fresh = await fetcher();
 
   try {
-    await redisClient.set(key, JSON.stringify(fresh), "EX", ttlSeconds);
+    if (isRedisConnected()) {
+      await redisClient.set(key, JSON.stringify(fresh), "EX", ttlSeconds);
+    }
   } catch (error) {
     logger.warn({ error: error.message, key }, "Cache write failed");
   }
